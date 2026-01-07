@@ -3,8 +3,9 @@ import * as customerService from '../services/customerService.js';
 // GET /api/customers
 export const getAllCustomers = async (req, res) => {
   try {
-    const customers = await customerService.getAllCustomers();
-    res.status(200).json(customers);
+    const { limit = 50, offset = 0 } = req.query;
+    const result = await customerService.getAllCustomers(limit, offset);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -12,6 +13,7 @@ export const getAllCustomers = async (req, res) => {
 
 // GET /api/customers/:id
 export const getCustomerById = async (req, res) => {
+
   try {
     const { id } = req.params;
     const customer = await customerService.getCustomerById(id);
@@ -29,13 +31,12 @@ export const getCustomerById = async (req, res) => {
 // POST /api/customers
 export const createCustomer = async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
+    const { name, mobileNumber, address, gstNumber, notes } = req.body;
 
     const errors = [];
 
     if (!name || name.trim() === '') errors.push('Name is required');
-    if (!email || email.trim() === '') errors.push('Email is required');
-    if (!phone || phone.trim() === '') errors.push('Phone is required');
+    if (!mobileNumber || mobileNumber.trim() === '') errors.push('Mobile number is required');
 
     if (errors.length > 0) {
       return res.status(400).json({
@@ -46,13 +47,17 @@ export const createCustomer = async (req, res) => {
 
     const customer = await customerService.createCustomer({
       name,
-      email,
-      phone,
+      mobileNumber,
       address,
+      gstNumber,
+      notes,
     });
 
     res.status(201).json(customer);
   } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'Mobile number already exists' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -61,33 +66,32 @@ export const createCustomer = async (req, res) => {
 export const updateCustomer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, address } = req.body;
+    const { name, mobileNumber, address, gstNumber, notes } = req.body;
 
     if (name !== undefined && name.trim() === '') {
       return res.status(400).json({ error: 'Name cannot be empty' });
     }
 
-    if (email !== undefined && email.trim() === '') {
-      return res.status(400).json({ error: 'Email cannot be empty' });
-    }
-
-    if (phone !== undefined && phone.trim() === '') {
-      return res.status(400).json({ error: 'Phone cannot be empty' });
+    if (mobileNumber !== undefined && mobileNumber.trim() === '') {
+      return res.status(400).json({ error: 'Mobile number cannot be empty' });
     }
 
     const updatedCustomer = await customerService.updateCustomer(id, {
       name,
-      email,
-      phone,
+      mobileNumber,
       address,
+      gstNumber,
+      notes,
     });
-
-    if (!updatedCustomer) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
 
     res.status(200).json(updatedCustomer);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'Mobile number already exists' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -97,14 +101,13 @@ export const deleteCustomer = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleted = await customerService.deleteCustomer(id);
-
-    if (!deleted) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    await customerService.deleteCustomer(id);
 
     res.status(204).send();
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
     res.status(500).json({ error: error.message });
   }
 };
