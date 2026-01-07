@@ -1,0 +1,52 @@
+import * as jobCardService from '../services/jobCardService.js';
+
+// POST /job-cards
+export const createJobCard = async (req, res) => {
+  try {
+    const { customer, vehicle, jobCard } = req.body;
+
+    if (!customer?.mobileNumber || !vehicle?.vinNumber) {
+      return res
+        .status(400)
+        .json({ error: 'Customer mobile & vehicle VIN required' });
+    }
+
+    const result = await jobCardService.createJobCard({
+      customerData: customer,
+      vehicleData: vehicle,
+      jobCardData: jobCard,
+      advisorId: req.user.id,
+    });
+
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /job-cards/:id
+export const getJobCard = async (req, res) => {
+  const jobCard = await jobCardService.getJobCardById(req.params.id);
+
+  if (!jobCard) {
+    return res.status(404).json({ error: 'Job card not found' });
+  }
+
+  res.json(jobCard);
+};
+
+// PATCH /job-cards/:id/status
+export const updateJobStatus = async (req, res) => {
+  const { status } = req.body;
+
+  if (!['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  const updated = await jobCardService.updateJobCardStatus(
+    req.params.id,
+    status
+  );
+
+  res.json(updated);
+};

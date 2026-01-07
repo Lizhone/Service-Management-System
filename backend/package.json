@@ -1,0 +1,28 @@
+{
+  "name": "service-system-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "studio": "prisma studio",
+    "create-admin": "node scripts/createAdmin.js",
+    "reset-admin": "node scripts/resetAdmin.js",
+    "setup-admin": "node scripts/createAdminSimple.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.1",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.1"
+  }
+}
