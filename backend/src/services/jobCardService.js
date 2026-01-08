@@ -87,3 +87,50 @@ export const updateJobCardStatus = async (id, status) => {
     data: { status },
   });
 };
+
+// Close job card
+export const closeJobCard = async (id, remarks) => {
+  return prisma.jobCard.update({
+    where: { id: Number(id) },
+    data: {
+      status: 'CLOSED',
+      remarks,
+    },
+  });
+};
+
+// Search job cards
+export const searchJobCards = async (filters) => {
+  const {
+    jobCardNumber,
+    mobileNumber,
+    vinNumber,
+    status,
+    fromDate,
+    toDate,
+  } = filters;
+
+  return prisma.jobCard.findMany({
+    where: {
+      jobCardNumber: jobCardNumber ? { contains: jobCardNumber } : undefined,
+      status: status || undefined,
+      createdAt:
+        fromDate || toDate
+          ? {
+              gte: fromDate ? new Date(fromDate) : undefined,
+              lte: toDate ? new Date(toDate) : undefined,
+            }
+          : undefined,
+      customer: mobileNumber
+        ? { mobileNumber: { contains: mobileNumber } }
+        : undefined,
+      vehicle: vinNumber ? { vinNumber: { contains: vinNumber } } : undefined,
+    },
+    include: {
+      customer: true,
+      vehicle: true,
+      advisor: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};

@@ -21,4 +21,4 @@ router.get(
   getInspection
 );
 
-export default router;   // ✅ THIS LINE IS REQUIRED
+export default router;   

@@ -3,8 +3,9 @@ import * as vehicleService from '../services/vehicleService.js';
 // Get all vehicles
 export const getAllVehicles = async (req, res) => {
   try {
-    const vehicles = await vehicleService.getAllVehicles();
-    res.status(200).json(vehicles);
+    const { limit = 50, offset = 0 } = req.query;
+    const result = await vehicleService.getAllVehicles(limit, offset);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -15,6 +16,7 @@ export const getVehicleById = async (req, res) => {
   try {
     const { id } = req.params;
     const vehicle = await vehicleService.getVehicleById(id);
+    if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
     res.status(200).json(vehicle);
   } catch (error) {
     if (error.message === 'Vehicle not found') {
@@ -29,6 +31,7 @@ export const getVehiclesByCustomerId = async (req, res) => {
   try {
     const { customerId } = req.params;
     const vehicles = await vehicleService.getVehiclesByCustomerId(customerId);
+    if (vehicles === null) return res.status(404).json({ error: 'Customer not found' });
     res.status(200).json(vehicles);
   } catch (error) {
     if (error.message === 'Customer not found') {
@@ -44,15 +47,9 @@ export const createVehicle = async (req, res) => {
     const vehicle = await vehicleService.createVehicle(req.body);
     res.status(201).json(vehicle);
   } catch (error) {
-    if (error.message === 'VIN, model, and customerId are required') {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.message === 'Customer not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'VIN already exists') {
-      return res.status(409).json({ error: error.message });
-    }
+    if (error.code === 'VALIDATION_ERROR') return res.status(400).json({ error: error.message });
+    if (error.code === 'P2025') return res.status(404).json({ error: error.message });
+    if (error.code === 'P2002') return res.status(409).json({ error: 'Unique constraint failed' });
     res.status(500).json({ error: error.message });
   }
 };
@@ -62,14 +59,11 @@ export const updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedVehicle = await vehicleService.updateVehicle(id, req.body);
+    if (!updatedVehicle) return res.status(404).json({ error: 'Vehicle not found' });
     res.status(200).json(updatedVehicle);
   } catch (error) {
-    if (error.message === 'Vehicle not found' || error.message === 'Customer not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'VIN already exists') {
-      return res.status(409).json({ error: error.message });
-    }
+    if (error.code === 'P2025') return res.status(404).json({ error: error.message });
+    if (error.code === 'P2002') return res.status(409).json({ error: 'Unique constraint failed' });
     res.status(500).json({ error: error.message });
   }
 };
@@ -79,11 +73,9 @@ export const deleteVehicle = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await vehicleService.deleteVehicle(id);
-    res.status(200).json(result);
+    res.status(204).send();
   } catch (error) {
-    if (error.message === 'Vehicle not found') {
-      return res.status(404).json({ error: error.message });
-    }
+    if (error.code === 'P2025' || error.message === 'Vehicle not found') return res.status(404).json({ error: 'Vehicle not found' });
     res.status(500).json({ error: error.message });
   }
 };

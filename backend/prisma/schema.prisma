@@ -54,13 +54,13 @@ enum PartAction {
 //////////////////////////////////////////////////////
 
 model User {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  passwordHash  String
-  role          Role
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
   jobCards JobCard[] @relation("AdvisorJobCards")
 }
@@ -78,8 +78,8 @@ model Customer {
   notes        String?
   createdAt    DateTime @default(now())
 
-  vehicles  Vehicle[]
-  jobCards  JobCard[]
+  vehicles Vehicle[]
+  jobCards JobCard[]
 }
 
 //////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ model Vehicle {
   warrantyStatus     String?
   createdAt          DateTime @default(now())
 
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
   jobCards JobCard[]
 }
 
@@ -108,20 +108,20 @@ model Vehicle {
 //////////////////////////////////////////////////////
 
 model JobCard {
-  id                 Int        @id @default(autoincrement())
-  jobCardNumber      String     @unique
+  id                 Int         @id @default(autoincrement())
+  jobCardNumber      String      @unique
   customerId         Int
   vehicleId          Int
   serviceAdvisorId   Int
   serviceInDatetime  DateTime
   serviceType        ServiceType
-  status             JobStatus  @default(OPEN)
+  status             JobStatus   @default(OPEN)
   odometer           Int?
   batteryVoltage     Float?
   nextServiceDueKm   Int?
   nextServiceDueDate DateTime?
   remarks            String?
-  createdAt          DateTime   @default(now())
+  createdAt          DateTime    @default(now())
 
   customer Customer @relation(fields: [customerId], references: [id])
   vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
@@ -138,7 +138,7 @@ model JobCard {
 //////////////////////////////////////////////////////
 
 model VehicleInspection {
-  id            Int                  @id @default(autoincrement())
+  id            Int                 @id @default(autoincrement())
   jobCardId     Int
   componentName String
   condition     InspectionCondition
@@ -151,7 +151,7 @@ model VehicleInspection {
 //////////////////////////////////////////////////////
 
 model ServiceComplaint {
-  id        Int    @id @default(autoincrement())
+  id        Int         @id @default(autoincrement())
   jobCardId Int
   category  String
   workType  ServiceType

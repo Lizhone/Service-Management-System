@@ -4,8 +4,9 @@ import { getImagePath, deleteImageFile } from '../config/multer.js';
 // Get all service jobs
 export const getAllServiceJobs = async (req, res) => {
   try {
-    const serviceJobs = await serviceJobService.getAllServiceJobs();
-    res.status(200).json(serviceJobs);
+    const { limit = 50, offset = 0 } = req.query;
+    const result = await serviceJobService.getAllServiceJobs(limit, offset);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -16,6 +17,7 @@ export const getServiceJobById = async (req, res) => {
   try {
     const { id } = req.params;
     const serviceJob = await serviceJobService.getServiceJobById(id);
+    if (!serviceJob) return res.status(404).json({ error: 'Service job not found' });
     res.status(200).json(serviceJob);
   } catch (error) {
     if (error.message === 'Service job not found') {
@@ -30,6 +32,7 @@ export const getServiceJobsByVehicleId = async (req, res) => {
   try {
     const { vehicleId } = req.params;
     const serviceJobs = await serviceJobService.getServiceJobsByVehicleId(vehicleId);
+    if (serviceJobs === null) return res.status(404).json({ error: 'Vehicle not found' });
     res.status(200).json(serviceJobs);
   } catch (error) {
     if (error.message === 'Vehicle not found') {
@@ -45,15 +48,9 @@ export const createServiceJob = async (req, res) => {
     const serviceJob = await serviceJobService.createServiceJob(req.body);
     res.status(201).json(serviceJob);
   } catch (error) {
-    if (error.message === 'jobCardNo, serviceType, status, and vehicleId are required') {
-      return res.status(400).json({ error: error.message });
-    }
-    if (error.message === 'Vehicle not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'Job card number already exists') {
-      return res.status(409).json({ error: error.message });
-    }
+    if (error.code === 'VALIDATION_ERROR') return res.status(400).json({ error: error.message });
+    if (error.code === 'P2025') return res.status(404).json({ error: error.message });
+    if (error.code === 'P2002') return res.status(409).json({ error: error.message });
     res.status(500).json({ error: error.message });
   }
 };
@@ -63,14 +60,11 @@ export const updateServiceJob = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedServiceJob = await serviceJobService.updateServiceJob(id, req.body);
+    if (!updatedServiceJob) return res.status(404).json({ error: 'Service job not found' });
     res.status(200).json(updatedServiceJob);
   } catch (error) {
-    if (error.message === 'Service job not found' || error.message === 'Vehicle not found') {
-      return res.status(404).json({ error: error.message });
-    }
-    if (error.message === 'Job card number already exists') {
-      return res.status(409).json({ error: error.message });
-    }
+    if (error.code === 'P2025') return res.status(404).json({ error: error.message });
+    if (error.code === 'P2002') return res.status(409).json({ error: error.message });
     res.status(500).json({ error: error.message });
   }
 };
@@ -80,11 +74,9 @@ export const deleteServiceJob = async (req, res) => {
   try {
     const { id } = req.params;
     const result = await serviceJobService.deleteServiceJob(id);
-    res.status(200).json(result);
+    res.status(204).send();
   } catch (error) {
-    if (error.message === 'Service job not found') {
-      return res.status(404).json({ error: error.message });
-    }
+    if (error.code === 'P2025' || error.message === 'Service job not found') return res.status(404).json({ error: 'Service job not found' });
     res.status(500).json({ error: error.message });
   }
 };

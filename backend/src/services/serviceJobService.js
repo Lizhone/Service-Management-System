@@ -1,9 +1,11 @@
 import prisma from '../config/database.js';
 import { deleteImageFile } from '../config/multer.js';
 
-// Get all service jobs
-export const getAllServiceJobs = async () => {
-  return await prisma.serviceJob.findMany({
+// Get all service jobs with pagination
+export const getAllServiceJobs = async (limit = 50, offset = 0) => {
+  const serviceJobs = await prisma.serviceJob.findMany({
+    take: parseInt(limit),
+    skip: parseInt(offset),
     include: {
       vehicle: {
         include: {
@@ -12,7 +14,19 @@ export const getAllServiceJobs = async () => {
       },
       images: true,
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
+
+  const total = await prisma.serviceJob.count();
+
+  return {
+    data: serviceJobs,
+    total,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+  };
 };
 
 // Get service job by ID
@@ -29,11 +43,7 @@ export const getServiceJobById = async (id) => {
     },
   });
 
-  if (!serviceJob) {
-    throw new Error('Service job not found');
-  }
-
-  return serviceJob;
+  return serviceJob || null;
 };
 
 // Get service jobs by vehicle ID (using Prisma relation)
@@ -43,9 +53,7 @@ export const getServiceJobsByVehicleId = async (vehicleId) => {
     where: { id: parseInt(vehicleId) },
   });
 
-  if (!vehicle) {
-    throw new Error('Vehicle not found');
-  }
+  if (!vehicle) return null;
 
   return await prisma.serviceJob.findMany({
     where: { vehicleId: parseInt(vehicleId) },
@@ -57,6 +65,9 @@ export const getServiceJobsByVehicleId = async (vehicleId) => {
       },
       images: true,
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 };
 
@@ -65,7 +76,9 @@ export const createServiceJob = async (data) => {
   const { jobCardNo, serviceType, status, odometer, notes, vehicleId, images } = data;
 
   if (!jobCardNo || !serviceType || !status || !vehicleId) {
-    throw new Error('jobCardNo, serviceType, status, and vehicleId are required');
+    const err = new Error('jobCardNo, serviceType, status, and vehicleId are required');
+    err.code = 'VALIDATION_ERROR';
+    throw err;
   }
 
   // Check if vehicle exists (validate relation)
@@ -74,7 +87,9 @@ export const createServiceJob = async (data) => {
   });
 
   if (!vehicle) {
-    throw new Error('Vehicle not found');
+    const err = new Error('Vehicle not found');
+    err.code = 'P2025';
+    throw err;
   }
 
   try {
@@ -101,7 +116,9 @@ export const createServiceJob = async (data) => {
     });
   } catch (error) {
     if (error.code === 'P2002') {
-      throw new Error('Job card number already exists');
+      const err = new Error('Job card number already exists');
+      err.code = 'P2002';
+      throw err;
     }
     throw error;
   }
@@ -116,9 +133,7 @@ export const updateServiceJob = async (id, data) => {
     where: { id: parseInt(id) },
   });
 
-  if (!serviceJob) {
-    throw new Error('Service job not found');
-  }
+  if (!serviceJob) return null;
 
   // If vehicleId is being updated, verify vehicle exists (validate relation)
   if (vehicleId) {
@@ -127,7 +142,9 @@ export const updateServiceJob = async (id, data) => {
     });
 
     if (!vehicle) {
-      throw new Error('Vehicle not found');
+      const err = new Error('Vehicle not found');
+      err.code = 'P2025';
+      throw err;
     }
   }
 
@@ -135,12 +152,12 @@ export const updateServiceJob = async (id, data) => {
     return await prisma.serviceJob.update({
       where: { id: parseInt(id) },
       data: {
-        jobCardNo,
-        serviceType,
-        status,
-        odometer,
-        notes,
-        vehicleId: vehicleId ? parseInt(vehicleId) : undefined,
+        ...(jobCardNo !== undefined && { jobCardNo }),
+        ...(serviceType !== undefined && { serviceType }),
+        ...(status !== undefined && { status }),
+        ...(odometer !== undefined && { odometer }),
+        ...(notes !== undefined && { notes }),
+        ...(vehicleId !== undefined && { vehicleId: parseInt(vehicleId) }),
       },
       include: {
         vehicle: {
@@ -153,7 +170,9 @@ export const updateServiceJob = async (id, data) => {
     });
   } catch (error) {
     if (error.code === 'P2002') {
-      throw new Error('Job card number already exists');
+      const err = new Error('Job card number already exists');
+      err.code = 'P2002';
+      throw err;
     }
     throw error;
   }
@@ -169,7 +188,9 @@ export const deleteServiceJob = async (id) => {
   });
 
   if (!serviceJob) {
-    throw new Error('Service job not found');
+    const err = new Error('Service job not found');
+    err.code = 'P2025';
+    throw err;
   }
 
   // Delete all associated image files from disk
@@ -184,7 +205,7 @@ export const deleteServiceJob = async (id) => {
     where: { id: parseInt(id) },
   });
 
-  return { message: 'Service job deleted successfully' };
+  return true;
 };
 
 // Add image to service job
