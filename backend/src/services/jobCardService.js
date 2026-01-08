@@ -1,4 +1,6 @@
 import prisma from '../config/database.js';
+import { findOrCreateCustomerByMobile } from './customerService.js';
+import { findOrCreateVehicleByVIN } from './vehicleService.js';
 
 // Generate daily job card number
 const generateJobCardNumber = async () => {
@@ -30,26 +32,8 @@ export const createJobCard = async ({
   jobCardData,
   advisorId,
 }) => {
-  let customer = await prisma.customer.findUnique({
-    where: { mobileNumber: customerData.mobileNumber },
-  });
-
-  if (!customer) {
-    customer = await prisma.customer.create({ data: customerData });
-  }
-
-  let vehicle = await prisma.vehicle.findUnique({
-    where: { vinNumber: vehicleData.vinNumber },
-  });
-
-  if (!vehicle) {
-    vehicle = await prisma.vehicle.create({
-      data: {
-        ...vehicleData,
-        customerId: customer.id,
-      },
-    });
-  }
+  const customer = await findOrCreateCustomerByMobile(customerData);
+  const vehicle = await findOrCreateVehicleByVIN(vehicleData, customer.id);
 
   const jobCardNumber = await generateJobCardNumber();
 
