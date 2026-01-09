@@ -1,23 +1,45 @@
 import express from 'express';
 import {
-  getTotalCustomers,
-  getTotalVehicles,
-  getOpenServiceJobs,
-  getRevenueSummary,
-  getDashboardSummary,
+  getVehiclesServicedThisMonth,
+  getPendingJobCards,
+  getWarrantyCases,
+  getPartsUsage,
 } from '../controllers/reportingController.js';
-import { authenticate } from '../middleware/authMiddleware.js';
+
+import { authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Protect all reporting routes
-router.use('/reports', authenticate);
+// Vehicles serviced this month
+router.get(
+  '/vehicles-this-month',
+  authenticate,
+  authorizeRoles('ADMIN'),
+  getVehiclesServicedThisMonth
+);
 
-router.get('/reports/customers/total', getTotalCustomers);
-router.get('/reports/vehicles/total', getTotalVehicles);
-router.get('/reports/service-jobs/open', getOpenServiceJobs);
-router.get('/reports/revenue', getRevenueSummary);
-router.get('/reports/dashboard', getDashboardSummary);
+// Pending job cards
+router.get(
+  '/pending',
+  authenticate,
+  authorizeRoles('ADMIN'),
+  getPendingJobCards
+);
+
+// Warranty cases
+router.get(
+  '/warranty',
+  authenticate,
+  authorizeRoles('ADMIN'),
+  getWarrantyCases
+);
+
+// Parts usage
+router.get(
+  '/parts-usage',
+  authenticate,
+  authorizeRoles('ADMIN'),
+  getPartsUsage
+);
 
 export default router;
-

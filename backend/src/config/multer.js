@@ -7,63 +7,101 @@ import { config } from './env.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../../', config.uploadPath, 'service-jobs');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// --------------------------------------------------
+// BASE UPLOAD ROOT
+// --------------------------------------------------
+const uploadRoot = path.join(__dirname, '../../', config.uploadPath);
+
+// Ensure base upload directory exists
+if (!fs.existsSync(uploadRoot)) {
+  fs.mkdirSync(uploadRoot, { recursive: true });
 }
 
-// Configure storage
-const storage = multer.diskStorage({
+// --------------------------------------------------
+// SERVICE JOB UPLOADS (existing behavior)
+// --------------------------------------------------
+const serviceJobsDir = path.join(uploadRoot, 'service-jobs');
+
+if (!fs.existsSync(serviceJobsDir)) {
+  fs.mkdirSync(serviceJobsDir, { recursive: true });
+}
+
+const serviceJobStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    cb(null, serviceJobsDir);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-serviceJobId-originalname
     const serviceJobId = req.params.id || 'temp';
     const timestamp = Date.now();
-    const originalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `${timestamp}-${serviceJobId}-${originalName}`;
-    cb(null, filename);
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${timestamp}-${serviceJobId}-${safeName}`);
   },
 });
 
-// File filter - only allow images
-const fileFilter = (req, file, cb) => {
-  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'), false);
-  }
+const serviceJobFilter = (req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  if (allowed.includes(file.mimetype)) cb(null, true);
+  else cb(new Error('Invalid file type. Only images allowed.'), false);
 };
 
-// Configure multer
-export const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+export const uploadServiceJobImage = multer({
+  storage: serviceJobStorage,
+  fileFilter: serviceJobFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+// --------------------------------------------------
+// JOBCARD MEDIA UPLOADS (new behavior)
+// --------------------------------------------------
+const jobCardStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const jobCardId = req.params.jobCardId;
+    const dir = path.join(uploadRoot, 'job-cards', jobCardId);
+
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${timestamp}-${safeName}`);
   },
 });
 
-// Helper function to get file path relative to project root
-export const getImagePath = (filename) => {
-  return path.join(config.uploadPath, 'service-jobs', filename);
+const jobCardFilter = (req, file, cb) => {
+  const allowed = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'video/mp4',
+    'video/quicktime',
+  ];
+
+  if (allowed.includes(file.mimetype)) cb(null, true);
+  else cb(new Error('Invalid file type. Only images and MP4 videos allowed.'), false);
 };
 
-// Helper function to get full file path
-export const getFullImagePath = (filename) => {
-  return path.join(__dirname, '../../', config.uploadPath, 'service-jobs', filename);
-};
+export const uploadJobCardMedia = multer({
+  storage: jobCardStorage,
+  fileFilter: jobCardFilter,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+});
 
-// Helper function to delete file
-export const deleteImageFile = (filename) => {
-  const filePath = getFullImagePath(filename);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+// --------------------------------------------------
+// HELPERS (shared)
+// --------------------------------------------------
+export const getRelativePath = (...segments) =>
+  path.join(config.uploadPath, ...segments).replace(/\\/g, '/');
+
+export const getAbsolutePath = (...segments) =>
+  path.join(uploadRoot, ...segments);
+
+export const deleteFile = (relativePath) => {
+  const fullPath = path.join(__dirname, '../../', relativePath);
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
     return true;
   }
   return false;
 };
-

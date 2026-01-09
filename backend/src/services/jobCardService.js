@@ -1,102 +1,77 @@
+import fs from 'fs';
+import path from 'path';
 import prisma from '../config/database.js';
-import { findOrCreateCustomerByMobile } from './customerService.js';
-import { findOrCreateVehicleByVIN } from './vehicleService.js';
 
-// Generate daily job card number
+const JOB_CARD_PREFIX = 'JC';
+
+// ----------------------------------
+// Generate Job Card Number
+// ----------------------------------
 const generateJobCardNumber = async () => {
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-
-  const count = await prisma.jobCard.count({
-    where: {
-      createdAt: {
-        gte: start,
-        lte: end,
-      },
-    },
-  });
-
-  return `JC-${dateStr}-${String(count + 1).padStart(3, '0')}`;
+  const count = await prisma.jobCard.count();
+  return `${JOB_CARD_PREFIX}-${String(count + 1).padStart(6, '0')}`;
 };
 
-// Create job card
-export const createJobCard = async ({
-  customerData,
-  vehicleData,
-  jobCardData,
-  advisorId,
-}) => {
-  const customer = await findOrCreateCustomerByMobile(customerData);
-  const vehicle = await findOrCreateVehicleByVIN(vehicleData, customer.id);
-
+// ----------------------------------
+// Create job card (safe)
+// ----------------------------------
+export const createJobCard = async (input) => {
   const jobCardNumber = await generateJobCardNumber();
 
   return prisma.jobCard.create({
     data: {
+      ...input,
       jobCardNumber,
-      customerId: customer.id,
-      vehicleId: vehicle.id,
-      serviceAdvisorId: advisorId,
-      ...jobCardData,
+      status: 'OPEN',
     },
-  });
-};
-
-// Get full job card
-export const getJobCardById = async (id) => {
-  return prisma.jobCard.findUnique({
-    where: { id: Number(id) },
     include: {
       customer: true,
       vehicle: true,
       advisor: true,
-      inspections: true,
-      complaints: true,
-      parts: true,
-      media: true,
     },
   });
 };
 
-// Update job card status
-export const updateJobCardStatus = async (id, status) => {
-  return prisma.jobCard.update({
-    where: { id: Number(id) },
-    data: { status },
+// ----------------------------------
+// Delete job card safely
+// ----------------------------------
+export const deleteJobCard = async (id) => {
+  const jobCardId = Number(id);
+
+  return prisma.$transaction(async (tx) => {
+    const jobCard = await tx.jobCard.findUnique({ where: { id: jobCardId } });
+    if (!jobCard) throw new Error('Job card not found');
+
+    if (jobCard.status !== 'OPEN') {
+      throw new Error('Only OPEN job cards can be deleted');
+    }
+
+    const media = await tx.jobCardMedia.findMany({
+      where: { jobCardId },
+    });
+
+    for (const m of media) {
+      const filePath = path.join(process.cwd(), m.filePath);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+
+    await tx.jobCard.delete({ where: { id: jobCardId } });
+
+    const dir = path.join(process.cwd(), 'uploads', 'job-cards', String(jobCardId));
+    if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+
+    return true;
   });
 };
 
-// Close job card
-export const closeJobCard = async (id, remarks) => {
-  return prisma.jobCard.update({
-    where: { id: Number(id) },
-    data: {
-      status: 'CLOSED',
-      remarks,
-    },
-  });
-};
-
+// ----------------------------------
 // Search job cards
+// ----------------------------------
 export const searchJobCards = async (filters) => {
-  const {
-    jobCardNumber,
-    mobileNumber,
-    vinNumber,
-    status,
-    fromDate,
-    toDate,
-  } = filters;
+  const { mobile, vin, status, fromDate, toDate } = filters;
 
   return prisma.jobCard.findMany({
     where: {
-      jobCardNumber: jobCardNumber ? { contains: jobCardNumber } : undefined,
       status: status || undefined,
       createdAt:
         fromDate || toDate
@@ -105,10 +80,12 @@ export const searchJobCards = async (filters) => {
               lte: toDate ? new Date(toDate) : undefined,
             }
           : undefined,
-      customer: mobileNumber
-        ? { mobileNumber: { contains: mobileNumber } }
+      customer: mobile
+        ? { mobileNumber: { contains: mobile, mode: 'insensitive' } }
         : undefined,
-      vehicle: vinNumber ? { vinNumber: { contains: vinNumber } } : undefined,
+      vehicle: vin
+        ? { vinNumber: { contains: vin, mode: 'insensitive' } }
+        : undefined,
     },
     include: {
       customer: true,
@@ -116,5 +93,35 @@ export const searchJobCards = async (filters) => {
       advisor: true,
     },
     orderBy: { createdAt: 'desc' },
+  });
+};
+
+// ----------------------------------
+// Update status safely
+// ----------------------------------
+export const updateJobCardStatus = async (id, newStatus) => {
+  const jobCardId = Number(id);
+
+  return prisma.$transaction(async (tx) => {
+    const jobCard = await tx.jobCard.findUnique({ where: { id: jobCardId } });
+    if (!jobCard) throw new Error('Job card not found');
+
+    const transitions = {
+      OPEN: ['IN_PROGRESS'],
+      IN_PROGRESS: ['CLOSED'],
+      CLOSED: [],
+    };
+
+    if (!transitions[jobCard.status].includes(newStatus)) {
+      throw new Error(`Invalid status transition from ${jobCard.status} to ${newStatus}`);
+    }
+
+    return tx.jobCard.update({
+      where: { id: jobCardId },
+      data: {
+        status: newStatus,
+        closedAt: newStatus === 'CLOSED' ? new Date() : undefined,
+      },
+    });
   });
 };

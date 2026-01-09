@@ -1,4 +1,9 @@
 import * as reportingService from '../services/reportingService.js';
+import { vehiclesServicedThisMonth } from '../services/reportingService.js';
+import { pendingJobCards } from '../services/reportingService.js';
+import { warrantyCases } from '../services/reportingService.js';
+import { partsUsage } from '../services/reportingService.js';
+
 
 // Get total customers
 export const getTotalCustomers = async (req, res) => {
@@ -51,3 +56,19 @@ export const getDashboardSummary = async (req, res) => {
   }
 };
 
+export const getVehiclesServicedThisMonth = async (req, res) => {
+  const count = await vehiclesServicedThisMonth();
+  res.json({ vehiclesThisMonth: count });
+};
+export const getPendingJobCards = async (req, res) => {
+  const data = await pendingJobCards();
+  res.json(data);
+};
+export const getWarrantyCases = async (req, res) => {
+  const data = await warrantyCases();
+  res.json(data);
+};
+export const getPartsUsage = async (req, res) => {
+  const data = await partsUsage();
+  res.json(data);
+};

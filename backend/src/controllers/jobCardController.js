@@ -1,24 +1,36 @@
 import * as jobCardService from '../services/jobCardService.js';
+import { z } from 'zod';
+
+const createSchema = z.object({
+  customerId: z.number(),
+  vehicleId: z.number(),
+  serviceInDatetime: z.string().datetime(),
+  serviceType: z.enum(['GENERAL', 'PAID', 'WARRANTY', 'COMPLAINT', 'BATTERY', 'CHARGER']),
+  odometer: z.number().optional(),
+  batteryVoltage: z.number().optional(),
+  nextServiceDueKm: z.number().optional(),
+  nextServiceDueDate: z.string().datetime().optional(),
+  remarks: z.string().optional(),
+});
 
 // POST /job-cards
 export const createJobCard = async (req, res) => {
   try {
-    const { customer, vehicle, jobCard } = req.body;
-
-    if (!customer?.mobileNumber || !vehicle?.vinNumber) {
-      return res
-        .status(400)
-        .json({ error: 'Customer mobile & vehicle VIN required' });
+    if (!['ADMIN', 'ADVISOR'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const result = await jobCardService.createJobCard({
-      customerData: customer,
-      vehicleData: vehicle,
-      jobCardData: jobCard,
-      advisorId: req.user.id,
+    const parsed = createSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json(parsed.error);
+    }
+
+    const jobCard = await jobCardService.createJobCard({
+      ...parsed.data,
+      serviceAdvisorId: req.user.id,
     });
 
-    res.status(201).json(result);
+    res.status(201).json(jobCard);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -26,42 +38,36 @@ export const createJobCard = async (req, res) => {
 
 // GET /job-cards/:id
 export const getJobCard = async (req, res) => {
-  const jobCard = await jobCardService.getJobCardById(req.params.id);
-
-  if (!jobCard) {
-    return res.status(404).json({ error: 'Job card not found' });
+  try {
+    const jobCard = await jobCardService.getJobCardById(req.params.id);
+    if (!jobCard) return res.status(404).json({ error: 'Not found' });
+    res.json(jobCard);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  res.json(jobCard);
 };
 
 // PATCH /job-cards/:id/status
 export const updateJobStatus = async (req, res) => {
-  const { status } = req.body;
+  try {
+    if (!['ADMIN', 'TECHNICIAN'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
 
-  if (!['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
+    const { status } = req.body;
+    const updated = await jobCardService.updateJobCardStatus(req.params.id, status);
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
-
-  const updated = await jobCardService.updateJobCardStatus(
-    req.params.id,
-    status
-  );
-
-  res.json(updated);
-};
-
-// PATCH /job-cards/:id/close
-export const closeJobCard = async (req, res) => {
-  const { remarks } = req.body;
-
-  const closed = await jobCardService.closeJobCard(req.params.id, remarks);
-
-  res.json(closed);
 };
 
 // GET /job-cards/search
 export const searchJobCards = async (req, res) => {
-  const results = await jobCardService.searchJobCards(req.query);
-  res.json(results);
+  try {
+    const results = await jobCardService.searchJobCards(req.query);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };

@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 
-// Verify JWT token
 export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -11,20 +10,33 @@ export const authenticate = (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, role }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
+
+    if (!decoded.id || !decoded.role) {
+      return res.status(401).json({ error: 'Invalid token payload' });
+    }
+
+    req.user = decoded;
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
-// Role-based access control
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access denied' });
+    if (!req.user?.role) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
+
+    if (req.user.role === 'ADMIN') return next();
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     next();
   };
 };

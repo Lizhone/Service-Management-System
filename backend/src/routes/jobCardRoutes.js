@@ -3,7 +3,6 @@ import {
   createJobCard,
   getJobCard,
   updateJobStatus,
-  closeJobCard,
   searchJobCards,
 } from '../controllers/jobCardController.js';
 
@@ -11,7 +10,7 @@ import { authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Search job cards (must be before /:id)
+// Search job cards
 router.get(
   '/search',
   authenticate,
@@ -34,16 +33,8 @@ router.get('/:id', authenticate, getJobCard);
 router.patch(
   '/:id/status',
   authenticate,
-  authorizeRoles('ADMIN', 'ADVISOR'),
+  authorizeRoles('ADMIN', 'TECHNICIAN'),
   updateJobStatus
-);
-
-// Close job card
-router.patch(
-  '/:id/close',
-  authenticate,
-  authorizeRoles('ADMIN', 'ADVISOR'),
-  closeJobCard
 );
 
 export default router;

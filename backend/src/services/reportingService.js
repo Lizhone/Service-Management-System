@@ -1,6 +1,6 @@
 import prisma from '../config/database.js';
-
 // Get total customers count
+
 export const getTotalCustomers = async () => {
   const count = await prisma.customer.count();
   return { totalCustomers: count };
@@ -163,4 +163,36 @@ export const getDashboardSummary = async () => {
     revenue: revenueSummary,
   };
 };
+export const vehiclesServicedThisMonth = async () => {
+  const start = new Date();
+  start.setDate(1);
+  start.setHours(0, 0, 0, 0);
+
+  return prisma.jobCard.count({
+    where: { createdAt: { gte: start } },
+  });
+};
+export const pendingJobCards = async () => {
+  return prisma.jobCard.findMany({
+    where: { status: { in: ['OPEN', 'IN_PROGRESS'] } },
+    include: { customer: true, vehicle: true },
+    orderBy: { createdAt: 'asc' },
+  });
+};
+export const warrantyCases = async () => {
+  return prisma.jobCard.findMany({
+    where: { serviceType: 'WARRANTY' },
+    include: { customer: true, vehicle: true },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+export const partsUsage = async () => {
+  return prisma.partsReplacement.groupBy({
+    by: ['partName'],
+    _count: { partName: true },
+    orderBy: { _count: { partName: 'desc' } },
+  });
+};
+
+
 
