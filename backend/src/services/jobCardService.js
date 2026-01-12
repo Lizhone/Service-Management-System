@@ -18,23 +18,27 @@ const generateJobCardNumber = async () => {
 export const createJobCard = async (input) => {
   const jobCardNumber = await generateJobCardNumber();
 
+  // Handle both old format (customer/vehicle) and new format (customerData/vehicleData)
+  const customerData = input.customerData || input.customer;
+  const vehicleData = input.vehicleData || input.vehicle;
+
   // Create or connect customer
   const customer = await prisma.customer.upsert({
-    where: { mobileNumber: input.customer.mobileNumber },
-    update: { name: input.customer.name },
+    where: { mobileNumber: customerData.mobileNumber },
+    update: { name: customerData.name },
     create: {
-      name: input.customer.name,
-      mobileNumber: input.customer.mobileNumber,
+      name: customerData.name,
+      mobileNumber: customerData.mobileNumber,
     },
   });
 
   // Create or connect vehicle
   const vehicle = await prisma.vehicle.upsert({
-    where: { vinNumber: input.vehicle.vinNumber },
-    update: { model: input.vehicle.model },
+    where: { vinNumber: vehicleData.vinNumber },
+    update: { model: vehicleData.model },
     create: {
-      vinNumber: input.vehicle.vinNumber,
-      model: input.vehicle.model,
+      vinNumber: vehicleData.vinNumber,
+      model: vehicleData.model,
       customerId: customer.id,
     },
   });
@@ -44,11 +48,11 @@ export const createJobCard = async (input) => {
       customerId: customer.id,
       vehicleId: vehicle.id,
       serviceAdvisorId: input.serviceAdvisorId,
-      serviceInDatetime: new Date(),
-      serviceType: input.jobCard.serviceType,
-      remarks: input.jobCard.remarks,
+      serviceInDatetime: new Date(input.serviceInDatetime),
+      serviceType: input.serviceType,
+      remarks: input.remarks,
       jobCardNumber,
-      status: 'OPEN',
+      status: input.status || 'OPEN',
     },
     include: {
       customer: true,

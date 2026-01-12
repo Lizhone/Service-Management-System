@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export const customerSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  mobileNumber: z.string().regex(/^\d{10}$/, 'Mobile number must be exactly 10 digits'),
-  address: z.string().optional(),
-  gstNumber: z.string().optional(),
-  notes: z.string().optional(),
-}).strict();
+export const vehicleInspectionSchema = z.object({
+  brakes: z.enum(["OK", "NOT_OK"]),
+  lights: z.enum(["OK", "NOT_OK"]),
+  tires: z.enum(["OK", "NOT_OK"]),
+  battery: z.enum(["OK", "NOT_OK"]),
+  remarks: z.string().optional(),
+});

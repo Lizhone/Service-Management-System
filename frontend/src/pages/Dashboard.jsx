@@ -1,27 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client";
-import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
   const [jobCards, setJobCards] = useState([]);
 
-  const loadJobCards = async () => {
-    try {
-      const res = await client.get("/job-cards/search");
-      setJobCards(res.data || []);
-    } catch (err) {
-      console.error("Dashboard load failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadJobCards();
+    client.get("/job-cards/search").then((res) => setJobCards(res.data || []));
   }, []);
-
-  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="p-6">
@@ -34,17 +20,32 @@ export default function Dashboard() {
         + Create Job Card
       </Link>
 
-      {jobCards.length === 0 ? (
-        <div>No job cards yet.</div>
-      ) : (
-        <ul className="space-y-2">
-          {jobCards.map((j) => (
-            <li key={j.id} className="border p-2 rounded">
+      <ul className="space-y-2">
+        {jobCards.map((j) => (
+          <li
+            key={j.id}
+            className="border p-3 rounded flex justify-between items-center"
+          >
+            <span>
               {j.jobCardNumber} — {j.status}
-            </li>
-          ))}
-        </ul>
-      )}
+            </span>
+
+            <Link
+              to={`/job-cards/${j.id}/inspection`}
+              className="text-blue-600 underline"
+            >
+              Inspect
+            </Link>
+            <Link
+              to={`/job-cards/${j.id}/complaints`}
+              className="text-sm text-indigo-600 underline"
+            >
+              Complaints
+            </Link>
+
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

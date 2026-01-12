@@ -1,14 +1,20 @@
-import { addComplaints } from '../services/complaintService.js';
+import { addComplaint } from '../services/complaintService.js';
 
-export const createComplaints = async (req, res) => {
-  const { id } = req.params;
-  const complaints = req.body;
+// POST /job-cards/:id/complaints
+export const createComplaint = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { description } = req.body;
 
-  if (!Array.isArray(complaints) || complaints.length === 0) {
-    return res.status(400).json({ error: 'Complaints required' });
+    if (!description || typeof description !== "string") {
+      return res.status(400).json({ error: "Description is required" });
+    }
+
+    await addComplaint(id, description);
+
+    res.status(201).json({ message: "Complaint added successfully" });
+  } catch (err) {
+    console.error("Complaint error:", err);
+    res.status(500).json({ error: "Failed to add complaint" });
   }
-
-  await addComplaints(id, complaints);
-
-  res.status(201).json({ message: 'Complaints added' });
 };

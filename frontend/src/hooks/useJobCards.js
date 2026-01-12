@@ -1,29 +1,11 @@
-import { useState, useEffect } from 'react';
-import client from '../api/client';
+import { createJobCard } from "../api/jobCards";
 
-export default function useJobCards() {
-  const [jobCards, setJobCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchJobCards = async () => {
-    try {
-      const response = await client.get('/job-cards/search');
-      setJobCards(response.data);
-    } catch (error) {
-      console.error('Error fetching job cards:', error);
-    } finally {
-      setLoading(false);
-    }
+export const useJobCards = () => {
+  const create = async (payload) => {
+    console.log("Hook layer received:", payload);
+    const res = await createJobCard(payload);
+    return res.data;
   };
 
-  useEffect(() => {
-    fetchJobCards();
-  }, []);
-
-  const refetch = () => {
-    setLoading(true);
-    fetchJobCards();
-  };
-
-  return { jobCards, loading, refetch };
-}
+  return { create };
+};
