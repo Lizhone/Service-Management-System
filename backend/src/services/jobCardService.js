@@ -18,9 +18,35 @@ const generateJobCardNumber = async () => {
 export const createJobCard = async (input) => {
   const jobCardNumber = await generateJobCardNumber();
 
+  // Create or connect customer
+  const customer = await prisma.customer.upsert({
+    where: { mobileNumber: input.customer.mobileNumber },
+    update: { name: input.customer.name },
+    create: {
+      name: input.customer.name,
+      mobileNumber: input.customer.mobileNumber,
+    },
+  });
+
+  // Create or connect vehicle
+  const vehicle = await prisma.vehicle.upsert({
+    where: { vinNumber: input.vehicle.vinNumber },
+    update: { model: input.vehicle.model },
+    create: {
+      vinNumber: input.vehicle.vinNumber,
+      model: input.vehicle.model,
+      customerId: customer.id,
+    },
+  });
+
   return prisma.jobCard.create({
     data: {
-      ...input,
+      customerId: customer.id,
+      vehicleId: vehicle.id,
+      serviceAdvisorId: input.serviceAdvisorId,
+      serviceInDatetime: new Date(),
+      serviceType: input.jobCard.serviceType,
+      remarks: input.jobCard.remarks,
       jobCardNumber,
       status: 'OPEN',
     },

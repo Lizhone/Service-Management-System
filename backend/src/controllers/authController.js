@@ -4,46 +4,33 @@ import prisma from '../config/database.js';
 
 export const login = async (req, res) => {
   try {
+    console.log("LOGIN BODY:", req.body);
+
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+    const user = await prisma.user.findUnique({ where: { email } });
+    console.log("USER FOUND:", user);
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
     }
 
-    console.log('Login attempt for email:', email);
+    const match = await bcrypt.compare(password, user.passwordHash);
+    console.log("PASSWORD MATCH:", match);
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    console.log('User found:', !!user, user ? { id: user.id, email: user.email, active: user.active } : null);
-
-    if (!user || !user.active) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    console.log('bcrypt.compare result for', email, ':', valid);
-
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!match) {
+      return res.status(401).json({ error: "Wrong password" });
     }
 
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '8h' }
+      { expiresIn: "1d" }
     );
 
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-      },
-    });
+    return res.json({ token, user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({ error: "Internal error" });
   }
 };

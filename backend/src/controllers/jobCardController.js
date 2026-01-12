@@ -1,17 +1,4 @@
 import * as jobCardService from '../services/jobCardService.js';
-import { z } from 'zod';
-
-const createSchema = z.object({
-  customerId: z.number(),
-  vehicleId: z.number(),
-  serviceInDatetime: z.string().datetime(),
-  serviceType: z.enum(['GENERAL', 'PAID', 'WARRANTY', 'COMPLAINT', 'BATTERY', 'CHARGER']),
-  odometer: z.number().optional(),
-  batteryVoltage: z.number().optional(),
-  nextServiceDueKm: z.number().optional(),
-  nextServiceDueDate: z.string().datetime().optional(),
-  remarks: z.string().optional(),
-});
 
 // POST /job-cards
 export const createJobCard = async (req, res) => {
@@ -20,18 +7,16 @@ export const createJobCard = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json(parsed.error);
-    }
+    console.log("CREATE JOB CARD PAYLOAD:", req.body);
 
     const jobCard = await jobCardService.createJobCard({
-      ...parsed.data,
+      ...req.body,
       serviceAdvisorId: req.user.id,
     });
 
     res.status(201).json(jobCard);
   } catch (err) {
+    console.error("CREATE JOB CARD ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 };

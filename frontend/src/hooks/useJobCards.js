@@ -1,20 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import client from '../api/client';
 
-export const useJobCards = (filters = {}) => {
+export default function useJobCards() {
   const [jobCards, setJobCards] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      const res = await client.get('/job-cards/search', { params: filters });
-      setJobCards(res.data);
+  const fetchJobCards = async () => {
+    try {
+      const response = await client.get('/job-cards/search');
+      setJobCards(response.data);
+    } catch (error) {
+      console.error('Error fetching job cards:', error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetch();
-  }, [JSON.stringify(filters)]);
+  useEffect(() => {
+    fetchJobCards();
+  }, []);
 
-  return { jobCards, loading };
-};
+  const refetch = () => {
+    setLoading(true);
+    fetchJobCards();
+  };
+
+  return { jobCards, loading, refetch };
+}
