@@ -1,8 +1,9 @@
-import { saveComplaint } from "../api/serviceComplaints";
+import { saveComplaint } from "../api/complaints";
 
 export const useServiceComplaints = () => {
   const submitComplaint = async (jobCardId, payload) => {
-    return await saveComplaint(jobCardId, payload);
+    const res = await saveComplaint(jobCardId, payload);
+    return res.data;
   };
 
   return { submitComplaint };

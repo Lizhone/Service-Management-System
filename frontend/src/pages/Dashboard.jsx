@@ -24,9 +24,9 @@ export default function Dashboard() {
         {jobCards.map((j) => (
           <li
             key={j.id}
-            className="border p-3 rounded flex justify-between items-center"
+            className="border p-3 rounded flex justify-between items-center gap-4"
           >
-            <span>
+            <span className="flex-1">
               {j.jobCardNumber} — {j.status}
             </span>
 
@@ -36,13 +36,27 @@ export default function Dashboard() {
             >
               Inspect
             </Link>
+
             <Link
               to={`/job-cards/${j.id}/complaints`}
-              className="text-sm text-indigo-600 underline"
+              className="text-indigo-600 underline"
             >
               Complaints
             </Link>
 
+            <Link
+              to={`/job-cards/${j.id}/parts`}
+              className="text-indigo-600 underline"
+            >
+              Parts
+            </Link>
+
+            <Link
+              to={`/job-cards/${j.id}/work-log`}
+              className="text-indigo-600 underline"
+            >
+              Work Log
+            </Link>
           </li>
         ))}
       </ul>

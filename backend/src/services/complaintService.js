@@ -1,16 +1,11 @@
 import prisma from "../../prisma/client.js";
 
-
-export const addComplaint = async (jobCardId, description) => {
+export const addComplaint = async (jobCardId, description, category) => {
   return prisma.serviceComplaint.create({
     data: {
       jobCardId: Number(jobCardId),
       description,
+      category,
     },
   });
 };
-export const getComplaintsByJobCardId = async (jobCardId) => {
-  return prisma.serviceComplaint.findMany({
-    where: { jobCardId: Number(jobCardId) },
-  });
-}

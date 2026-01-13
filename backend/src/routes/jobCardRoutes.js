@@ -10,29 +10,30 @@ import { authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Search job cards
-router.get(
-  '/search',
-  authenticate,
-  authorizeRoles('ADMIN', 'ADVISOR', 'TECHNICIAN'),
-  searchJobCards
-);
+/**
+ * PUBLIC ROUTE
+ * Dashboard uses this, so it must not require auth
+ */
+router.get('/search', searchJobCards);
+
+/**
+ * Everything below this requires authentication
+ */
+router.use(authenticate);
 
 // Create job card
 router.post(
   '/',
-  authenticate,
   authorizeRoles('ADMIN', 'ADVISOR'),
   createJobCard
 );
 
 // Get job card by ID
-router.get('/:id', authenticate, getJobCard);
+router.get('/:id', getJobCard);
 
 // Update job card status
 router.patch(
   '/:id/status',
-  authenticate,
   authorizeRoles('ADMIN', 'TECHNICIAN'),
   updateJobStatus
 );

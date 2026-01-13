@@ -5,6 +5,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import CreateJobCard from "./pages/CreateJobCard";
 import AddInspection from "./pages/AddInspection";
 import AddComplaint from "./pages/AddComplaint";
+import PartsReplacement from "./pages/PartsReplacement";
+import WorkLog from "./pages/WorkLog";
 
 export default function App() {
   return (
@@ -39,13 +41,27 @@ export default function App() {
           }
         />
         <Route
-  path="/job-cards/:id/complaints"
-  element={
-    <ProtectedRoute>
-      <AddComplaint />
-    </ProtectedRoute>
-  }
-/>
+          path="/job-cards/:id/complaints"
+          element={
+           <ProtectedRoute>
+             <AddComplaint />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+         path="/job-cards/:id/parts"
+          element={
+            <ProtectedRoute>
+          <PartsReplacement />
+            </ProtectedRoute>
+          } 
+          />
+          <Route
+           path="/job-cards/:id/work" 
+           element={
+           <WorkLog />
+           } 
+           />
       </Routes>
     </BrowserRouter>
   );
