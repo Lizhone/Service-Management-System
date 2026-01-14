@@ -17,6 +17,7 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   jobCards     JobCard[] @relation("AdvisorJobCards")
+  workLogs     WorkLog[]
 }
 
 model Customer {
@@ -137,15 +138,23 @@ model JobCardMedia {
 }
 
 model WorkLog {
-  id          Int      @id @default(autoincrement())
-  description String
-  jobCardId   Int
-  createdAt   DateTime @default(now())
+  id           Int         @id @default(autoincrement())
+  jobCardId    Int
+  technicianId Int?
+  taskName     String?
+  status       WorkStatus @default(PENDING)
+  startedAt    DateTime?
+  endedAt      DateTime?
+  durationMin  Int?
+  createdAt    DateTime   @default(now())
 
-  jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
+  jobCard    JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
+  technician User?   @relation(fields: [technicianId], references: [id])
 
   @@index([jobCardId])
+  @@index([technicianId])
 }
+
 
 enum Role {
   ADMIN
@@ -200,4 +209,10 @@ enum PartAction {
   NEW
   REPLACE
   REFURBISHED
+}
+
+enum WorkStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
 }

@@ -1,41 +1,25 @@
-import express from 'express';
-import {
-  createJobCard,
-  getJobCard,
-  updateJobStatus,
-  searchJobCards,
-} from '../controllers/jobCardController.js';
+import express from "express";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+import { PrismaClient } from "@prisma/client";
+import { authenticate } from "../middleware/authMiddleware.js";
 
-import { authenticate, authorizeRoles } from '../middleware/authMiddleware.js';
-
+const prisma = new PrismaClient();
 const router = express.Router();
 
-/**
- * PUBLIC ROUTE
- * Dashboard uses this, so it must not require auth
- */
-router.get('/search', searchJobCards);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-/**
- * Everything below this requires authentication
- */
-router.use(authenticate);
+const uploadDir = path.join(__dirname, "../../uploads/job-cards");
 
-// Create job card
-router.post(
-  '/',
-  authorizeRoles('ADMIN', 'ADVISOR'),
-  createJobCard
-);
+const storage = multer.diskStorage({
+  destination: uploadDir,
+  filename: (_, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
-// Get job card by ID
-router.get('/:id', getJobCard);
 
-// Update job card status
-router.patch(
-  '/:id/status',
-  authorizeRoles('ADMIN', 'TECHNICIAN'),
-  updateJobStatus
-);
 
 export default router;
