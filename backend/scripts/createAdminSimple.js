@@ -1,43 +1,46 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+
 const prisma = new PrismaClient();
-import bcrypt from 'bcryptjs';
 
 async function createAdmin() {
   try {
-    // Get username and password from command line arguments
-    const username = process.argv[2] || 'admin';
-    const password = process.argv[3] || 'admin123';
+    const email = process.argv[2] || "admin@example.com";
+    const password = process.argv[3] || "admin123";
 
-    console.log('Creating admin user...');
-    console.log(`Username: ${username}`);
+    console.log("Creating admin user...");
+    console.log(`Email: ${email}`);
 
-    // Delete existing admins
-    await prisma.admin.deleteMany({});
-    console.log('Deleted existing admins.');
+    // Remove existing admin with same email (safe reset)
+    await prisma.user.deleteMany({
+      where: {
+        email,
+        role: "ADMIN",
+      },
+    });
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create admin
-    const admin = await prisma.admin.create({
+    const admin = await prisma.user.create({
       data: {
-        username,
-        password: hashedPassword,
+        name: "Admin",
+        email,
+        passwordHash,
+        role: "ADMIN",
+        active: true,
       },
       select: {
         id: true,
-        username: true,
+        email: true,
         createdAt: true,
       },
     });
 
-    console.log('\n✅ Admin created successfully!');
-    console.log(`Username: ${admin.username}`);
-    console.log(`Password: ${password}`);
-    console.log('\nYou can now login with these credentials.');
-
+    console.log("\n✅ Admin created successfully");
+    console.log("Email:", admin.email);
+    console.log("Password:", password);
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error creating admin:", error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();
@@ -45,4 +48,3 @@ async function createAdmin() {
 }
 
 createAdmin();
-

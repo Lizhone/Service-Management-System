@@ -34,7 +34,7 @@ router.post(
 /**
  * Start a work task
  */
-router.post(
+router.patch(
   "/work-log/:id/start",
   authenticate,
   authorizeRoles("TECHNICIAN"),
@@ -44,7 +44,7 @@ router.post(
 /**
  * Complete a work task
  */
-router.post(
+router.patch(
   "/work-log/:id/complete",
   authenticate,
   authorizeRoles("TECHNICIAN"),

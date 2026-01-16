@@ -1,125 +1,224 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
 import client from "../api/client";
 
 export default function WorkLog() {
   const { id } = useParams();
-  const [taskName, setTaskName] = useState("");
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const [taskName, setTaskName] = useState("");
+  const [technicianName, setTechnicianName] = useState("");
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // TEMPORARY DEBUG: explicit token + header
+  const load = useCallback(async () => {
+    if (!id) return;
+
     try {
       setLoading(true);
-      const res = await client.get(`/job-cards/${id}/work-log`);
-      setLogs(res.data || []);
+      setError("");
+
+      const token = localStorage.getItem("token");
+      console.log("TOKEN BEING SENT:", token);
+
+      const res = await client.get(`/job-cards/${id}/work-log`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("Failed to load work logs", err);
-      alert("Failed to load work logs. Check console.");
+      console.error(
+        "LOAD WORKLOG ERROR:",
+        err.response?.status,
+        err.response?.data || err.message
+      );
+      setError("Failed to load work logs");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    if (id) load();
   }, [id]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const create = async () => {
-    if (!taskName.trim()) return alert("Enter task name");
+    if (!taskName.trim() || !technicianName.trim()) return;
 
     try {
-      await client.post(`/job-cards/${id}/work-log`, { taskName });
+      setError("");
+
+      await client.post(`/job-cards/${id}/work-log`, {
+        taskName,
+        technicianName,
+      });
+
       setTaskName("");
+      setTechnicianName("");
       load();
     } catch (err) {
-      console.error("Create failed", err);
-      alert(err.response?.data?.error || "Create failed");
+      console.error(
+        "CREATE WORKLOG ERROR:",
+        err.response?.status,
+        err.response?.data || err.message
+      );
+      setError("Failed to create task");
     }
   };
 
   const start = async (logId) => {
     try {
-      await client.post(`/work-log/${logId}/start`);
+      setError("");
+      await client.patch(`/work-log/${logId}/start`);
       load();
     } catch (err) {
-      console.error("Start failed", err);
-      alert(err.response?.data?.error || "Start failed");
+      console.error(
+        "START WORKLOG ERROR:",
+        err.response?.status,
+        err.response?.data || err.message
+      );
+      setError("Failed to start task");
     }
   };
 
   const complete = async (logId) => {
     try {
-      await client.post(`/work-log/${logId}/complete`);
+      setError("");
+      await client.patch(`/work-log/${logId}/complete`);
       load();
     } catch (err) {
-      console.error("Complete failed", err);
-      alert(err.response?.data?.error || "Complete failed");
+      console.error(
+        "COMPLETE WORKLOG ERROR:",
+        err.response?.status,
+        err.response?.data || err.message
+      );
+      setError("Failed to complete task");
     }
   };
 
-  if (loading) return <div className="p-6">Loading work logs…</div>;
+  const activeLogs = logs.filter(
+    (l) => l.status === "PENDING" || l.status === "IN_PROGRESS"
+  );
+  const completedLogs = logs.filter((l) => l.status === "COMPLETED");
 
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Work Log</h2>
 
-      <div className="flex gap-2 mb-4">
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Add task */}
+      <div className="flex gap-2 mb-6">
         <input
-          className="border p-2 flex-1"
+          className="border px-3 py-2 flex-1 rounded"
           placeholder="Task name"
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
         />
+        <input
+          className="border px-3 py-2 flex-1 rounded"
+          placeholder="Technician name"
+          value={technicianName}
+          onChange={(e) => setTechnicianName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") create();
+          }}
+        />
         <button
           onClick={create}
-          className="bg-blue-600 text-white px-4 rounded"
+          disabled={loading}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
         >
           Add Task
         </button>
       </div>
 
-      <h3 className="font-semibold">Active / Pending</h3>
-      {logs.filter((l) => l.status !== "COMPLETED").length === 0 && (
-        <p className="text-gray-500 text-sm mb-2">No active tasks</p>
+      {/* Active / Pending */}
+      {activeLogs.length > 0 && (
+        <>
+          <h3 className="font-semibold mb-3 text-lg">Active / Pending</h3>
+          <div className="space-y-2 mb-6">
+            {activeLogs.map((log) => (
+              <div
+                key={log.id}
+                className="p-3 border rounded bg-gray-50 flex items-center justify-between"
+              >
+                <div>
+                  <div className="font-medium">{log.taskName}</div>
+                  <div className="text-sm text-gray-600">
+                    Technician: {log.technicianName}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Status:{" "}
+                    {log.status === "PENDING" ? "Pending" : "In Progress"}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  {log.status === "PENDING" && (
+                    <button
+                      onClick={() => start(log.id)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                    >
+                      Start
+                    </button>
+                  )}
+                  {log.status === "IN_PROGRESS" && (
+                    <button
+                      onClick={() => complete(log.id)}
+                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                    >
+                      Complete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {logs.filter((l) => l.status !== "COMPLETED").map((l) => (
-        <div key={l.id} className="flex gap-2 border p-2 mb-2">
-          <span className="flex-1">
-            {l.taskName} ({l.status})
-          </span>
-
-          {l.status === "PENDING" && (
-            <button
-              className="text-blue-600"
-              onClick={() => start(l.id)}
-            >
-              Start
-            </button>
-          )}
-
-          {l.status === "ACTIVE" && (
-            <button
-              className="text-green-600"
-              onClick={() => complete(l.id)}
-            >
-              Complete
-            </button>
-          )}
-        </div>
-      ))}
-
-      <h3 className="font-semibold mt-4">Completed</h3>
-      {logs.filter((l) => l.status === "COMPLETED").length === 0 && (
-        <p className="text-gray-500 text-sm mb-2">No completed tasks</p>
+      {/* Completed */}
+      {completedLogs.length > 0 && (
+        <>
+          <h3 className="font-semibold mb-3 text-lg">Completed</h3>
+          <div className="space-y-2">
+            {completedLogs.map((log) => (
+              <div
+                key={log.id}
+                className="p-3 border rounded bg-green-50"
+              >
+                <div className="font-medium line-through">
+                  {log.taskName}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Technician: {log.technicianName}
+                </div>
+                {log.durationMin != null && (
+                  <div className="text-sm text-gray-600">
+                    Duration: {log.durationMin} minutes
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {logs.filter((l) => l.status === "COMPLETED").map((l) => (
-        <div key={l.id} className="border p-2 text-gray-700">
-          {l.taskName} — {l.durationMin ?? 0} min
-        </div>
-      ))}
+      {!loading && logs.length === 0 && (
+        <div className="text-gray-500">No work logs yet.</div>
+      )}
+
+      {loading && (
+        <div className="text-gray-500">Loading work logs…</div>
+      )}
     </div>
   );
 }

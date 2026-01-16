@@ -7,83 +7,118 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//////////////////////////////////////////////////////
+// AUTH (ADMIN ONLY)
+//////////////////////////////////////////////////////
+
 model User {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
-  email        String    @unique
+  email        String   @unique
   passwordHash String
-  role         Role
-  active       Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  jobCards     JobCard[] @relation("AdvisorJobCards")
-  workLogs     WorkLog[]
+  role         Role     @default(ADMIN)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
+enum Role {
+  ADMIN
+}
+
+
+
+//////////////////////////////////////////////////////
+// CUSTOMER & VEHICLE
+//////////////////////////////////////////////////////
+
 model Customer {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
-  mobileNumber String    @unique
+  mobileNumber String   @unique
   address      String?
   gstNumber    String?
   notes        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  jobCards     JobCard[]
-  vehicles     Vehicle[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vehicles Vehicle[]
+  jobCards JobCard[]
 }
 
 model Vehicle {
-  id                 Int       @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   customerId         Int
-  vinNumber          String    @unique
+  vinNumber          String   @unique
   model              String
-  batchDetails       String?
-  batteryNumber      String?
-  chargerNumber      String?
-  motorNumber        String?
   registrationNumber String?
+  batteryNumber      String?
+  motorNumber        String?
+  chargerNumber      String?
   warrantyStatus     String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  jobCards           JobCard[]
-  customer           Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobCards JobCard[]
 
   @@index([customerId])
 }
 
+//////////////////////////////////////////////////////
+// JOB CARD (CORE)
+//////////////////////////////////////////////////////
+
 model JobCard {
-  id                 Int         @id @default(autoincrement())
-  jobCardNumber      String      @unique
+  id                 Int        @id @default(autoincrement())
+  jobCardNumber      String     @unique
   customerId         Int
   vehicleId          Int
-  serviceAdvisorId   Int
   serviceInDatetime  DateTime
   serviceType        ServiceType
-  status             JobStatus   @default(OPEN)
+  status             JobStatus  @default(OPEN)
   odometer           Int?
   batteryVoltage     Float?
-  nextServiceDueKm   Int?
-  nextServiceDueDate DateTime?
   remarks            String?
-  createdAt          DateTime    @default(now())
+  createdAt          DateTime   @default(now())
   closedAt           DateTime?
-  updatedAt          DateTime    @updatedAt
+  updatedAt          DateTime   @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id])
-  advisor  User     @relation("AdvisorJobCards", fields: [serviceAdvisorId], references: [id])
   vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
 
-  media       JobCardMedia[]
-  parts       PartsReplacement[]
-  complaints  ServiceComplaint[]
-  inspections VehicleInspection[]
-  workLogs    WorkLog[]
+  complaints   ServiceComplaint[]
+  inspections  VehicleInspection[]
+  parts        PartsReplacement[]
+  media        JobCardMedia[]
+  workLogs     WorkLog[]
 
   @@index([customerId])
   @@index([vehicleId])
-  @@index([serviceAdvisorId])
 }
+
+//////////////////////////////////////////////////////
+// WORK TRACKING (KEY FEATURE)
+//////////////////////////////////////////////////////
+
+model WorkLog {
+  id             Int        @id @default(autoincrement())
+  jobCardId      Int
+  taskName       String
+  technicianName String
+  status         WorkStatus @default(PENDING)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime   @default(now())
+
+  jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
+
+  @@index([jobCardId])
+}
+
+//////////////////////////////////////////////////////
+// INSPECTION
+//////////////////////////////////////////////////////
 
 model VehicleInspection {
   id            Int                 @id @default(autoincrement())
@@ -91,24 +126,32 @@ model VehicleInspection {
   componentName String
   condition     InspectionCondition
   createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
 
   @@index([jobCardId])
 }
 
+//////////////////////////////////////////////////////
+// COMPLAINTS
+//////////////////////////////////////////////////////
+
 model ServiceComplaint {
   id          Int               @id @default(autoincrement())
   jobCardId   Int
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
   category    ComplaintCategory
   workType    WorkType
   description String
+  createdAt   DateTime          @default(now())
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
+
+  @@index([jobCardId])
 }
+
+//////////////////////////////////////////////////////
+// PARTS
+//////////////////////////////////////////////////////
 
 model PartsReplacement {
   id                 Int        @id @default(autoincrement())
@@ -118,18 +161,21 @@ model PartsReplacement {
   action             PartAction
   warrantyApplicable Boolean
   createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
 
   @@index([jobCardId])
 }
 
+//////////////////////////////////////////////////////
+// MEDIA
+//////////////////////////////////////////////////////
+
 model JobCardMedia {
   id         Int       @id @default(autoincrement())
   jobCardId  Int
-  mediaType  MediaType
-  filePath   String
+  fileUrl    String
+  fileType   MediaType
   uploadedAt DateTime  @default(now())
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
@@ -137,30 +183,9 @@ model JobCardMedia {
   @@index([jobCardId])
 }
 
-model WorkLog {
-  id           Int         @id @default(autoincrement())
-  jobCardId    Int
-  technicianId Int?
-  taskName     String?
-  status       WorkStatus @default(PENDING)
-  startedAt    DateTime?
-  endedAt      DateTime?
-  durationMin  Int?
-  createdAt    DateTime   @default(now())
-
-  jobCard    JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
-  technician User?   @relation(fields: [technicianId], references: [id])
-
-  @@index([jobCardId])
-  @@index([technicianId])
-}
-
-
-enum Role {
-  ADMIN
-  ADVISOR
-  TECHNICIAN
-}
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
 
 enum JobStatus {
   OPEN
@@ -213,6 +238,6 @@ enum PartAction {
 
 enum WorkStatus {
   PENDING
-  ACTIVE
+  IN_PROGRESS
   COMPLETED
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -12,75 +12,76 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+    <Routes>
+      {/* PUBLIC */}
+      <Route path="/" element={<Login />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+      {/* DASHBOARD */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/new"
-          element={
-            <ProtectedRoute>
-              <CreateJobCard />
-            </ProtectedRoute>
-          }
-        />
+      {/* JOB CARD */}
+      <Route
+        path="/job-cards/new"
+        element={
+          <ProtectedRoute>
+            <CreateJobCard />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/:id"
-          element={
-            <ProtectedRoute>
-              <JobCardDetail />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/job-cards/:id"
+        element={
+          <ProtectedRoute>
+            <JobCardDetail />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/:id/inspection"
-          element={
-            <ProtectedRoute>
-              <AddInspection />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/job-cards/:id/inspection"
+        element={
+          <ProtectedRoute>
+            <AddInspection />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/:id/complaints"
-          element={
-            <ProtectedRoute>
-              <AddComplaint />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/job-cards/:id/complaints"
+        element={
+          <ProtectedRoute>
+            <AddComplaint />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/:id/parts"
-          element={
-            <ProtectedRoute>
-              <PartsReplacement />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/job-cards/:id/parts"
+        element={
+          <ProtectedRoute>
+            <PartsReplacement />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route
-          path="/job-cards/:id/work-log"
-          element={
-            <ProtectedRoute>
-              <WorkLog />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/job-cards/:id/work-log"
+        element={
+          <ProtectedRoute>
+            <WorkLog />
+          </ProtectedRoute>
+        }
+      />
 
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }

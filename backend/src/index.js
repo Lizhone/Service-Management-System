@@ -21,65 +21,82 @@ import jobCardMediaRoutes from "./routes/jobCardMediaRoutes.js";
 import { prismaMiddleware } from "./middleware/prismaMiddleware.js";
 import { authenticate } from "./middleware/authMiddleware.js";
 
-// Path setup for ES modules
+// ES module helpers
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Init app
 const app = express();
 
-// Global middleware
+// =====================================================
+// GLOBAL MIDDLEWARE
+// =====================================================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static uploads
+// =====================================================
+// PRISMA CONTEXT (MUST COME BEFORE ROUTES)
+// =====================================================
+app.use(prismaMiddleware);
+
+// =====================================================
+// STATIC FILES (MEDIA UPLOADS)
+// =====================================================
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "../", config.uploadPath))
 );
 
-// Health & Auth (public)
+// =====================================================
+// PUBLIC ROUTES (NO AUTH REQUIRED)
+// =====================================================
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 
-// Public job card search
-app.use("/job-cards/search", jobCardRoutes);
-
-// Prisma connection
-app.use(prismaMiddleware);
-
-// Everything below this requires authentication
+// =====================================================
+// AUTHENTICATION BOUNDARY
+// =====================================================
 app.use(authenticate);
 
-// Core APIs
+// =====================================================
+// PROTECTED DOMAIN ROUTES
+// =====================================================
+
+// Customers & Vehicles
 app.use("/api/customers", customerRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
-// Job cards
+// Job Cards & Related Modules
 app.use("/job-cards", jobCardRoutes);
-app.use(jobCardMediaRoutes);
-app.use(inspectionRoutes);
-app.use(complaintRoutes);
-app.use(partRoutes);
+app.use("/job-cards", jobCardMediaRoutes);
+app.use("/job-cards", inspectionRoutes);
+app.use("/job-cards", complaintRoutes);
+app.use("/job-cards", partRoutes);
 
-// Reports & logs
-app.use("/api/reports", reportingRoutes);
+// Work Logs
 app.use(workLogRoutes);
 
-// Start server
+// Reports
+app.use("/api/reports", reportingRoutes);
+
+// =====================================================
+// SERVER STARTUP
+// =====================================================
 const PORT = config.port || 4000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${config.nodeEnv}`);
-  console.log(`❤️  Health check: http://localhost:${PORT}/health`);
-}).on("error", (err) => {
-  if (err.code === "EADDRINUSE") {
-    console.error(`❌ Port ${PORT} already in use.`);
-    process.exit(1);
-  } else {
-    console.error("Server error:", err);
-    process.exit(1);
-  }
-});
+app
+  .listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌍 Environment: ${config.nodeEnv}`);
+    console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+  })
+  .on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`❌ Port ${PORT} already in use.`);
+      process.exit(1);
+    } else {
+      console.error("❌ Server error:", err);
+      process.exit(1);
+    }
+  });

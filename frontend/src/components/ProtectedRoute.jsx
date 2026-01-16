@@ -3,6 +3,10 @@ import { useAuth } from "../hooks/useAuth";
 
 export default function ProtectedRoute({ children }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/" replace />;
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }

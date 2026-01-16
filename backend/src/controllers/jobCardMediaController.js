@@ -2,6 +2,7 @@ import prisma from '../config/database.js';
 
 export const uploadMedia = async (req, res) => {
   const { jobCardId } = req.params;
+  const { type } = req.body;
 
   const jobCard = await prisma.jobCard.findUnique({
     where: { id: Number(jobCardId) },
@@ -9,16 +10,24 @@ export const uploadMedia = async (req, res) => {
 
   if (!jobCard) return res.status(404).json({ error: 'JobCard not found' });
 
-  const records = req.files.map((file) => ({
-    jobCardId: Number(jobCardId),
-    mediaType: file.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE',
-    filePath: file.path.replace(/\\/g, '/'),
-  }));
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file provided' });
+  }
 
-  const saved = await prisma.jobCardMedia.createMany({ data: records });
+  const validTypes = ['IMAGE', 'VIDEO'];
+  const fileType = validTypes.includes(type) ? type : 'IMAGE';
 
-  res.status(201).json({ count: saved.count });
+  const media = await prisma.jobCardMedia.create({
+    data: {
+      jobCardId: Number(jobCardId),
+      fileType: fileType,
+      fileUrl: req.file.path.replace(/\\/g, '/'),
+    },
+  });
+
+  res.status(201).json({ id: media.id, url: media.fileUrl, type: media.fileType });
 };
+
 export const getMedia = async (req, res) => {
   const { jobCardId } = req.params;
 

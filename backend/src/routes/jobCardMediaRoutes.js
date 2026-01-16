@@ -12,7 +12,7 @@ router.get('/job-cards/:jobCardId/media', authenticate, getMedia);
 router.post(
   '/job-cards/:jobCardId/media',
   authenticate,
-  uploadJobCardMedia.array('media', 10),
+  uploadJobCardMedia.single('file'),
   uploadMedia
 );
 
