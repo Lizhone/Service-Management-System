@@ -4,7 +4,9 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import { config } from "./config/env.js";
 
-// Routes
+// ===============================
+// ROUTES
+// ===============================
 import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
@@ -17,72 +19,78 @@ import reportingRoutes from "./routes/reportingRoutes.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
 import jobCardMediaRoutes from "./routes/jobCardMediaRoutes.js";
 
-// Middleware
+// ===============================
+// MIDDLEWARE
+// ===============================
 import { prismaMiddleware } from "./middleware/prismaMiddleware.js";
 import { authenticate } from "./middleware/authMiddleware.js";
 
-// ES module helpers
+// ===============================
+// ES MODULE HELPERS
+// ===============================
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Init app
+// ===============================
+// APP INIT
+// ===============================
 const app = express();
 
-// =====================================================
+// ===============================
 // GLOBAL MIDDLEWARE
-// =====================================================
+// ===============================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// =====================================================
-// PRISMA CONTEXT (MUST COME BEFORE ROUTES)
-// =====================================================
+// ===============================
+// PRISMA CONTEXT
+// ===============================
 app.use(prismaMiddleware);
 
-// =====================================================
+// ===============================
 // STATIC FILES (MEDIA UPLOADS)
-// =====================================================
+// ===============================
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "../", config.uploadPath))
 );
 
-// =====================================================
-// PUBLIC ROUTES (NO AUTH REQUIRED)
-// =====================================================
+// ===============================
+// PUBLIC ROUTES (NO AUTH)
+// ===============================
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 
-// =====================================================
+// ===============================
 // AUTHENTICATION BOUNDARY
-// =====================================================
+// ===============================
 app.use(authenticate);
 
-// =====================================================
+// ===============================
 // PROTECTED DOMAIN ROUTES
-// =====================================================
+// ===============================
 
 // Customers & Vehicles
 app.use("/api/customers", customerRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
-// Job Cards & Related Modules
-app.use("/job-cards", jobCardRoutes);
-app.use("/job-cards", jobCardMediaRoutes);
-app.use("/job-cards", inspectionRoutes);
-app.use("/job-cards", complaintRoutes);
-app.use("/job-cards", partRoutes);
+// Job Cards (single canonical base)
+app.use("/api/job-cards", jobCardRoutes);
+app.use("/api/job-cards", jobCardMediaRoutes);
+app.use("/api/job-cards", inspectionRoutes);
+app.use("/api/job-cards", complaintRoutes);
+app.use("/api/job-cards", partRoutes);
 
 // Work Logs
-app.use(workLogRoutes);
+app.use("/api", workLogRoutes);
 
 // Reports
 app.use("/api/reports", reportingRoutes);
 
-// =====================================================
+// ===============================
 // SERVER STARTUP
-// =====================================================
+// ===============================
 const PORT = config.port || 4000;
 
 app

@@ -7,7 +7,7 @@ const router = express.Router();
 router.post(
   "/job-cards/:id/complaints",
   authenticate,
-  authorizeRoles("ADMIN", "TECHNICIAN"),
+  authorizeRoles("ADMIN"),
   addComplaint
 );
 

@@ -1,6 +1,6 @@
 import prisma from "../../prisma/client.js";
 
-export const addParts = async (req, res) => {
+export const saveParts = async (req, res) => {
   const { id } = req.params;
   const parts = req.body;
 
@@ -15,13 +15,13 @@ export const addParts = async (req, res) => {
   }
 
   await prisma.partsReplacement.createMany({
-    data: parts.map(p => ({
+    data: parts.map((p) => ({
       jobCardId: Number(id),
       partName: p.partName,
       partNumber: p.partNumber || null,
       action: p.action,
-      warrantyApplicable: p.warrantyApplicable
-    }))
+      warrantyApplicable: p.warrantyApplicable,
+    })),
   });
 
   res.status(201).json({ message: "Parts added" });
@@ -32,7 +32,7 @@ export const getParts = async (req, res) => {
 
   const parts = await prisma.partsReplacement.findMany({
     where: { jobCardId: Number(id) },
-    orderBy: { createdAt: "asc" }
+    orderBy: { createdAt: "asc" },
   });
 
   res.json(parts);

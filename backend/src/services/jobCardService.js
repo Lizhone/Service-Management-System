@@ -47,7 +47,6 @@ export const createJobCard = async (input) => {
     data: {
       customerId: customer.id,
       vehicleId: vehicle.id,
-      serviceAdvisorId: input.serviceAdvisorId,
       serviceInDatetime: new Date(input.serviceInDatetime),
       serviceType: input.serviceType,
       remarks: input.remarks,
@@ -57,7 +56,30 @@ export const createJobCard = async (input) => {
     include: {
       customer: true,
       vehicle: true,
-      advisor: true,
+    },
+  });
+};
+
+// ----------------------------------
+// Get job card by ID
+// ----------------------------------
+export const getJobCardById = async (id) => {
+  const jobCardId = Number(id);
+
+  if (Number.isNaN(jobCardId)) {
+    throw new Error('Invalid job card id');
+  }
+
+  return prisma.jobCard.findUnique({
+    where: { id: jobCardId },
+    include: {
+      customer: true,
+      vehicle: true,
+      complaints: true,
+      inspections: true,
+      parts: true,
+      media: true,
+      workLogs: true,
     },
   });
 };
@@ -120,7 +142,6 @@ export const searchJobCards = async (filters) => {
     include: {
       customer: true,
       vehicle: true,
-      advisor: true,
     },
     orderBy: { createdAt: 'desc' },
   });

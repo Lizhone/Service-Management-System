@@ -10,44 +10,42 @@ import {
 const router = express.Router();
 
 /**
- * Get all work logs for a job card
- * Accessible by ADMIN, ADVISOR, TECHNICIAN
+ * GET /api/job-cards/:id/work-log
  */
 router.get(
   "/job-cards/:id/work-log",
   authenticate,
-  authorizeRoles("ADMIN", "ADVISOR", "TECHNICIAN"),
+  authorizeRoles("ADMIN"),
   getWorkLogsByJobCard
 );
 
 /**
- * Create a new work task for a job card
- * Only technicians can create tasks
+ * POST /api/job-cards/:id/work-log
  */
 router.post(
   "/job-cards/:id/work-log",
   authenticate,
-  authorizeRoles("TECHNICIAN"),
+  authorizeRoles("ADMIN"),
   createWorkLog
 );
 
 /**
- * Start a work task
+ * PATCH /api/work-log/:id/start
  */
 router.patch(
   "/work-log/:id/start",
   authenticate,
-  authorizeRoles("TECHNICIAN"),
+  authorizeRoles("ADMIN"),
   startWorkLog
 );
 
 /**
- * Complete a work task
+ * PATCH /api/work-log/:id/complete
  */
 router.patch(
   "/work-log/:id/complete",
   authenticate,
-  authorizeRoles("TECHNICIAN"),
+  authorizeRoles("ADMIN"),
   completeWorkLog
 );
 

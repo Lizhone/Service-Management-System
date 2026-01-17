@@ -1,6 +1,34 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import { authenticate } from "../middleware/authMiddleware.js";
+import { validate } from "../middleware/validate.js";
+import { createJobCardSchema } from "../validators/jobCard.schema.js";
+
+import {
+  createJobCard,
+  getJobCard,
+  updateJobStatus,
+} from "../controllers/jobCardController.js";
+
+import {
+  getInspection,
+  saveInspection,
+} from "../controllers/inspectionController.js";
+
+import {
+  getJobCardMedia,
+  uploadJobCardMedia,
+} from "../controllers/jobCardMediaController.js";
+
+import {
+  getParts,
+  addParts,
+} from "../controllers/partsController.js";
+
+import {
+  getComplaints,
+  createComplaint,
+} from "../controllers/complaintController.js";
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -9,7 +37,7 @@ const router = express.Router();
    PUBLIC ROUTES
 ================================ */
 
-// GET /job-cards/search
+// GET /api/job-cards/search
 router.get("/search", async (req, res) => {
   try {
     const { q = "" } = req.query;
@@ -34,34 +62,43 @@ router.get("/search", async (req, res) => {
 /* ================================
    AUTHENTICATION BOUNDARY
 ================================ */
+
 router.use(authenticate);
 
 /* ================================
-   PROTECTED ROUTES
+   CORE JOB CARD
 ================================ */
 
-// GET /job-cards/:id
-router.get("/:id", async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.post("/", validate(createJobCardSchema), createJobCard);
+router.get("/:id", getJobCard);
+router.patch("/:id/status", updateJobStatus);
 
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ error: "Invalid job card id" });
-    }
+/* ================================
+   INSPECTION
+================================ */
 
-    const jobCard = await prisma.jobCard.findUnique({
-      where: { id },
-    });
+router.get("/:id/inspection", getInspection);
+router.post("/:id/inspection", saveInspection);
 
-    if (!jobCard) {
-      return res.status(404).json({ error: "Job card not found" });
-    }
+/* ================================
+   COMPLAINTS
+================================ */
 
-    res.json(jobCard);
-  } catch (err) {
-    console.error("Get job card failed:", err);
-    res.status(500).json({ error: "Failed to load job card" });
-  }
-});
+router.get("/:id/complaints", getComplaints);
+router.post("/:id/complaints", createComplaint);
+
+/* ================================
+   PARTS
+================================ */
+
+router.get("/:id/parts", getParts);
+router.post("/:id/parts", addParts);
+
+/* ================================
+   MEDIA
+================================ */
+
+router.get("/:id/media", getJobCardMedia);
+router.post("/:id/media", uploadJobCardMedia);
 
 export default router;

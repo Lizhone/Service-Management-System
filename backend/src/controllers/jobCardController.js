@@ -3,16 +3,13 @@ import * as jobCardService from '../services/jobCardService.js';
 // POST /job-cards
 export const createJobCard = async (req, res) => {
   try {
-    if (!['ADMIN', 'ADVISOR'].includes(req.user.role)) {
+    if (req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
     console.log("CREATE JOB CARD PAYLOAD:", req.body);
 
-    const jobCard = await jobCardService.createJobCard({
-      ...req.body,
-      serviceAdvisorId: req.user.id,
-    });
+    const jobCard = await jobCardService.createJobCard(req.body);
 
     res.status(201).json(jobCard);
   } catch (err) {
@@ -35,7 +32,7 @@ export const getJobCard = async (req, res) => {
 // PATCH /job-cards/:id/status
 export const updateJobStatus = async (req, res) => {
   try {
-    if (!['ADMIN', 'TECHNICIAN'].includes(req.user.role)) {
+    if (req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Not authorized' });
     }
 

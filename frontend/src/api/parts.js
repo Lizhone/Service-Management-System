@@ -1,7 +1,9 @@
-import api from "./client";
+import client from "./client";
 
-export const fetchParts = (jobCardId) =>
-  api.get(`/job-cards/${jobCardId}/parts`);
+export const fetchParts = (jobCardId) => {
+  return client.get(`/job-cards/${jobCardId}/parts`);
+};
 
-export const saveParts = (jobCardId, parts) =>
-  api.post(`/job-cards/${jobCardId}/parts`, parts);
+export const saveParts = (jobCardId, parts) => {
+  return client.post(`/job-cards/${jobCardId}/parts`, parts);
+};

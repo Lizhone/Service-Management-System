@@ -12,7 +12,7 @@ const router = express.Router();
 router.post(
   "/job-cards/:id/inspection",
   authenticate,
-  authorizeRoles("TECHNICIAN", "ADMIN"),
+  authorizeRoles("ADMIN"),
   validate(vehicleInspectionSchema),
   addInspection
 );

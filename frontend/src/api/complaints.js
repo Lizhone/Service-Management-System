@@ -1,16 +1,7 @@
-import axios from "axios";
+import client from "./client";
 
-export const saveComplaint = (jobCardId, payload) => {
-  const token = localStorage.getItem("token");
+export const saveComplaint = (jobCardId, payload) =>
+  client.post(`/job-cards/${jobCardId}/complaints`, payload);
 
-  return axios.post(
-    `http://localhost:4000/job-cards/${jobCardId}/complaints`,
-    payload,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-};
+export const getComplaints = (jobCardId) =>
+  client.get(`/job-cards/${jobCardId}/complaints`);
