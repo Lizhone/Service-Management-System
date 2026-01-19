@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import client from "../api/client";
+
+const API_BASE_URL = "http://localhost:4000";
 
 export default function JobCardMedia({ jobCardId }) {
   const [media, setMedia] = useState([]);
@@ -9,12 +11,16 @@ export default function JobCardMedia({ jobCardId }) {
   const [file, setFile] = useState(null);
   const [mediaType, setMediaType] = useState("IMAGE");
 
+  /* =========================
+     LOAD MEDIA
+  ========================= */
   const loadMedia = async () => {
     try {
       setLoading(true);
       setError("");
+
       const res = await client.get(`/job-cards/${jobCardId}/media`);
-      setMedia(res.data || []);
+      setMedia(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Load media failed:", err);
       setError("Failed to load media");
@@ -29,6 +35,9 @@ export default function JobCardMedia({ jobCardId }) {
     }
   }, [jobCardId]);
 
+  /* =========================
+     FILE HANDLING
+  ========================= */
   const handleFileChange = (e) => {
     setFile(e.target.files?.[0] || null);
   };
@@ -41,18 +50,18 @@ export default function JobCardMedia({ jobCardId }) {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("type", mediaType);
+    formData.append("fileType", mediaType); // must match backend
 
     try {
       setUploading(true);
       setError("");
+
       await client.post(
         `/job-cards/${jobCardId}/media`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
+
       setFile(null);
       setMediaType("IMAGE");
       loadMedia();
@@ -66,6 +75,9 @@ export default function JobCardMedia({ jobCardId }) {
 
   if (!jobCardId) return null;
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold mb-4">Job Card Media</h3>
@@ -115,41 +127,57 @@ export default function JobCardMedia({ jobCardId }) {
         )}
       </div>
 
-      {/* Gallery */}
+      {/* Media Gallery */}
       {loading ? (
         <div className="text-gray-500">Loading media...</div>
       ) : media.length === 0 ? (
         <div className="text-gray-500 text-sm">No media uploaded yet.</div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((m) => (
-            <div key={m.id} className="border rounded overflow-hidden bg-gray-100">
-              <div className="aspect-square bg-gray-200">
-                {m.type === "IMAGE" && (
-                  <img
-                    src={`http://localhost:4000/${m.url}`}
-                    alt="Media"
-                    className="w-full h-full object-cover"
-                  />
-                )}
+          {media.map((m) => {
+            const src = m.fileUrl
+              ? `${API_BASE_URL}${m.fileUrl}`
+              : null;
 
-                {m.type === "VIDEO" && (
-                  <video controls className="w-full h-full object-cover">
-                    <source src={`http://localhost:4000/${m.url}`} />
-                  </video>
-                )}
-              </div>
+            return (
+              <div
+                key={m.id}
+                className="border rounded overflow-hidden bg-gray-100"
+              >
+                <div className="aspect-square bg-gray-200">
+                  {m.fileType === "IMAGE" && src && (
+                    <img
+                      src={src}
+                      alt="Job Card Media"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
 
-              <div className="p-2 text-xs text-gray-600 bg-white">
-                <div className="truncate font-medium">
-                  {m.url.split("/").pop()}
+                  {m.fileType === "VIDEO" && src && (
+                    <video
+                      controls
+                      className="w-full h-full object-cover"
+                    >
+                      <source src={src} />
+                    </video>
+                  )}
                 </div>
-                <div>
-                  {new Date(m.createdAt).toLocaleDateString()}
+
+                <div className="p-2 text-xs text-gray-600 bg-white">
+                  <div className="truncate font-medium">
+                    {m.fileUrl
+                      ? m.fileUrl.split("/").pop()
+                      : "unknown-file"}
+                  </div>
+                  <div>
+                    {m.uploadedAt
+                      ? new Date(m.uploadedAt).toLocaleDateString()
+                      : ""}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -20,7 +20,7 @@ export default function WorkLog() {
       setLoading(true);
       setError("");
 
-      const res = await client.get(`/api/job-cards/${id}/work-log`);
+      const res = await client.get(`/job-cards/${id}/work-log`);
       setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(
@@ -44,7 +44,7 @@ export default function WorkLog() {
     try {
       setError("");
 
-      await client.post(`/api/job-cards/${id}/work-log`, {
+      await client.post(`/job-cards/${id}/work-log`, {
         taskName,
         technicianName,
       });
@@ -65,7 +65,7 @@ export default function WorkLog() {
   const start = async (logId) => {
     try {
       setError("");
-      await client.patch(`/api/work-log/${logId}/start`);
+      await client.patch(`/work-log/${logId}/start`);
       load();
     } catch (err) {
       console.error(
@@ -80,7 +80,7 @@ export default function WorkLog() {
   const complete = async (logId) => {
     try {
       setError("");
-      await client.patch(`/api/work-log/${logId}/complete`);
+      await client.patch(`/work-log/${logId}/complete`);
       load();
     } catch (err) {
       console.error(

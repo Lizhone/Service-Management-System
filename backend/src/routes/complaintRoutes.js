@@ -1,14 +1,29 @@
 import express from "express";
-import { addComplaint } from "../controllers/complaintController.js";
+import {
+  getComplaints,
+  createComplaint,
+} from "../controllers/complaintController.js";
 import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+/* ================================
+   COMPLAINT ROUTES
+================================ */
+
+// GET /:id/complaints
+router.get(
+  "/:id/complaints",
+  authenticate,
+  getComplaints
+);
+
+// POST /:id/complaints
 router.post(
-  "/job-cards/:id/complaints",
+  "/:id/complaints",
   authenticate,
   authorizeRoles("ADMIN"),
-  addComplaint
+  createComplaint
 );
 
 export default router;

@@ -11,8 +11,8 @@ import {
 } from "../controllers/jobCardController.js";
 
 import {
+  addInspection,
   getInspection,
-  saveInspection,
 } from "../controllers/inspectionController.js";
 
 import {
@@ -22,7 +22,7 @@ import {
 
 import {
   getParts,
-  addParts,
+  saveParts,
 } from "../controllers/partsController.js";
 
 import {
@@ -34,71 +34,55 @@ const prisma = new PrismaClient();
 const router = express.Router();
 
 /* ================================
-   PUBLIC ROUTES
+   PUBLIC
 ================================ */
-
-// GET /api/job-cards/search
 router.get("/search", async (req, res) => {
   try {
     const { q = "" } = req.query;
 
     const jobCards = await prisma.jobCard.findMany({
       where: {
-        jobCardNumber: {
-          contains: q,
-          mode: "insensitive",
-        },
+        jobCardNumber: { contains: q, mode: "insensitive" },
       },
       orderBy: { createdAt: "desc" },
     });
 
     res.json(jobCards);
-  } catch (err) {
-    console.error("Job card search failed:", err);
+  } catch (error) {
     res.status(500).json({ error: "Search failed" });
   }
 });
 
 /* ================================
-   AUTHENTICATION BOUNDARY
+   AUTH
 ================================ */
-
 router.use(authenticate);
 
 /* ================================
-   CORE JOB CARD
+   JOB CARD
 ================================ */
-
 router.post("/", validate(createJobCardSchema), createJobCard);
 router.get("/:id", getJobCard);
 router.patch("/:id/status", updateJobStatus);
 
 /* ================================
-   INSPECTION
+   INSPECTION (FIXED)
 ================================ */
-
 router.get("/:id/inspection", getInspection);
-router.post("/:id/inspection", saveInspection);
+router.post("/:id/inspection", addInspection);
 
 /* ================================
    COMPLAINTS
 ================================ */
-
 router.get("/:id/complaints", getComplaints);
 router.post("/:id/complaints", createComplaint);
 
 /* ================================
    PARTS
 ================================ */
-
 router.get("/:id/parts", getParts);
-router.post("/:id/parts", addParts);
+router.post("/:id/parts", saveParts);
 
-/* ================================
-   MEDIA
-================================ */
 
-router.get("/:id/media", getJobCardMedia);
-router.post("/:id/media", uploadJobCardMedia);
 
 export default router;

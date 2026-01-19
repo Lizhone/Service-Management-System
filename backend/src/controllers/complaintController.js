@@ -1,15 +1,15 @@
-// src/controllers/complaintController.js
+import prisma from "../../prisma/client.js";
 
 export const createComplaint = async (req, res) => {
   try {
     const { id } = req.params;
-    const { description, category = "GENERAL", workType = "GENERAL" } = req.body;
+    const { description, category, workType } = req.body;
 
     if (!description) {
       return res.status(400).json({ error: "Description is required" });
     }
 
-    const complaint = await req.prisma.serviceComplaint.create({
+    const complaint = await prisma.serviceComplaint.create({
       data: {
         jobCardId: Number(id),
         description,
@@ -20,23 +20,18 @@ export const createComplaint = async (req, res) => {
 
     res.status(201).json(complaint);
   } catch (err) {
-    console.error("Create complaint failed:", err);
+    console.error("Add complaint failed:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
 export const getComplaints = async (req, res) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    const complaints = await req.prisma.serviceComplaint.findMany({
-      where: { jobCardId: Number(id) },
-      orderBy: { createdAt: "asc" },
-    });
+  const complaints = await prisma.serviceComplaint.findMany({
+    where: { jobCardId: Number(id) },
+    orderBy: { createdAt: "asc" },
+  });
 
-    res.json(complaints);
-  } catch (err) {
-    console.error("Get complaints failed:", err);
-    res.status(500).json({ error: err.message });
-  }
+  res.json(complaints);
 };

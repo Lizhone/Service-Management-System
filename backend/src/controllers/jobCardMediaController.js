@@ -1,50 +1,32 @@
-import prisma from "../prisma/client.js";
-import path from "path";
-import fs from "fs";
+import prisma from "../../prisma/client.js";
 
-/**
- * GET /api/job-cards/:id/media
- */
-export const getJobCardMedia = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const media = await prisma.jobCardMedia.findMany({
-      where: { jobCardId: Number(id) },
-      orderBy: { createdAt: "desc" },
-    });
-
-    res.json(media);
-  } catch (err) {
-    console.error("Get job card media failed:", err);
-    res.status(500).json({ error: "Failed to load media" });
-  }
-};
-
-/**
- * POST /api/job-cards/:id/media
- * multipart/form-data
- */
 export const uploadJobCardMedia = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { type = "IMAGE" } = req.body;
-
     if (!req.file) {
-      return res.status(400).json({ error: "File is required" });
+      return res.status(400).json({ error: "File required" });
     }
+
+    const fileType =
+      req.file.mimetype.startsWith("image") ? "IMAGE" : "VIDEO";
 
     const media = await prisma.jobCardMedia.create({
       data: {
-        jobCardId: Number(id),
-        type,
-        url: req.file.path.replace(/\\/g, "/"),
+        jobCardId: Number(req.params.id),
+        fileUrl: `/uploads/job-cards/${req.params.id}/${req.file.filename}`,
+        fileType,
       },
     });
 
     res.status(201).json(media);
-  } catch (err) {
-    console.error("Upload job card media failed:", err);
-    res.status(500).json({ error: "Media upload failed" });
+  } catch (error) {
+    console.error("Media upload failed:", error);
+    res.status(500).json({ error: "Upload failed" });
   }
+};
+
+export const getJobCardMedia = async (req, res) => {
+  const media = await prisma.jobCardMedia.findMany({
+    where: { jobCardId: Number(req.params.id) },
+  });
+  res.json(media);
 };

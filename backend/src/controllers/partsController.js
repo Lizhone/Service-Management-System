@@ -1,7 +1,6 @@
-import prisma from "../prisma/client.js";
+import prisma from "../../prisma/client.js";
 
-
-export const addParts = async (req, res) => {
+export const saveParts = async (req, res) => {
   try {
     const jobCardId = Number(req.params.id);
     const parts = req.body;

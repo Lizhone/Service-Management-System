@@ -1,10 +1,13 @@
 import express from "express";
-import { addParts, getParts } from "../controllers/partsController.js";
+import { saveParts, getParts } from "../controllers/partsController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/job-cards/:id/parts", authenticate, addParts);
-router.get("/job-cards/:id/parts", authenticate, getParts);
+// GET /:id/parts
+router.get("/:id/parts", authenticate, getParts);
+
+// POST /:id/parts
+router.post("/:id/parts", authenticate, saveParts);
 
 export default router;

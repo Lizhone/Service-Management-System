@@ -1,72 +1,87 @@
-import prisma from '../config/database.js';
+import prisma from "../../prisma/client.js";
 
-export async function getWorkLogsByJobCard(req, res) {
-  const jobCardId = Number(req.params.id);
+export const getWorkLogsByJobCard = async (req, res) => {
+  try {
+    const jobCardId = Number(req.params.id);
 
-  const logs = await prisma.workLog.findMany({
-    where: { jobCardId },
-    orderBy: { createdAt: "desc" },
-  });
+    const logs = await prisma.workLog.findMany({
+      where: { jobCardId },
+      orderBy: { createdAt: "desc" },
+    });
 
-  res.json(logs);
-}
-
-export async function createWorkLog(req, res) {
-  const jobCardId = Number(req.params.id);
-  const { taskName, technicianName } = req.body;
-
-  const jobCard = await prisma.jobCard.findUnique({
-    where: { id: jobCardId },
-  });
-
-  if (!jobCard) {
-    return res.status(404).json({ error: 'JobCard not found' });
+    res.json(logs);
+  } catch (error) {
+    console.error("Fetch work logs failed:", error);
+    res.status(500).json({ error: "Failed to fetch work logs" });
   }
+};
 
-  const log = await prisma.workLog.create({
-    data: {
-      jobCardId,
-      taskName,
-      technicianName,
-      status: "PENDING"
-    },
-  });
+export const createWorkLog = async (req, res) => {
+  try {
+    const jobCardId = Number(req.params.id);
+    const { taskName, technicianName } = req.body;
 
-  res.status(201).json(log);
-}
+    if (!taskName || !technicianName) {
+      return res.status(400).json({ error: "taskName and technicianName required" });
+    }
 
-export async function startWorkLog(req, res) {
-  const id = Number(req.params.id);
+    const log = await prisma.workLog.create({
+      data: {
+        jobCardId,
+        taskName,
+        technicianName,
+      },
+    });
 
-  const log = await prisma.workLog.findUnique({ where: { id } });
-  if (!log) {
-    return res.status(404).json({ error: 'WorkLog not found' });
+    res.status(201).json(log);
+  } catch (error) {
+    console.error("Create work log failed:", error);
+    res.status(500).json({ error: "Failed to create work log" });
   }
+};
 
-  const updated = await prisma.workLog.update({
-    where: { id },
-    data: { status: "IN_PROGRESS", startedAt: new Date() },
-  });
+export const startWorkLog = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
 
-  res.json(updated);
-}
+    const log = await prisma.workLog.findUnique({ where: { id } });
+    if (!log) {
+      return res.status(404).json({ error: "Work log not found" });
+    }
 
-export async function completeWorkLog(req, res) {
-  const id = Number(req.params.id);
+    const updated = await prisma.workLog.update({
+      where: { id },
+      data: { status: "IN_PROGRESS", startedAt: new Date() },
+    });
 
-  const log = await prisma.workLog.findUnique({ where: { id } });
-  if (!log) {
-    return res.status(404).json({ error: 'WorkLog not found' });
+    res.json(updated);
+  } catch (error) {
+    console.error("Start work log failed:", error);
+    res.status(500).json({ error: "Failed to start work log" });
   }
+};
 
-  if (log.status !== "IN_PROGRESS") {
-    return res.status(400).json({ error: "Task must be in IN_PROGRESS status to complete." });
+export const completeWorkLog = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    const log = await prisma.workLog.findUnique({ where: { id } });
+    if (!log) {
+      return res.status(404).json({ error: "Work log not found" });
+    }
+
+    if (log.status !== "IN_PROGRESS") {
+      return res.status(400).json({ error: "Work log must be IN_PROGRESS to complete" });
+    }
+
+    const updated = await prisma.workLog.update({
+      where: { id },
+      data: { status: "COMPLETED", completedAt: new Date() },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Complete work log failed:", error);
+    res.status(500).json({ error: "Failed to complete work log" });
   }
-
-  const updated = await prisma.workLog.update({
-    where: { id },
-    data: { status: "COMPLETED", completedAt: new Date() },
-  });
-
-  res.json(updated);
-}
+};

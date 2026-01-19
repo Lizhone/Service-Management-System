@@ -1,19 +1,31 @@
-import express from 'express';
-import { uploadJobCardMedia } from '../config/multer.js';
-import { uploadMedia, getMedia } from '../controllers/jobCardMediaController.js';
-import { authenticate } from '../middleware/authMiddleware.js';
+import express from "express";
+import {
+  getJobCardMedia,
+  uploadJobCardMedia,
+} from "../controllers/jobCardMediaController.js";
+import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
+import { uploadJobCardMedia as multerUpload } from "../config/multer.js";
 
 const router = express.Router();
 
-// Get media for a job card
-router.get('/job-cards/:jobCardId/media', authenticate, getMedia);
+/* ================================
+   JOB CARD MEDIA
+================================ */
 
-// Upload images/videos for a job card
-router.post(
-  '/job-cards/:jobCardId/media',
+// GET /:id/media
+router.get(
+  "/:id/media",
   authenticate,
-  uploadJobCardMedia.single('file'),
-  uploadMedia
+  getJobCardMedia
+);
+
+// POST /:id/media
+router.post(
+  "/:id/media",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  multerUpload.single("file"),
+  uploadJobCardMedia
 );
 
 export default router;

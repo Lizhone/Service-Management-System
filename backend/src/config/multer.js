@@ -55,7 +55,7 @@ export const uploadServiceJobImage = multer({
 // --------------------------------------------------
 const jobCardStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const jobCardId = req.params.jobCardId;
+    const jobCardId = req.params.id;
     const dir = path.join(uploadRoot, 'job-cards', jobCardId);
 
     fs.mkdirSync(dir, { recursive: true });

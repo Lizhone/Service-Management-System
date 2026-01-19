@@ -49,7 +49,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(prismaMiddleware);
 
 // ===============================
-// STATIC FILES (MEDIA UPLOADS)
+// ✅ STATIC FILES (MEDIA UPLOADS) — PUBLIC
+// THIS IS REQUIRED FOR <img src="..."> TO WORK
 // ===============================
 app.use(
   "/uploads",
