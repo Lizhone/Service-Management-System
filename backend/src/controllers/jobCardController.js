@@ -1,4 +1,5 @@
 import * as jobCardService from '../services/jobCardService.js';
+import prisma from '../../prisma/client.js';
 
 // POST /job-cards
 export const createJobCard = async (req, res) => {
@@ -49,6 +50,28 @@ export const searchJobCards = async (req, res) => {
   try {
     const results = await jobCardService.searchJobCards(req.query);
     res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /job-cards/:jobCardId/media/:mediaId
+export const getJobCardMediaById = async (req, res) => {
+  try {
+    const { jobCardId, mediaId } = req.params;
+
+    const media = await prisma.jobCardMedia.findFirst({
+      where: {
+        id: Number(mediaId),
+        jobCardId: Number(jobCardId),
+      },
+    });
+
+    if (!media) {
+      return res.status(404).json({ error: 'Media not found' });
+    }
+
+    res.json(media);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

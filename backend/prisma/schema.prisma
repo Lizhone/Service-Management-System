@@ -24,6 +24,11 @@ model User {
 
 enum Role {
   ADMIN
+  CUSTOMER
+  SERVICE_ADVISOR
+  TECHNICIAN
+  SUPPLY_CHAIN
+  SALES
 }
 
 
@@ -172,11 +177,12 @@ model PartsReplacement {
 //////////////////////////////////////////////////////
 
 model JobCardMedia {
-  id         Int       @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   jobCardId  Int
   fileUrl    String
   fileType   MediaType
-  uploadedAt DateTime  @default(now())
+  context    MediaContext   @default(GENERAL)
+  uploadedAt DateTime       @default(now())
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
 
@@ -240,4 +246,11 @@ enum WorkStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
+}
+
+enum MediaContext {
+  INSPECTION
+  COMPLAINT
+  PART_REPLACEMENT
+  GENERAL
 }

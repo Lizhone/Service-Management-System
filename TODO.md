@@ -1,13 +1,4 @@
-# Job Card Media Upload Fix
-
-## Tasks
-- [x] Fix multer config to use req.params.id instead of jobCardId
-- [x] Update controller to set correct fileUrl with subdirectory
-- [x] Add multer middleware to the POST route in jobCardMediaRoutes.js
-- [x] Remove duplicate media routes from jobCardRoutes.js to avoid conflicts
-
-## Files to Edit
-- backend/src/config/multer.js
-- backend/src/controllers/jobCardMediaController.js
-- backend/src/routes/jobCardMediaRoutes.js
-- backend/src/routes/jobCardRoutes.js
+- [x] Identify the route that the "Open" button navigates to (/job-cards/:id)
+- [x] Locate the corresponding <Route> definition in App.jsx
+- [x] Update ONLY the ProtectedRoute roles for that route so that ADMIN is allowed
+- [x] Ensure role comparison is case-sensitive and matches backend values (ADMIN, SERVICE_ADVISOR, TECHNICIAN)

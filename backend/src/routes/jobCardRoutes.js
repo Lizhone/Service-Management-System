@@ -1,5 +1,6 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 import { authenticate } from "../middleware/authMiddleware.js";
 import { validate } from "../middleware/validate.js";
 import { createJobCardSchema } from "../validators/jobCard.schema.js";
@@ -8,6 +9,7 @@ import {
   createJobCard,
   getJobCard,
   updateJobStatus,
+  getJobCardMediaById,
 } from "../controllers/jobCardController.js";
 
 import {
@@ -83,6 +85,9 @@ router.post("/:id/complaints", createComplaint);
 router.get("/:id/parts", getParts);
 router.post("/:id/parts", saveParts);
 
-
+/* ================================
+   MEDIA
+================================ */
+router.get("/:jobCardId/media/:mediaId", getJobCardMediaById);
 
 export default router;

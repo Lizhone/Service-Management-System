@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import client from "../api/client";
+import MediaList from "./MediaList";
 
 const API_BASE_URL = "http://localhost:4000";
 
@@ -10,6 +11,7 @@ export default function JobCardMedia({ jobCardId }) {
   const [error, setError] = useState("");
   const [file, setFile] = useState(null);
   const [mediaType, setMediaType] = useState("IMAGE");
+  const [mediaContext, setMediaContext] = useState("GENERAL");
 
   /* =========================
      LOAD MEDIA
@@ -51,6 +53,7 @@ export default function JobCardMedia({ jobCardId }) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("fileType", mediaType); // must match backend
+    formData.append("context", mediaContext);
 
     try {
       setUploading(true);
@@ -64,6 +67,7 @@ export default function JobCardMedia({ jobCardId }) {
 
       setFile(null);
       setMediaType("IMAGE");
+      setMediaContext("GENERAL");
       loadMedia();
     } catch (err) {
       console.error("Upload failed:", err);
@@ -111,6 +115,18 @@ export default function JobCardMedia({ jobCardId }) {
             <option value="VIDEO">Video</option>
           </select>
 
+          <select
+            value={mediaContext}
+            onChange={(e) => setMediaContext(e.target.value)}
+            disabled={uploading}
+            className="border rounded px-3 py-2"
+          >
+            <option value="GENERAL">General</option>
+            <option value="INSPECTION">Inspection</option>
+            <option value="COMPLAINT">Complaint</option>
+            <option value="PART_REPLACEMENT">Part Replacement</option>
+          </select>
+
           <button
             onClick={handleUpload}
             disabled={uploading || !file}
@@ -130,55 +146,8 @@ export default function JobCardMedia({ jobCardId }) {
       {/* Media Gallery */}
       {loading ? (
         <div className="text-gray-500">Loading media...</div>
-      ) : media.length === 0 ? (
-        <div className="text-gray-500 text-sm">No media uploaded yet.</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((m) => {
-            const src = m.fileUrl
-              ? `${API_BASE_URL}${m.fileUrl}`
-              : null;
-
-            return (
-              <div
-                key={m.id}
-                className="border rounded overflow-hidden bg-gray-100"
-              >
-                <div className="aspect-square bg-gray-200">
-                  {m.fileType === "IMAGE" && src && (
-                    <img
-                      src={src}
-                      alt="Job Card Media"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-
-                  {m.fileType === "VIDEO" && src && (
-                    <video
-                      controls
-                      className="w-full h-full object-cover"
-                    >
-                      <source src={src} />
-                    </video>
-                  )}
-                </div>
-
-                <div className="p-2 text-xs text-gray-600 bg-white">
-                  <div className="truncate font-medium">
-                    {m.fileUrl
-                      ? m.fileUrl.split("/").pop()
-                      : "unknown-file"}
-                  </div>
-                  <div>
-                    {m.uploadedAt
-                      ? new Date(m.uploadedAt).toLocaleDateString()
-                      : ""}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <MediaList jobCardId={jobCardId} media={media} />
       )}
     </div>
   );
