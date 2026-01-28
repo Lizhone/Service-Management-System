@@ -18,6 +18,8 @@ import partRoutes from "./routes/partRoutes.js";
 import reportingRoutes from "./routes/reportingRoutes.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
 import jobCardMediaRoutes from "./routes/jobCardMediaRoutes.js";
+import customerAuthRoutes from "./routes/customerAuthRoutes.js";
+import customerMeRoutes from "./routes/customerMeRoutes.js";
 
 // ===============================
 // MIDDLEWARE
@@ -67,6 +69,7 @@ app.use("/auth", authRoutes);
 // AUTHENTICATION BOUNDARY
 // ===============================
 app.use(authenticate);
+app.use("/api/auth/customer", customerAuthRoutes);
 
 // ===============================
 // PROTECTED DOMAIN ROUTES
@@ -88,6 +91,9 @@ app.use("/api", workLogRoutes);
 
 // Reports
 app.use("/api/reports", reportingRoutes);
+
+// Customers Me
+app.use("/api/customers/me", customerMeRoutes);
 
 // ===============================
 // SERVER STARTUP

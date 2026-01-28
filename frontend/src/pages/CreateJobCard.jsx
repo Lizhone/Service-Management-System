@@ -1,160 +1,285 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useJobCards } from "../hooks/useJobCards";
+import api from "../api/client";
+import "./jobcard/JobCardForm.css";
 
 export default function CreateJobCard() {
   const navigate = useNavigate();
-  const { create } = useJobCards();
 
-  const [serviceType, setServiceType] = useState("GENERAL");
-  const [serviceInDatetime, setServiceInDatetime] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerMobile, setCustomerMobile] = useState("");
-  const [vinNumber, setVinNumber] = useState("");
-  const [model, setModel] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [mode, setMode] = useState("new"); // "new" or "existing"
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+
+  const [form, setForm] = useState({
+    serviceType: "GENERAL",
+    serviceInDatetime: "",
+    customerId: "",
+    customerName: "",
+    customerPhone: "",
+    vehicleId: "",
+    vin: "",
+    vehicleModel: "",
+    remarks: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Load existing customers and vehicles
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [customersRes, vehiclesRes] = await Promise.all([
+          api.get("/customers"),
+          api.get("/vehicles"),
+        ]);
+
+        // DEFENSIVE parsing for customers
+        const customersData = Array.isArray(customersRes.data)
+          ? customersRes.data
+          : Array.isArray(customersRes.data?.data)
+          ? customersRes.data.data
+          : Array.isArray(customersRes.data?.customers)
+          ? customersRes.data.customers
+          : [];
+
+        // DEFENSIVE parsing for vehicles
+        const vehiclesData = Array.isArray(vehiclesRes.data)
+          ? vehiclesRes.data
+          : Array.isArray(vehiclesRes.data?.data)
+          ? vehiclesRes.data.data
+          : Array.isArray(vehiclesRes.data?.vehicles)
+          ? vehiclesRes.data.vehicles
+          : [];
+
+        setCustomers(customersData);
+        setVehicles(vehiclesData);
+      } catch (error) {
+        console.error("Failed to load customers/vehicles:", error);
+        setCustomers([]);
+        setVehicles([]);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    setForm({
+      serviceType: "GENERAL",
+      serviceInDatetime: "",
+      customerId: "",
+      customerName: "",
+      customerPhone: "",
+      vehicleId: "",
+      vin: "",
+      vehicleModel: "",
+      remarks: "",
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    if (!customerName.trim() || !customerMobile.trim() || !vinNumber.trim() || !model.trim() || !serviceInDatetime) {
-      setError("All fields are required");
-      return;
-    }
-
-    const payload = {
-      serviceType,
-      status: "OPEN",
-      serviceInDatetime: new Date(serviceInDatetime).toISOString(),
-      customerData: { name: customerName, mobileNumber: customerMobile },
-      vehicleData: { vinNumber, model },
-      remarks: remarks || undefined,
-    };
 
     try {
-      setLoading(true);
-      const res = await create(payload);
-      alert("Job card created successfully");
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("Create failed:", err.response?.data || err.message);
-      setError(err.response?.data?.error || "Failed to create job card");
-    } finally {
-      setLoading(false);
+      let payload;
+      let endpoint;
+
+      if (mode === "existing") {
+        if (!form.customerId || !form.vehicleId) {
+          alert("Please select both customer and vehicle");
+          return;
+        }
+
+        payload = {
+          customerId: Number(form.customerId),
+          vehicleId: Number(form.vehicleId),
+          serviceType: form.serviceType,
+          serviceInDatetime: form.serviceInDatetime,
+          remarks: form.remarks,
+        };
+
+        endpoint = "/job-cards";
+      } else {
+        payload = {
+          serviceType: form.serviceType,
+          serviceInDatetime: form.serviceInDatetime,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          vin: form.vin,
+          vehicleModel: form.vehicleModel,
+          remarks: form.remarks,
+        };
+
+        endpoint = "/job-cards/create-with-details";
+      }
+
+      await api.post(endpoint, payload);
+
+      alert("Job Card created successfully");
+      navigate("/dashboard/admin");
+    } catch (error) {
+      console.error("Job card creation failed", error);
+      alert(error.response?.data?.message || "Failed to create job card");
     }
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h2 className="text-xl font-bold mb-4">Create Job Card</h2>
+    <div className="jobcard-page">
+      <div className="jobcard-container">
+        <h1>Create Job Card</h1>
+        <p>Fill in service, customer, and vehicle details</p>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium mb-1">Service Type</label>
-          <select
-            value={serviceType}
-            onChange={(e) => setServiceType(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          >
-            <option value="GENERAL">General</option>
-            <option value="COMPLAINT">Complaint</option>
-            <option value="BATTERY">Battery</option>
-            <option value="CHARGER">Charger</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Service Date & Time</label>
-          <input
-            type="datetime-local"
-            required
-            value={serviceInDatetime}
-            onChange={(e) => setServiceInDatetime(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Customer Name</label>
-          <input
-            required
-            placeholder="Customer Name"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Customer Mobile</label>
-          <input
-            required
-            placeholder="Customer Mobile"
-            value={customerMobile}
-            onChange={(e) => setCustomerMobile(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">VIN Number</label>
-          <input
-            required
-            placeholder="VIN"
-            value={vinNumber}
-            onChange={(e) => setVinNumber(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Model</label>
-          <input
-            required
-            placeholder="Model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Remarks (Optional)</label>
-          <textarea
-            placeholder="Additional remarks"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            className="border w-full px-3 py-2 rounded"
-            rows={3}
-          />
-        </div>
-
-        <div className="flex gap-2 pt-4">
+        {/* Mode Selection */}
+        <div className="mode-selection">
           <button
-            type="submit"
-            disabled={loading}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 flex-1"
+            type="button"
+            className={mode === "new" ? "mode-btn active" : "mode-btn"}
+            onClick={() => handleModeChange("new")}
           >
-            {loading ? "Creating..." : "Create Job Card"}
+            Create New Customer & Vehicle
           </button>
           <button
             type="button"
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+            className={mode === "existing" ? "mode-btn active" : "mode-btn"}
+            onClick={() => handleModeChange("existing")}
           >
-            Cancel
+            Use Existing Customer & Vehicle
           </button>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="jobcard-form">
+          {/* Service */}
+          <div className="form-section">
+            <h3>Service Information</h3>
+
+            <label>Service Type</label>
+            <select
+              name="serviceType"
+              value={form.serviceType}
+              onChange={handleChange}
+              required
+            >
+              <option value="GENERAL">General</option>
+              <option value="COMPLAINT">Complaint</option>
+              <option value="BATTERY">Battery</option>
+              <option value="CHARGER">Charger</option>
+            </select>
+
+            <label>Service Date & Time</label>
+            <input
+              type="datetime-local"
+              name="serviceInDatetime"
+              value={form.serviceInDatetime}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {/* Customer */}
+          <div className="form-section">
+            <h3>Customer Information</h3>
+
+            {mode === "existing" ? (
+              <>
+                <label>Select Customer</label>
+                <select
+                  name="customerId"
+                  value={form.customerId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Choose a customer...</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name} - {customer.mobileNumber}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <>
+                <label>Customer Name</label>
+                <input
+                  name="customerName"
+                  value={form.customerName}
+                  onChange={handleChange}
+                  required
+                />
+
+                <label>Customer Phone</label>
+                <input
+                  name="customerPhone"
+                  value={form.customerPhone}
+                  onChange={handleChange}
+                  required
+                />
+              </>
+            )}
+          </div>
+
+          {/* Vehicle */}
+          <div className="form-section">
+            <h3>Vehicle Information</h3>
+
+            {mode === "existing" ? (
+              <>
+                <label>Select Vehicle</label>
+                <select
+                  name="vehicleId"
+                  value={form.vehicleId}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Choose a vehicle...</option>
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.model} - {vehicle.vinNumber}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <>
+                <label>VIN Number</label>
+                <input
+                  name="vin"
+                  value={form.vin}
+                  onChange={handleChange}
+                  required
+                />
+
+                <label>Vehicle Model</label>
+                <input
+                  name="vehicleModel"
+                  value={form.vehicleModel}
+                  onChange={handleChange}
+                  required
+                />
+              </>
+            )}
+
+            <label>Remarks</label>
+            <textarea
+              name="remarks"
+              value={form.remarks}
+              onChange={handleChange}
+              rows="3"
+            />
+          </div>
+
+          <div className="form-actions">
+            <button type="button" onClick={() => navigate(-1)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Create Job Card
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

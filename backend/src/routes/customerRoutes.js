@@ -1,19 +1,36 @@
-import express from 'express';
+import express from "express";
 import {
   getAllCustomers,
   getCustomerById,
   createCustomer,
   updateCustomer,
   deleteCustomer,
-} from '../controllers/customerController.js';
+  getCustomerJobCards,
+  getMyJobCards,
+} from "../controllers/customerController.js";
+
+import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ DO NOT repeat "/customers" here
-router.get('/', getAllCustomers);
-router.get('/:id', getCustomerById);
-router.post('/', createCustomer);
-router.put('/:id', updateCustomer);
-router.delete('/:id', deleteCustomer);
+/* ===============================
+   CUSTOMER SELF ROUTES
+   (MUST COME FIRST)
+================================ */
+router.get(
+  "/me/job-cards",
+  authenticate,
+  getMyJobCards
+);
+
+/* ===============================
+   ADMIN / STAFF ROUTES
+================================ */
+router.get("/", getAllCustomers);
+router.get("/:id", getCustomerById);
+router.get("/:id/job-cards", getCustomerJobCards);
+router.post("/", createCustomer);
+router.put("/:id", updateCustomer);
+router.delete("/:id", deleteCustomer);
 
 export default router;

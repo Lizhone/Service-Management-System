@@ -1,4 +1,4 @@
-import express from 'express';
+import express from "express";
 import {
   getAllVehicles,
   getVehicleById,
@@ -6,21 +6,19 @@ import {
   createVehicle,
   updateVehicle,
   deleteVehicle,
-} from '../controllers/vehicleController.js';
-import { authenticate } from '../middleware/authMiddleware.js';
-
+} from "../controllers/vehicleController.js";
 
 const router = express.Router();
 
-// Protect all vehicle routes
-router.use('/vehicles', authenticate);
+// IMPORTANT:
+// - DO NOT prefix with "/vehicles"
+// - DO NOT add authenticate here (already global)
 
-router.get('/vehicles', getAllVehicles);
-router.get('/vehicles/customer/:customerId', getVehiclesByCustomerId);
-router.get('/vehicles/:id', getVehicleById);
-router.post('/vehicles', createVehicle);
-router.put('/vehicles/:id', updateVehicle);
-router.delete('/vehicles/:id', deleteVehicle);
+router.get("/", getAllVehicles);
+router.get("/customer/:customerId", getVehiclesByCustomerId);
+router.get("/:id", getVehicleById);
+router.post("/", createVehicle);
+router.put("/:id", updateVehicle);
+router.delete("/:id", deleteVehicle);
 
 export default router;
-

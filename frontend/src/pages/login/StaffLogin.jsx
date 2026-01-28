@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import authClient from '../../api/authClient';
 
 export default function StaffLogin() {
-  const { setUser } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,9 +23,8 @@ export default function StaffLogin() {
 
       const { token, user } = res.data;
 
-      // Store token and user
-      localStorage.setItem('token', token);
-      setUser(user);
+      // Store token and user using auth hook
+      login(user, token);
 
       // Redirect based on role
       const dashboardRoutes = {

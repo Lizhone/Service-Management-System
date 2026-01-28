@@ -1,7 +1,8 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getJobCard } from "../api/jobCards";
 import JobCardMedia from "../components/JobCardMedia";
+import "./JobCardDetail.css";
 
 export default function JobCardDetail() {
   const { id } = useParams();
@@ -27,48 +28,71 @@ export default function JobCardDetail() {
     load();
   }, [id]);
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (loading) return <div className="jobcard-page">Loading…</div>;
+  if (error) return <div className="jobcard-page">{error}</div>;
+  if (!jobCard) return <div className="jobcard-page">Not found</div>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Job Card {jobCard?.jobCardNumber}</h2>
-      
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 mb-6 border-b">
-        <button
-          onClick={() => navigate(`/job-cards/${id}`)}
-          className="px-4 py-2 text-blue-600 border-b-2 border-blue-600"
-        >
-          Media
+    <div className="jobcard-page">
+      {/* Header */}
+      <div className="jobcard-header">
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          ← Back
         </button>
-        <button
-          onClick={() => navigate(`/job-cards/${id}/inspection`)}
-          className="px-4 py-2 text-gray-600 hover:text-blue-600"
-        >
-          Inspection
-        </button>
-        <button
-          onClick={() => navigate(`/job-cards/${id}/complaints`)}
-          className="px-4 py-2 text-gray-600 hover:text-blue-600"
-        >
-          Complaints
-        </button>
-        <button
-          onClick={() => navigate(`/job-cards/${id}/parts`)}
-          className="px-4 py-2 text-gray-600 hover:text-blue-600"
-        >
-          Parts
-        </button>
-        <button
-          onClick={() => navigate(`/job-cards/${id}/work-log`)}
-          className="px-4 py-2 text-gray-600 hover:text-blue-600"
-        >
-          Work Log
-        </button>
+
+        <h1>Job Card {jobCard.jobCardNumber}</h1>
+
+        <span className={`status ${jobCard.status.toLowerCase()}`}>
+          {jobCard.status}
+        </span>
       </div>
 
-      <JobCardMedia jobCardId={id} />
+      {/* Service Info */}
+      <div className="jobcard-info">
+        <div>
+          <label>Service Type</label>
+          <p>{jobCard.serviceType}</p>
+        </div>
+
+        <div>
+          <label>Service In</label>
+          <p>
+            {new Date(jobCard.serviceInDatetime).toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Customer */}
+      <div className="jobcard-section">
+        <h3>Customer</h3>
+        <Link
+  to={`/customers/${jobCard.customer?.id}`}
+  className="customer-link"
+>
+  {jobCard.customer?.name}
+</Link>
+
+        <p className="muted">
+          {jobCard.customer?.mobileNumber}
+        </p>
+      </div>
+
+      {/* Vehicle */}
+      <div className="jobcard-section">
+        <h3>Vehicle</h3>
+        <p>
+          {jobCard.vehicle?.model} — VIN{" "}
+          {jobCard.vehicle?.vinNumber}
+        </p>
+      </div>
+
+      {/* Media */}
+      <div className="jobcard-section">
+        <JobCardMedia
+          jobCardId={jobCard.id}
+          media={jobCard.media}
+        />
+      </div>
     </div>
   );
 }

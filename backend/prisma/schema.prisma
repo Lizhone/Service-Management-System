@@ -46,6 +46,7 @@ model Customer {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  passwordHash String?  // For password-based login
 
   vehicles Vehicle[]
   jobCards JobCard[]

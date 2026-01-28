@@ -9,44 +9,55 @@ import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
 import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
 import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
+
 import CreateJobCard from "./pages/CreateJobCard";
 import JobCardDetail from "./pages/JobCardDetail";
+import CustomerDetail from "./pages/CustomerDetail";
+
 import AddInspection from "./pages/AddInspection";
 import AddComplaint from "./pages/AddComplaint";
 import PartsReplacement from "./pages/PartsReplacement";
 import WorkLog from "./pages/WorkLog";
 import MediaViewerPage from "./pages/MediaViewerPage";
+
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
+import CustomerLogin from "./pages/login/CustomerLogin";
+import CustomerDashboard from "./pages/CustomerDashboard";
 
 export default function App() {
   return (
     <Routes>
-      {/* PUBLIC */}
+      {/* =======================
+          PUBLIC ROUTES
+         ======================= */}
       <Route path="/" element={<HomePage />} />
-      <Route path="/login/customer" element={<Login />} />
+      <Route path="/login/customer" element={<CustomerLogin />} />
       <Route path="/login/staff" element={<StaffLogin />} />
 
-      {/* CUSTOMER DASHBOARD */}
+      {/* =======================
+          CUSTOMER DASHBOARD
+         ======================= */}
       <Route
         path="/dashboard"
         element={
           <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
-            <Dashboard />
+            <CustomerDashboard />
           </RoleBasedRoute>
         }
       />
 
-      {/* STAFF/ADMIN DASHBOARDS */}
+      {/* =======================
+          STAFF / ADMIN DASHBOARDS
+         ======================= */}
       <Route
-  path="/dashboard/admin"
-  element={
-    <ProtectedRoute roles={["ADMIN"]}>
-      <AdminDashboard />
-    </ProtectedRoute>
-  }
-/>
-
+        path="/dashboard/admin"
+        element={
+          <ProtectedRoute roles={["ADMIN"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard/service-advisor"
@@ -84,11 +95,13 @@ export default function App() {
         }
       />
 
-      {/* JOB CARD - CUSTOMER ONLY */}
+      {/* =======================
+          JOB CARD CREATION & VIEW
+         ======================= */}
       <Route
         path="/job-cards/new"
         element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+          <RoleBasedRoute allowedRoles={["CUSTOMER", "ADMIN"]}>
             <CreateJobCard />
           </RoleBasedRoute>
         }
@@ -103,6 +116,21 @@ export default function App() {
         }
       />
 
+      {/* =======================
+          CUSTOMER HISTORY (FIXED)
+         ======================= */}
+      <Route
+        path="/customers/:id"
+        element={
+          <RoleBasedRoute allowedRoles={["CUSTOMER", "ADMIN"]}>
+            <CustomerDetail />
+          </RoleBasedRoute>
+        }
+      />
+
+      {/* =======================
+          JOB CARD OPERATIONS
+         ======================= */}
       <Route
         path="/job-cards/:id/inspection"
         element={
@@ -148,6 +176,9 @@ export default function App() {
         }
       />
 
+      {/* =======================
+          CATCH-ALL (MUST BE LAST)
+         ======================= */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
