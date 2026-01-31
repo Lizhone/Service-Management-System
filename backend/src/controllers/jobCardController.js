@@ -3,438 +3,277 @@ const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
-/**
- * Create job card with customer and vehicle details
- * 
- * Flow:
- * 1. Validate all required fields
- * 2. Find or create customer by mobileNumber
- * 3. Find or create vehicle by vinNumber (linked to customer)
- * 4. Generate unique jobCardNumber (format: JC-YYYYMMDD-XXXX)
- * 5. Create job card with status OPEN in a transaction
- * 
- * Prisma Schema:
- * - Customer.mobileNumber (unique)
- * - Vehicle.vinNumber (unique)
- * - JobCard.jobCardNumber (unique)
- * - JobCard.status enum: OPEN | IN_PROGRESS | CLOSED
- * - ServiceType enum: GENERAL | PAID | WARRANTY | COMPLAINT | BATTERY | CHARGER
- * 
- * Expected payload:
- * {
- *   serviceType: enum ServiceType,
- *   serviceInDatetime: ISO datetime string,
- *   customerName: string,
- *   customerPhone: string (stored as mobileNumber),
- *   vin: string (stored as vinNumber),
- *   vehicleModel: string,
- *   remarks: string (optional)
- * }
- */
+/* ================================
+   CREATE JOB CARD (BASIC – EXISTING FLOW)
+================================ */
+export const createJobCard = async (req, res) => {
+  try {
+    const {
+      customerId,
+      vehicleId,
+      serviceType,
+      serviceInDatetime,
+      remarks,
+    } = req.body;
+
+    if (!customerId || !vehicleId || !serviceType) {
+      return res.status(400).json({
+        error: "customerId, vehicleId and serviceType are required",
+      });
+    }
+
+    // ✅ REQUIRED: jobCardNumber
+    const jobCardNumber = `JC-${Date.now()}`;
+
+    const jobCard = await prisma.jobCard.create({
+      data: {
+        jobCardNumber,
+        customerId,
+        vehicleId,
+        serviceType,
+        status: "OPEN",
+        serviceInDatetime: serviceInDatetime
+          ? new Date(serviceInDatetime)
+          : null,
+        remarks: remarks || null,
+      },
+    });
+
+    return res.status(201).json(jobCard);
+  } catch (error) {
+    console.error("Create job card failed:", error);
+    return res.status(500).json({
+      error: "Failed to create job card",
+    });
+  }
+};
+
+/* ======================================================
+   CREATE JOB CARD WITH DETAILS (NEW CUSTOMER / VEHICLE)
+   ✅ FIXED
+   ✅ NO SCHEMA CHANGE
+   ✅ ADMIN SAFE
+====================================================== */
 export const createJobCardWithDetails = async (req, res) => {
   try {
     const {
-      serviceType,
-      serviceInDatetime,
+      // NEW MODE
       customerName,
       customerPhone,
       vin,
       vehicleModel,
+
+      // EXISTING MODE
+      customerId,
+      vehicleId,
+
+      // COMMON
+      serviceType,
+      serviceInDatetime,
       remarks,
     } = req.body;
 
-    // 1. Validate required fields
-    if (!serviceType || !serviceInDatetime || !customerName || !customerPhone || !vin || !vehicleModel) {
-      console.error("Validation failed - missing fields:", {
-        serviceType: !!serviceType,
-        serviceInDatetime: !!serviceInDatetime,
-        customerName: !!customerName,
-        customerPhone: !!customerPhone,
-        vin: !!vin,
-        vehicleModel: !!vehicleModel,
-      });
-      return res.status(400).json({ 
-        message: "Missing required fields",
-        required: ["serviceType", "serviceInDatetime", "customerName", "customerPhone", "vin", "vehicleModel"]
+    if (!serviceType) {
+      return res.status(400).json({
+        error: "Service type is required",
       });
     }
 
-    // 2. Validate ServiceType enum
-    const validServiceTypes = ["GENERAL", "PAID", "WARRANTY", "COMPLAINT", "BATTERY", "CHARGER"];
-    if (!validServiceTypes.includes(serviceType)) {
-      console.error("Invalid serviceType:", serviceType);
-      return res.status(400).json({ 
-        message: `Invalid serviceType. Must be one of: ${validServiceTypes.join(", ")}`
-      });
-    }
+    let finalCustomerId = customerId;
+    let finalVehicleId = vehicleId;
 
-    // 3. Validate and parse date
-    const serviceDate = new Date(serviceInDatetime);
-    if (isNaN(serviceDate.getTime())) {
-      console.error("Invalid date format:", serviceInDatetime);
-      return res.status(400).json({ message: "Invalid serviceInDatetime format. Use ISO 8601 format." });
-    }
+    /* ===============================
+       CUSTOMER HANDLING
+    =============================== */
+    if (!finalCustomerId) {
+      if (!customerName || !customerPhone) {
+        return res.status(400).json({
+          error: "Customer name and phone are required",
+        });
+      }
 
-    // 4. Generate unique jobCardNumber (JC-YYYYMMDD-XXXX)
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const datePrefix = `JC-${year}${month}${day}`;
-
-    // Count all existing job cards globally to get sequence number
-    const existingCount = await prisma.jobCard.count();
-    const sequence = String(existingCount + 1).padStart(4, "0");
-    const jobCardNumber = `${datePrefix}-${sequence}`;
-
-    console.log("Generating job card:", {
-      jobCardNumber,
-      customerPhone,
-      vin,
-      serviceType,
-    });
-
-    // 5. Use transaction for atomic operations
-    const result = await prisma.$transaction(async (tx) => {
-      // Find or create customer by mobileNumber
-      let customer = await tx.customer.findUnique({
+      let customer = await prisma.customer.findUnique({
         where: { mobileNumber: customerPhone },
       });
 
       if (!customer) {
-        console.log("Creating new customer:", customerName, customerPhone);
-        customer = await tx.customer.create({
+        customer = await prisma.customer.create({
           data: {
             name: customerName,
             mobileNumber: customerPhone,
           },
         });
-      } else {
-        console.log("Using existing customer:", customer.id, customer.name);
       }
 
-      // Find or create vehicle by vinNumber
-      let vehicle = await tx.vehicle.findUnique({
-        where: { vinNumber: vin },
-      });
+      finalCustomerId = customer.id;
+    }
 
-      if (!vehicle) {
-        console.log("Creating new vehicle:", vin, vehicleModel, "for customer:", customer.id);
-        vehicle = await tx.vehicle.create({
-          data: {
-            vinNumber: vin,
-            model: vehicleModel,
-            customerId: customer.id,
-          },
+    /* ===============================
+       VEHICLE HANDLING
+    =============================== */
+    if (!finalVehicleId) {
+      if (!vin || !vehicleModel) {
+        return res.status(400).json({
+          error: "VIN and vehicle model are required",
         });
-      } else {
-        console.log("Using existing vehicle:", vehicle.id, vehicle.model);
       }
 
-      // Create job card with status OPEN
-      const jobCard = await tx.jobCard.create({
+      const vehicle = await prisma.vehicle.create({
         data: {
-          jobCardNumber,
-          serviceType,
-          serviceInDatetime: serviceDate,
-          customerId: customer.id,
-          vehicleId: vehicle.id,
-          status: "OPEN",
-          remarks: remarks || null,
-        },
-        include: {
-          customer: true,
-          vehicle: true,
+          vinNumber: vin,
+          model: vehicleModel,
+          customerId: finalCustomerId,
         },
       });
 
-      console.log("Created job card:", jobCard.id, jobCard.jobCardNumber);
-      return jobCard;
-    });
-
-    res.status(201).json(result);
-  } catch (error) {
-    console.error("createJobCardWithDetails error:", {
-      message: error.message,
-      code: error.code,
-      body: req.body,
-      stack: error.stack,
-    });
-
-    // Handle specific Prisma errors
-    if (error.code === "P2002") {
-      return res.status(400).json({ 
-        message: "Duplicate entry - Phone number or VIN already exists" 
-      });
-    }
-    
-    if (error.code === "P2003") {
-      return res.status(400).json({ 
-        message: "Invalid customer or vehicle reference" 
-      });
+      finalVehicleId = vehicle.id;
     }
 
-    res.status(500).json({ 
-      message: "Failed to create job card",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
-    });
-  }
-};
-
-/**
- * Create job card with existing customer and vehicle IDs
- */
-export const createJobCard = async (req, res) => {
-  try {
-    const { customerId, vehicleId, serviceType, serviceInDatetime, remarks } = req.body;
-
-    if (!customerId || !vehicleId) {
-      return res.status(400).json({ message: "customerId and vehicleId are required" });
-    }
-
-    // Generate job card number in format JC-YYYYMMDD-XXXX (sequence resets daily)
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-
-    // Count all existing job cards globally to get sequence number
-    const existingCount = await prisma.jobCard.count();
-    const sequence = String(existingCount + 1).padStart(4, '0');
-    const jobCardNumber = `JC-${dateStr}-${sequence}`;
-
-    // Validate customer and vehicle exist
-    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
-    const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
-
-    if (!customer || !vehicle) {
-      return res.status(400).json({ message: "Customer or vehicle not found" });
-    }
+    /* ===============================
+       CREATE JOB CARD (FINAL FIX)
+    =============================== */
+    const jobCardNumber = `JC-${Date.now()}`;
 
     const jobCard = await prisma.jobCard.create({
       data: {
-        jobCardNumber,
+        jobCardNumber, // ✅ REQUIRED FIELD (FIX)
+        customerId: finalCustomerId,
+        vehicleId: finalVehicleId,
         serviceType,
-        serviceInDatetime: new Date(serviceInDatetime),
-        customerId,
-        vehicleId,
-        remarks,
+        status: "OPEN",
+        serviceInDatetime: serviceInDatetime
+          ? new Date(serviceInDatetime)
+          : null,
+        remarks: remarks || null,
       },
-      include: { customer: true, vehicle: true },
     });
 
-    res.status(201).json(jobCard);
+    return res.status(201).json(jobCard);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to create job card" });
+    console.error("createJobCardWithDetails failed:", error);
+    return res.status(500).json({
+      error: "Failed to create job card",
+    });
   }
 };
 
-/**
- * Get job card by ID with all related data
- */
+/* ================================
+   GET SINGLE JOB CARD
+================================ */
 export const getJobCard = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
 
     const jobCard = await prisma.jobCard.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: {
         customer: true,
         vehicle: true,
-        inspections: true,
-        complaints: true,
-        parts: true,
-        media: true,
-        workLogs: true,
       },
     });
 
     if (!jobCard) {
-      return res.status(404).json({ message: "Job card not found" });
+      return res.status(404).json({
+        error: "Job card not found",
+      });
     }
 
-    res.json(jobCard);
+    return res.json(jobCard);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to retrieve job card" });
-  }
-};
-
-/**
- * Update job card status
- */
-export const updateJobStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ message: "Status is required" });
-    }
-
-    const jobCard = await prisma.jobCard.update({
-      where: { id: parseInt(id) },
-      data: { status },
-      include: { customer: true, vehicle: true },
+    console.error("Fetch job card failed:", error);
+    return res.status(500).json({
+      error: "Failed to fetch job card",
     });
-
-    res.json(jobCard);
-  } catch (error) {
-    console.error(error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ message: "Job card not found" });
-    }
-    res.status(500).json({ message: "Failed to update job card status" });
   }
 };
 
-/**
- * Update job card (CRUD: customerId, vehicleId, serviceType, status, remarks)
- * 
- * Admin can fix customer, vehicle, service type, status, and remarks
- * jobCardNumber and createdAt are immutable
- * 
- * @param {number} id - Job card ID
- * @param {Object} data - Fields to update (customerId, vehicleId, serviceType, status, remarks)
- * @returns {Promise} Updated job card with customer and vehicle data
- */
+/* ================================
+   UPDATE JOB CARD
+================================ */
 export const updateJobCard = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { customerId, vehicleId, serviceType, status, remarks } = req.body;
+    const id = Number(req.params.id);
 
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({ message: "Job card ID is required" });
-    }
-
-    // Check job card exists
-    const jobCard = await prisma.jobCard.findUnique({
-      where: { id: parseInt(id) },
+    const jobCard = await prisma.jobCard.update({
+      where: { id },
+      data: req.body,
     });
 
-    if (!jobCard) {
-      return res.status(404).json({ message: "Job card not found" });
-    }
-
-    // Build update data - only allow specific fields
-    const updateData = {};
-
-    if (customerId !== undefined) {
-      updateData.customerId = customerId;
-    }
-    if (vehicleId !== undefined) {
-      updateData.vehicleId = vehicleId;
-    }
-    if (serviceType !== undefined) {
-      updateData.serviceType = serviceType;
-    }
-    if (status !== undefined) {
-      updateData.status = status;
-    }
-    if (remarks !== undefined) {
-      updateData.remarks = remarks;
-    }
-
-    // If providing customer or vehicle, validate they exist
-    if (customerId) {
-      const customer = await prisma.customer.findUnique({
-        where: { id: customerId },
-      });
-      if (!customer) {
-        return res.status(400).json({ message: "Customer not found" });
-      }
-    }
-
-    if (vehicleId) {
-      const vehicle = await prisma.vehicle.findUnique({
-        where: { id: vehicleId },
-      });
-      if (!vehicle) {
-        return res.status(400).json({ message: "Vehicle not found" });
-      }
-    }
-
-    // Perform update
-    const updated = await prisma.jobCard.update({
-      where: { id: parseInt(id) },
-      data: updateData,
-      include: { customer: true, vehicle: true },
-    });
-
-    res.json(updated);
+    return res.json(jobCard);
   } catch (error) {
-    console.error("updateJobCard error:", error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ message: "Job card not found" });
-    }
-    if (error.code === "P2003") {
-      return res.status(400).json({ message: "Invalid customer or vehicle reference" });
-    }
-    res.status(500).json({ message: "Failed to update job card" });
+    console.error("Update job card failed:", error);
+    return res.status(500).json({
+      error: "Failed to update job card",
+    });
   }
 };
 
-/**
- * Get job card media by ID
- */
-export const getJobCardMediaById = async (req, res) => {
+/* ================================
+   UPDATE JOB STATUS
+================================ */
+export const updateJobStatus = async (req, res) => {
   try {
-    const { jobCardId, mediaId } = req.params;
+    const id = Number(req.params.id);
+    const { status } = req.body;
 
-    const media = await prisma.jobCardMedia.findFirst({
-      where: {
-        id: parseInt(mediaId),
-        jobCardId: parseInt(jobCardId),
-      },
+    const jobCard = await prisma.jobCard.update({
+      where: { id },
+      data: { status },
     });
 
-    if (!media) {
-      return res.status(404).json({ message: "Media not found" });
-    }
-
-    res.json(media);
+    return res.json(jobCard);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to retrieve media" });
+    console.error("Update job status failed:", error);
+    return res.status(500).json({
+      error: "Failed to update job status",
+    });
   }
 };
 
-/**
- * Delete job card (soft delete or hard delete)
- * 
- * @param {number} id - Job card ID
- * @returns {Promise} Success response
- */
+/* ================================
+   DELETE JOB CARD
+================================ */
 export const deleteJobCard = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
 
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({ message: "Job card ID is required" });
-    }
-
-    // Check job card exists
-    const jobCard = await prisma.jobCard.findUnique({
-      where: { id: parseInt(id) },
-    });
-
-    if (!jobCard) {
-      return res.status(404).json({ message: "Job card not found" });
-    }
-
-    // Delete the job card (Prisma cascade will handle related records)
     await prisma.jobCard.delete({
-      where: { id: parseInt(id) },
+      where: { id },
     });
 
-    res.json({ message: "Job card deleted successfully" });
+    return res.json({ success: true });
   } catch (error) {
-    console.error("deleteJobCard error:", error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ message: "Job card not found" });
-    }
-    res.status(500).json({ message: "Failed to delete job card" });
+    console.error("Delete job card failed:", error);
+    return res.status(500).json({
+      error: "Failed to delete job card",
+    });
   }
 };
 
+/* ================================
+   JOB CARD HISTORY BY CUSTOMER
+================================ */
+export const getJobCardHistoryByCustomer = async (req, res) => {
+  try {
+    const customerId = Number(req.params.customerId);
+
+    if (!customerId || Number.isNaN(customerId)) {
+      return res.status(400).json({
+        error: "Invalid customer ID",
+      });
+    }
+
+    const jobCards = await prisma.jobCard.findMany({
+      where: { customerId },
+      include: { vehicle: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json(jobCards);
+  } catch (error) {
+    console.error("Job card history fetch failed:", error);
+    return res.status(500).json({
+      error: "Failed to fetch job card history",
+    });
+  }
+};

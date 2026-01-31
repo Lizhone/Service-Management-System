@@ -91,3 +91,61 @@ textarea:focus {
   padding: 10px 18px;
   border-radius: 6px;
 }
+/* ============================= */
+/* Vehicle Service-In Checklist  */
+/* ============================= */
+
+.condition-checklist-section {
+  margin-top: 32px;
+}
+
+.condition-checklist-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Table layout */
+.condition-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.condition-table th,
+.condition-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.condition-table th:first-child,
+.condition-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+  width: 35%;
+}
+
+.condition-table thead {
+  background-color: #f9fafb;
+}
+
+/* Radio alignment */
+.condition-table input[type="radio"] {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+/* Status colors (optional but clean) */
+.status-ok {
+  color: #16a34a;
+}
+
+.status-not-ok {
+  color: #d97706;
+}
+
+.status-damaged {
+  color: #dc2626;
+}

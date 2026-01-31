@@ -1,20 +1,17 @@
 import multer from "multer";
-import path from "path";
 import fs from "fs";
-
-const uploadDir = "uploads";
-
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+import path from "path";
 
 const storage = multer.diskStorage({
-  destination: (_, __, cb) => {
-    cb(null, uploadDir);
+  destination(req, file, cb) {
+    const jobCardId = req.params.jobCardId;
+    const dir = `uploads/job-cards/${jobCardId}`;
+
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
-  filename: (_, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
+  filename(req, file, cb) {
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 

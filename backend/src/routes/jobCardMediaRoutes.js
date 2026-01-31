@@ -1,59 +1,28 @@
 import express from "express";
+import multer from "multer";
 import {
+  uploadJobCardMedia,
   getJobCardMedia,
   getJobCardMediaById,
-  uploadJobCardMedia,
 } from "../controllers/jobCardMediaController.js";
-import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
-import { uploadJobCardMedia as multerUpload } from "../config/multer.js";
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/tmp" });
 
-/* ================================
-   MULTER ERROR HANDLER MIDDLEWARE
-================================ */
-const handleMulterError = (err, req, res, next) => {
-  if (err && err.name === "MulterError") {
-    if (err.code === "FILE_TOO_LARGE") {
-      return res.status(400).json({ error: "File is too large (max 50MB)" });
-    }
-    if (err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ error: "File size exceeds limit" });
-    }
-    return res.status(400).json({ error: `Upload error: ${err.message}` });
-  }
-  if (err) {
-    return res.status(400).json({ error: err.message || "Upload failed" });
-  }
-  next();
-};
+router.post(
+  "/job-cards/:jobCardId/media",
+  upload.single("file"),
+  uploadJobCardMedia
+);
 
-/* ================================
-   JOB CARD MEDIA
-================================ */
-
-// GET /:id/media
 router.get(
-  "/:id/media",
-  authenticate,
+  "/job-cards/:jobCardId/media",
   getJobCardMedia
 );
 
-// GET /:id/media/:mediaId
 router.get(
-  "/:id/media/:mediaId",
-  authenticate,
+  "/job-cards/:jobCardId/media/:mediaId",
   getJobCardMediaById
-);
-
-// POST /:id/media
-router.post(
-  "/:id/media",
-  authenticate,
-  authorizeRoles("ADMIN"),
-  multerUpload.single("file"),
-  handleMulterError,
-  uploadJobCardMedia
 );
 
 export default router;

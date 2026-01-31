@@ -9,6 +9,24 @@ export default function CreateJobCard() {
   const [mode, setMode] = useState("new"); // "new" or "existing"
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [customerJobCards, setCustomerJobCards] = useState([]);
+
+  const [vehicleServiceInCondition, setVehicleServiceInCondition] = useState({
+    battery: "",
+    brakes: "",
+    display: "",
+    body: "",
+    carrier: "",
+    chassis: "",
+    rust: "",
+    wheels: "",
+    footBoard: "",
+    allSwitchesFunction: "",
+    lightsAndIndicators: "",
+    solenoid: "",
+    mudguards: "",
+    charger: "",
+  });
 
   const [form, setForm] = useState({
     serviceType: "GENERAL",
@@ -16,6 +34,7 @@ export default function CreateJobCard() {
     customerId: "",
     customerName: "",
     customerPhone: "",
+    Address: "",
     vehicleId: "",
     vin: "",
     vehicleModel: "",
@@ -24,6 +43,13 @@ export default function CreateJobCard() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleConditionChange = (condition, value) => {
+    setVehicleServiceInCondition({
+      ...vehicleServiceInCondition,
+      [condition]: value,
+    });
   };
 
   // Load existing customers and vehicles
@@ -65,6 +91,29 @@ export default function CreateJobCard() {
     loadData();
   }, []);
 
+  // Load customer job cards when customer is selected in existing mode
+  useEffect(() => {
+    if (mode === "existing" && form.customerId) {
+      const loadCustomerJobCards = async () => {
+        try {
+          const res = await api.get(`/customers/${form.customerId}/job-cards`);
+          const jobCardsData = Array.isArray(res.data?.data)
+            ? res.data.data
+            : Array.isArray(res.data)
+            ? res.data
+            : [];
+          setCustomerJobCards(jobCardsData);
+        } catch (error) {
+          console.error("Failed to load customer job cards:", error);
+          setCustomerJobCards([]);
+        }
+      };
+      loadCustomerJobCards();
+    } else {
+      setCustomerJobCards([]);
+    }
+  }, [mode, form.customerId]);
+
   const handleModeChange = (newMode) => {
     setMode(newMode);
     setForm({
@@ -73,6 +122,7 @@ export default function CreateJobCard() {
       customerId: "",
       customerName: "",
       customerPhone: "",
+      Address: "",
       vehicleId: "",
       vin: "",
       vehicleModel: "",
@@ -81,50 +131,66 @@ export default function CreateJobCard() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      let payload;
-      let endpoint;
+  try {
+    let payload;
+    let endpoint;
 
-      if (mode === "existing") {
-        if (!form.customerId || !form.vehicleId) {
-          alert("Please select both customer and vehicle");
-          return;
-        }
-
-        payload = {
-          customerId: Number(form.customerId),
-          vehicleId: Number(form.vehicleId),
-          serviceType: form.serviceType,
-          serviceInDatetime: form.serviceInDatetime,
-          remarks: form.remarks,
-        };
-
-        endpoint = "/job-cards";
-      } else {
-        payload = {
-          serviceType: form.serviceType,
-          serviceInDatetime: form.serviceInDatetime,
-          customerName: form.customerName,
-          customerPhone: form.customerPhone,
-          vin: form.vin,
-          vehicleModel: form.vehicleModel,
-          remarks: form.remarks,
-        };
-
-        endpoint = "/job-cards/create-with-details";
+    if (mode === "existing") {
+      if (!form.customerId || !form.vehicleId) {
+        alert("Please select both customer and vehicle");
+        return;
       }
 
-      await api.post(endpoint, payload);
+      payload = {
+        customerId: Number(form.customerId),
+        vehicleId: Number(form.vehicleId),
+        serviceType: form.serviceType,
+        serviceInDatetime: form.serviceInDatetime,
+        remarks: form.remarks,
+      };
 
-      alert("Job Card created successfully");
-      navigate("/dashboard/admin");
-    } catch (error) {
-      console.error("Job card creation failed", error);
-      alert(error.response?.data?.message || "Failed to create job card");
+      endpoint = "/job-cards";
+    } else {
+      // 🔴 THIS WAS THE BUG — missing validation
+      if (
+        !form.customerName ||
+        !form.customerPhone ||
+        !form.vin ||
+        !form.vehicleModel
+      ) {
+        alert("Please fill Customer Name, Phone, VIN, and Vehicle Model");
+        return;
+      }
+
+      payload = {
+        serviceType: form.serviceType,
+        serviceInDatetime: form.serviceInDatetime,
+        customerName: form.customerName,
+        customerPhone: form.customerPhone,
+        vin: form.vin,
+        vehicleModel: form.vehicleModel,
+        remarks: form.remarks,
+      };
+
+      endpoint = "/job-cards/create-with-details";
     }
-  };
+
+    await api.post(endpoint, payload);
+
+    alert("Job Card created successfully");
+    navigate("/dashboard/admin");
+  } catch (error) {
+    console.error("Job card creation failed", error);
+    alert(
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      "Failed to create job card"
+    );
+  }
+};
+
 
   return (
     <div className="jobcard-page">
@@ -162,10 +228,13 @@ export default function CreateJobCard() {
               onChange={handleChange}
               required
             >
-              <option value="GENERAL">General</option>
-              <option value="COMPLAINT">Complaint</option>
-              <option value="BATTERY">Battery</option>
-              <option value="CHARGER">Charger</option>
+              <option value="GENERAL">General Service</option>
+              <option value="COMPLAINT">General Complaint</option>
+              <option value="BATTERY">Battery Complaint</option>
+              <option value="CHARGER">Charger Complaint</option>
+              <option value="PAID_SERVICE_REPAIRABLE">Paid Service with Repairable Complaints</option>
+              <option value="PAID_SERVICE_WARRANTY">Paid Service with Warranty Replacement</option>
+              <option value="SPARES_DISPATCH">Spares Parts Dispatch</option>
             </select>
 
             <label>Service Date & Time</label>
@@ -179,7 +248,7 @@ export default function CreateJobCard() {
           </div>
 
           {/* Customer */}
-          <div className="form-section">
+            
             <h3>Customer Information</h3>
 
             {mode === "existing" ? (
@@ -198,7 +267,80 @@ export default function CreateJobCard() {
                     </option>
                   ))}
                 </select>
+
+                {/* Job Card History Section - Only for existing customers */}
+                {customerJobCards.length > 0 && (
+                  <div className="job-history-section">
+                    <h4>Job Card History</h4>
+                    <div className="job-cards-list">
+                      {customerJobCards.map((jc) => (
+                        <div key={jc.id} className="job-card-item">
+                          <span className="job-card-number">{jc.jobCardNumber}</span>
+                          <span className="job-card-date">
+                            {jc.serviceInDatetime ? new Date(jc.serviceInDatetime).toLocaleDateString() : '-'}
+                          </span>
+                          <span className="job-card-status">{jc.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Vehicle Service-In Condition Checklist - Only for existing customers */}
+                {/* Vehicle Service-In Condition Checklist - Only for existing customers */}
+<div className="condition-checklist-section">
+  <h4>Vehicle Service-In Condition Checklist</h4>
+
+  <table className="condition-table">
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>OK</th>
+        <th>NOT OK</th>
+        <th>DAMAGED</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {[
+        { key: "battery", label: "Battery" },
+        { key: "brakes", label: "Brakes" },
+        { key: "display", label: "Display" },
+        { key: "body", label: "Body" },
+        { key: "carrier", label: "Carrier" },
+        { key: "chassis", label: "Chassis" },
+        { key: "rust", label: "Rust" },
+        { key: "wheels", label: "Wheels" },
+        { key: "footBoard", label: "Foot Board" },
+        { key: "allSwitchesFunction", label: "All Switches Function" },
+        { key: "lightsAndIndicators", label: "Lights and Indicators" },
+        { key: "solenoid", label: "Solenoid" },
+        { key: "mudguards", label: "Mudguards" },
+        { key: "charger", label: "Charger" },
+      ].map((item) => (
+        <tr key={item.key}>
+          <td>{item.label}</td>
+
+          {["OK", "NOT OK", "DAMAGED"].map((status) => (
+            <td key={status}>
+              <input
+                type="radio"
+                name={item.key}
+                value={status}
+                checked={vehicleServiceInCondition[item.key] === status}
+                onChange={() =>
+                  handleConditionChange(item.key, status)
+                }
+              />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
               </>
+            
             ) : (
               <>
                 <label>Customer Name</label>
@@ -218,7 +360,6 @@ export default function CreateJobCard() {
                 />
               </>
             )}
-          </div>
 
           {/* Vehicle */}
           <div className="form-section">
@@ -252,12 +393,20 @@ export default function CreateJobCard() {
                 />
 
                 <label>Vehicle Model</label>
-                <input
+                <select
                   name="vehicleModel"
                   value={form.vehicleModel}
                   onChange={handleChange}
                   required
-                />
+                >
+                  <option value="">Select vehicle model</option>
+                  <option value="C2">C2</option>
+                  <option value="B1">B1</option>
+                  <option value="B2">B2</option>
+                  <option value="B3">B3</option>
+                  <option value="Shera">Shera</option>
+                  <option value="White Carbon">White Carbon</option>
+                </select>
               </>
             )}
 

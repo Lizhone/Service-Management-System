@@ -9,7 +9,11 @@ export const getMyJobCards = async (req, res) => {
   }
   const jobCards = await prisma.jobCard.findMany({
     where: { customerId },
-    include: { vehicle: true },
+    select: {
+      id: true,
+      jobCardNumber: true,
+      status: true,
+    },
     orderBy: { createdAt: "desc" },
   });
   res.json({ data: jobCards });

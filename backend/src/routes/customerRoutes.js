@@ -2,30 +2,34 @@ import express from "express";
 import {
   getAllCustomers,
   getCustomerById,
+  getCustomerJobCards,
+  getMyJobCards,
   createCustomer,
   updateCustomer,
   deleteCustomer,
-  getCustomerJobCards,
-  getMyJobCards,
+  getMyVehicles,
 } from "../controllers/customerController.js";
 
+import { requireCustomer } from "../middleware/customerAuth.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /* ===============================
-   CUSTOMER SELF ROUTES
-   (MUST COME FIRST)
+   CUSTOMER SELF ROUTES (IMPORTANT)
+   ORDER MATTERS – DO NOT MOVE
 ================================ */
-router.get(
-  "/me/job-cards",
-  authenticate,
-  getMyJobCards
-);
+
+/* Logged-in customer job cards */
+router.get("/me/job-cards", requireCustomer, getMyJobCards);
+
+/* Logged-in customer vehicles (FIXED) */
+router.get("/me/vehicles", authenticate, getMyVehicles);
 
 /* ===============================
    ADMIN / STAFF ROUTES
 ================================ */
+
 router.get("/", getAllCustomers);
 router.get("/:id", getCustomerById);
 router.get("/:id/job-cards", getCustomerJobCards);

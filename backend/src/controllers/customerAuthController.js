@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 
@@ -9,41 +9,43 @@ export const customerLogin = async (req, res) => {
     const { mobileNumber, password } = req.body;
 
     if (!mobileNumber || !password) {
-      return res.status(400).json({ error: "Mobile number and password are required" });
+      return res.status(400).json({ message: "Missing credentials" });
     }
 
-    const customer = await prisma.customer.findUnique({ where: { mobileNumber } });
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+    // IMPORTANT: mobileNumber must be STRING
+    const customer = await prisma.customer.findUnique({
+      where: { mobileNumber: String(mobileNumber) },
+    });
+
+    if (!customer || !customer.passwordHash) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (!customer.passwordHash) {
-      return res.status(400).json({ error: "Password not set for this customer" });
+    const isValid = await bcrypt.compare(password, customer.passwordHash);
+
+    if (!isValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const match = await bcrypt.compare(password, customer.passwordHash);
-    if (!match) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
-
-    // Generate JWT
     const token = jwt.sign(
-      { id: customer.id, role: "CUSTOMER" },
+      {
+        id: customer.id,
+        role: "CUSTOMER",
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    return res.json({
+    res.json({
       token,
       user: {
         id: customer.id,
         name: customer.name,
         role: "CUSTOMER",
-        mobileNumber: customer.mobileNumber
-      }
+      },
     });
   } catch (err) {
-    console.error("CUSTOMER LOGIN ERROR:", err);
-    return res.status(500).json({ error: "Internal error" });
+    console.error("Customer login error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

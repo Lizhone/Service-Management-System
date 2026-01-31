@@ -17,9 +17,11 @@ import complaintRoutes from "./routes/complaintRoutes.js";
 import partRoutes from "./routes/partRoutes.js";
 import reportingRoutes from "./routes/reportingRoutes.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
-import jobCardMediaRoutes from "./routes/jobCardMediaRoutes.js";
+
 import customerAuthRoutes from "./routes/customerAuthRoutes.js";
 import customerMeRoutes from "./routes/customerMeRoutes.js";
+import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
+import serviceBookingRoutes from "./routes/serviceBookingRoutes.js";
 
 // ===============================
 // MIDDLEWARE
@@ -81,7 +83,6 @@ app.use("/api/vehicles", vehicleRoutes);
 
 // Job Cards (single canonical base)
 app.use("/api/job-cards", jobCardRoutes);
-app.use("/api/job-cards", jobCardMediaRoutes);
 app.use("/api/job-cards", inspectionRoutes);
 app.use("/api/job-cards", complaintRoutes);
 app.use("/api/job-cards", partRoutes);
@@ -94,6 +95,15 @@ app.use("/api/reports", reportingRoutes);
 
 // Customers Me
 app.use("/api/customers/me", customerMeRoutes);
+
+// Service Requests
+app.use("/api/service-requests", serviceRequestRoutes);
+
+///////////////////////////////////////////////
+// Service Bookings
+app.use("/api/service-bookings", serviceBookingRoutes);
+
+///////////////////////////////////////////////
 
 // ===============================
 // SERVER STARTUP

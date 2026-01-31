@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
 import CustomerLogin from "./pages/login/CustomerLogin";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import BookService from "./pages/BookService";
 
 export default function App() {
   return (
@@ -43,6 +44,16 @@ export default function App() {
         element={
           <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
             <CustomerDashboard />
+          </RoleBasedRoute>
+        }
+      />
+
+      {/* ✅ CUSTOMER BOOK SERVICE (SAFE) */}
+      <Route
+        path="/customer/book-service"
+        element={
+          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+            <BookService />
           </RoleBasedRoute>
         }
       />
@@ -96,12 +107,12 @@ export default function App() {
       />
 
       {/* =======================
-          JOB CARD CREATION & VIEW
+          JOB CARD (ADMIN FLOW)
          ======================= */}
       <Route
         path="/job-cards/new"
         element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER", "ADMIN"]}>
+          <RoleBasedRoute allowedRoles={["ADMIN"]}>
             <CreateJobCard />
           </RoleBasedRoute>
         }
@@ -117,7 +128,7 @@ export default function App() {
       />
 
       {/* =======================
-          CUSTOMER HISTORY (FIXED)
+          CUSTOMER HISTORY
          ======================= */}
       <Route
         path="/customers/:id"
@@ -177,7 +188,7 @@ export default function App() {
       />
 
       {/* =======================
-          CATCH-ALL (MUST BE LAST)
+          FALLBACK
          ======================= */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
