@@ -4,17 +4,15 @@ import { useAuth } from "../hooks/useAuth";
 export default function RoleBasedRoute({ allowedRoles, children }) {
   const { user, loading } = useAuth();
 
-  // ⏳ Wait for auth restore
+  // 🔥 DO NOTHING while auth is loading
   if (loading) {
     return null;
   }
 
-  // ❌ Not logged in
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login/customer" replace />;
   }
 
-  // ❌ Wrong role
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }

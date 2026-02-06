@@ -11,13 +11,20 @@ export const requireCustomer = (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role !== "CUSTOMER") {
+    // 🔐 Ensure this is a CUSTOMER token
+    if (decoded.role !== "CUSTOMER" || !decoded.customerId) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    req.user = decoded; // ✅ REQUIRED
+    // 🔥 THIS IS THE FIX
+    req.user = {
+      id: decoded.customerId, // <-- normalize
+      role: decoded.role,
+    };
+
     next();
   } catch (err) {
+    console.error("Customer auth error:", err);
     return res.status(401).json({ message: "Invalid token" });
   }
 };

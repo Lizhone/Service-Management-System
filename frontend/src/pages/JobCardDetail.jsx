@@ -66,11 +66,11 @@ export default function JobCardDetail() {
       <div className="jobcard-section">
         <h3>Customer</h3>
         <Link
-  to={`/customers/${jobCard.customer?.id}`}
-  className="customer-link"
->
-  {jobCard.customer?.name}
-</Link>
+          to={`/customers/${jobCard.customer?.id}`}
+          className="customer-link"
+        >
+          {jobCard.customer?.name}
+        </Link>
 
         <p className="muted">
           {jobCard.customer?.mobileNumber}
@@ -86,92 +86,131 @@ export default function JobCardDetail() {
         </p>
       </div>
 
-      {/* Complaint Details */}
-      {Array.isArray(jobCard.complaints) && jobCard.complaints.length > 0 && (
-        <div className="jobcard-section">
-          <h3>Complaint Details</h3>
-          {jobCard.complaints.map((c) => (
-            <div key={c.id} className="complaint-block">
-              <div><b>Category:</b> {c.category || '-'}</div>
-              <div><b>Description:</b> {c.description || '-'}</div>
-              <div><b>Created:</b> {c.createdAt ? new Date(c.createdAt).toLocaleString() : '-'}</div>
-              {c.media && c.media.length > 0 && (
-                <div className="mt-2">
-                  <b>Attachments:</b>
-                  <ul>
-                    {c.media.map((m) => (
-                      <li key={m.id}>
-                        <a href={m.url} target="_blank" rel="noopener noreferrer">{m.fileName || m.url}</a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+      {/* ================= COMPLAINT DETAILS ================= */}
+{Array.isArray(jobCard.serviceComplaints) &&
+  jobCard.serviceComplaints.length > 0 && (
+    <div className="jobcard-section">
+      <h3>Complaint Details</h3>
+
+      <table className="min-w-full border bg-white">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="py-2 px-3 text-left">Complaint Ref</th>
+            <th className="py-2 px-3 text-left">Category</th>
+            <th className="py-2 px-3 text-left">Description</th>
+            <th className="py-2 px-3 text-left">Raised At</th>
+            <th className="py-2 px-3 text-left">Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {jobCard.serviceComplaints.map((c) => (
+            <tr key={c.id} className="border-t">
+              <td className="py-2 px-3 font-mono">
+                CMP-{c.id}
+              </td>
+
+              <td className="py-2 px-3">
+                {c.category}
+              </td>
+
+              <td className="py-2 px-3">
+                {c.description}
+              </td>
+
+              <td className="py-2 px-3">
+                {new Date(c.createdAt).toLocaleDateString()}
+              </td>
+
+              <td className="py-2 px-3 font-semibold">
+                {c.status || "OPEN"}
+              </td>
+            </tr>
           ))}
-        </div>
-      )}
+        </tbody>
+      </table>
+    </div>
+)}
 
       {/* Inspection Details */}
-      {Array.isArray(jobCard.inspections) && jobCard.inspections.length > 0 && (
-        <div className="jobcard-section">
-          <h3>Inspection Details</h3>
-          {jobCard.inspections.map((i) => (
-            <div key={i.id} className="inspection-block">
-              <div><b>Type:</b> {i.type || '-'}</div>
-              <div><b>Result:</b> {i.result || '-'}</div>
-              <div><b>Notes:</b> {i.notes || '-'}</div>
-              <div><b>Created:</b> {i.createdAt ? new Date(i.createdAt).toLocaleString() : '-'}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {Array.isArray(jobCard.inspections) &&
+        jobCard.inspections.length > 0 && (
+          <div className="jobcard-section">
+            <h3>Inspection Details</h3>
+            {jobCard.inspections.map((i) => (
+              <div key={i.id} className="inspection-block">
+                <div><b>Type:</b> {i.type || "-"}</div>
+                <div><b>Result:</b> {i.result || "-"}</div>
+                <div><b>Notes:</b> {i.notes || "-"}</div>
+                <div>
+                  <b>Created:</b>{" "}
+                  {i.createdAt
+                    ? new Date(i.createdAt).toLocaleString()
+                    : "-"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       {/* Parts Replacement Details */}
-      {Array.isArray(jobCard.parts) && jobCard.parts.length > 0 && (
-        <div className="jobcard-section">
-          <h3>Parts Replacement Details</h3>
-          {jobCard.parts.map((p) => (
-            <div key={p.id} className="parts-block">
-              <div><b>Part:</b> {p.partName || '-'}</div>
-              <div><b>Quantity:</b> {p.quantity || '-'}</div>
-              <div><b>Notes:</b> {p.notes || '-'}</div>
-              <div><b>Created:</b> {p.createdAt ? new Date(p.createdAt).toLocaleString() : '-'}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {Array.isArray(jobCard.parts) &&
+        jobCard.parts.length > 0 && (
+          <div className="jobcard-section">
+            <h3>Parts Replacement Details</h3>
+            {jobCard.parts.map((p) => (
+              <div key={p.id} className="parts-block">
+                <div><b>Part:</b> {p.partName || "-"}</div>
+                <div><b>Quantity:</b> {p.quantity || "-"}</div>
+                <div><b>Notes:</b> {p.notes || "-"}</div>
+                <div>
+                  <b>Created:</b>{" "}
+                  {p.createdAt
+                    ? new Date(p.createdAt).toLocaleString()
+                    : "-"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       {/* Work Logs */}
-      {Array.isArray(jobCard.workLogs) && jobCard.workLogs.length > 0 && (
-        <div className="jobcard-section">
-          <h3>Work Logs</h3>
-          <table className="worklog-table">
-            <thead>
-              <tr>
-                <th>Task</th>
-                <th>Technician</th>
-                <th>Status</th>
-                <th>Started</th>
-                <th>Completed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jobCard.workLogs.map((w) => (
-                <tr key={w.id}>
-                  <td>{w.taskName}</td>
-                  <td>{w.technicianName}</td>
-                  <td>{w.status}</td>
-                  <td>{w.startedAt ? new Date(w.startedAt).toLocaleString() : '-'}</td>
-                  <td>{w.completedAt ? new Date(w.completedAt).toLocaleString() : '-'}</td>
+      {Array.isArray(jobCard.workLogs) &&
+        jobCard.workLogs.length > 0 && (
+          <div className="jobcard-section">
+            <h3>Work Logs</h3>
+            <table className="worklog-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Technician</th>
+                  <th>Status</th>
+                  <th>Started</th>
+                  <th>Completed</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-
+              </thead>
+              <tbody>
+                {jobCard.workLogs.map((w) => (
+                  <tr key={w.id}>
+                    <td>{w.taskName}</td>
+                    <td>{w.technicianName}</td>
+                    <td>{w.status}</td>
+                    <td>
+                      {w.startedAt
+                        ? new Date(w.startedAt).toLocaleString()
+                        : "-"}
+                    </td>
+                    <td>
+                      {w.completedAt
+                        ? new Date(w.completedAt).toLocaleString()
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
       {/* Media */}
       <div className="jobcard-section">

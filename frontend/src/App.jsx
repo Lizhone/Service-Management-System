@@ -1,44 +1,74 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
+/* ================= PUBLIC PAGES ================= */
 import HomePage from "./pages/HomePage";
-import Login from "./pages/Login";
 import StaffLogin from "./pages/login/StaffLogin";
-import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import CustomerLogin from "./pages/login/CustomerLogin";
+
+/* ================= CUSTOMER ================= */
+import CustomerDashboard from "./pages/CustomerDashboard";
+import BookService from "./pages/BookService";
+import RaiseComplaint from "./pages/RaiseComplaint";
+import CustomerDetail from "./pages/CustomerDetail";
+
+/* ================= JOB CARDS ================= */
+import CreateJobCard from "./pages/CreateJobCard";
+import JobCardDetail from "./pages/JobCardDetail";
+
+/* ================= MEDIA ================= */
+import MediaViewerPage from "./pages/MediaViewerPage";
+import CustomerMediaViewer from "./pages/CustomerMediaViewer";
+
+/* ================= ADMIN LAYOUT ================= */
+import AdminLayout from "./layouts/AdminLayout";
+
+/* ================= ADMIN PAGES ================= */
+import AdminOverview from "./pages/admin/Overview";
+import AdminServiceBookings from "./pages/admin/ServiceBookings";
+import AdminJobCards from "./pages/admin/JobCards";
+import AdminComplaints from "./pages/admin/Complaints";
+import AdminCustomers from "./pages/admin/Customers";
+import AdminTechnicians from "./pages/admin/Technicians";
+import AdminAdvisors from "./pages/admin/Advisors";
+import AdminSales from "./pages/admin/Sales";
+import AdminSupplyChain from "./pages/admin/SupplyChain";
+import AdminVehicles from "./pages/admin/Vehicles";
+import AdminParts from "./pages/admin/Parts";
+import AdminMedia from "./pages/admin/Media";
+import AdminWorkLogs from "./pages/admin/WorkLogs";
+
+/* ================= OTHER STAFF ================= */
 import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
 import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
 import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
 
-import CreateJobCard from "./pages/CreateJobCard";
-import JobCardDetail from "./pages/JobCardDetail";
-import CustomerDetail from "./pages/CustomerDetail";
-
-import AddInspection from "./pages/AddInspection";
-import AddComplaint from "./pages/AddComplaint";
-import PartsReplacement from "./pages/PartsReplacement";
-import WorkLog from "./pages/WorkLog";
-import MediaViewerPage from "./pages/MediaViewerPage";
-
+/* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
-import CustomerLogin from "./pages/login/CustomerLogin";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import BookService from "./pages/BookService";
+import { AdminTabsProvider } from "./context/AdminTabsContext";
 
 export default function App() {
   return (
     <Routes>
-      {/* =======================
-          PUBLIC ROUTES
-         ======================= */}
+      {/* ======================================================
+         PUBLIC
+      ====================================================== */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login/customer" element={<CustomerLogin />} />
       <Route path="/login/staff" element={<StaffLogin />} />
 
-      {/* =======================
-          CUSTOMER DASHBOARD
-         ======================= */}
+      {/* ======================================================
+         CUSTOMER MEDIA (NO AUTH)
+      ====================================================== */}
+      <Route
+        path="/customer/media/:mediaId"
+        element={<CustomerMediaViewer />}
+      />
+
+      {/* ======================================================
+         CUSTOMER DASHBOARD
+      ====================================================== */}
       <Route
         path="/dashboard"
         element={
@@ -48,7 +78,9 @@ export default function App() {
         }
       />
 
-      {/* ✅ CUSTOMER BOOK SERVICE (SAFE) */}
+      {/* ======================================================
+         CUSTOMER ACTIONS
+      ====================================================== */}
       <Route
         path="/customer/book-service"
         element={
@@ -58,18 +90,60 @@ export default function App() {
         }
       />
 
-      {/* =======================
-          STAFF / ADMIN DASHBOARDS
-         ======================= */}
+      <Route
+        path="/customer/raise-complaint"
+        element={
+          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+            <RaiseComplaint />
+          </RoleBasedRoute>
+        }
+      />
+
+      {/* ======================================================
+         ADMIN DASHBOARD (PRISMA-STUDIO STYLE)
+      ====================================================== */}
       <Route
         path="/dashboard/admin"
         element={
           <ProtectedRoute roles={["ADMIN"]}>
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<AdminOverview />} />
 
+        {/* OPERATIONS */}
+        <Route path="service-bookings" element={<AdminServiceBookings />} />
+        <Route path="job-cards" element={<AdminJobCards />} />
+        <Route path="complaints" element={<AdminComplaints />} />
+
+        {/* ROLES */}
+        <Route path="customers" element={<AdminCustomers />} />
+        <Route path="technicians" element={<AdminTechnicians />} />
+        <Route path="advisors" element={<AdminAdvisors />} />
+        <Route path="sales" element={<AdminSales />} />
+        <Route path="supply-chain" element={<AdminSupplyChain />} />
+
+        {/* SYSTEM */}
+        <Route path="vehicles" element={<AdminVehicles />} />
+        <Route path="parts" element={<AdminParts />} />
+        <Route path="media" element={<AdminMedia />} />
+        <Route path="work-logs" element={<AdminWorkLogs />} />
+      </Route>
+      <Route
+  path="/dashboard/admin/*"
+  element={
+    <ProtectedRoute roles={["ADMIN"]}>
+      <AdminTabsProvider>
+        <AdminLayout />
+      </AdminTabsProvider>
+    </ProtectedRoute>
+  }
+/>
+
+      {/* ======================================================
+         OTHER STAFF DASHBOARDS
+      ====================================================== */}
       <Route
         path="/dashboard/service-advisor"
         element={
@@ -106,9 +180,9 @@ export default function App() {
         }
       />
 
-      {/* =======================
-          JOB CARD (ADMIN FLOW)
-         ======================= */}
+      {/* ======================================================
+         JOB CARDS (SHARED)
+      ====================================================== */}
       <Route
         path="/job-cards/new"
         element={
@@ -121,76 +195,42 @@ export default function App() {
       <Route
         path="/job-cards/:id"
         element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER", "ADMIN"]}>
+          <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
             <JobCardDetail />
           </RoleBasedRoute>
         }
       />
 
-      {/* =======================
-          CUSTOMER HISTORY
-         ======================= */}
+      {/* ======================================================
+         CUSTOMER DETAIL
+      ====================================================== */}
       <Route
         path="/customers/:id"
         element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER", "ADMIN"]}>
+          <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
             <CustomerDetail />
           </RoleBasedRoute>
         }
       />
 
-      {/* =======================
-          JOB CARD OPERATIONS
-         ======================= */}
-      <Route
-        path="/job-cards/:id/inspection"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
-            <AddInspection />
-          </RoleBasedRoute>
-        }
-      />
-
-      <Route
-        path="/job-cards/:id/complaints"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
-            <AddComplaint />
-          </RoleBasedRoute>
-        }
-      />
-
-      <Route
-        path="/job-cards/:id/parts"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
-            <PartsReplacement />
-          </RoleBasedRoute>
-        }
-      />
-
-      <Route
-        path="/job-cards/:id/work-log"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
-            <WorkLog />
-          </RoleBasedRoute>
-        }
-      />
-
+      {/* ======================================================
+         MEDIA VIEWER
+      ====================================================== */}
       <Route
         path="/job-cards/:jobCardId/media/:mediaId"
         element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
+          <RoleBasedRoute
+            allowedRoles={["ADMIN", "TECHNICIAN", "CUSTOMER"]}
+          >
             <MediaViewerPage />
           </RoleBasedRoute>
         }
       />
 
-      {/* =======================
-          FALLBACK
-         ======================= */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* ======================================================
+         FALLBACK
+      ====================================================== */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

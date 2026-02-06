@@ -14,13 +14,14 @@ export function AuthProvider({ children }) {
       setUser(JSON.parse(storedUser));
     }
 
-    setLoading(false);
+    setLoading(false); // 🔥 IMPORTANT
   }, []);
 
-  const login = (userData, token) => {
+  const login = (user, token) => {
+    console.log("AUTH login() called", user, token);
     localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(user));
+    setUser(user);
   };
 
   const logout = () => {
@@ -29,7 +30,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

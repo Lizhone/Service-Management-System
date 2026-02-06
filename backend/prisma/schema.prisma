@@ -31,6 +31,8 @@ enum Role {
   SALES
 }
 
+
+
 //////////////////////////////////////////////////////
 // CUSTOMER & VEHICLE
 //////////////////////////////////////////////////////
@@ -44,11 +46,11 @@ model Customer {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  passwordHash String? // For password-based login
+  passwordHash String?  // For password-based login
 
-  vehicles        Vehicle[]
-  jobCards        JobCard[]
-  serviceBookings ServiceBooking[]
+  vehicles Vehicle[]
+  jobCards JobCard[]
+  serviceBookings  ServiceBooking[] 
 }
 
 model Vehicle {
@@ -75,28 +77,28 @@ model Vehicle {
 //////////////////////////////////////////////////////
 
 model JobCard {
-  id                Int         @id @default(autoincrement())
-  jobCardNumber     String      @unique
-  customerId        Int
-  vehicleId         Int
-  serviceInDatetime DateTime
-  serviceType       ServiceType
-  status            JobStatus   @default(OPEN)
-  odometer          Int?
-  batteryVoltage    Float?
-  remarks           String?
-  createdAt         DateTime    @default(now())
-  closedAt          DateTime?
-  updatedAt         DateTime    @updatedAt
+  id                 Int        @id @default(autoincrement())
+  jobCardNumber      String     @unique
+  customerId         Int
+  vehicleId          Int
+  serviceInDatetime  DateTime
+  serviceType        ServiceType
+  status             JobStatus  @default(OPEN)
+  odometer           Int?
+  batteryVoltage     Float?
+  remarks            String?
+  createdAt          DateTime   @default(now())
+  closedAt           DateTime?
+  updatedAt          DateTime   @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id])
   vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
 
-  complaints  ServiceComplaint[]
-  inspections VehicleInspection[]
-  parts       PartsReplacement[]
-  media       JobCardMedia[]
-  workLogs    WorkLog[]
+  complaints   ServiceComplaint[]
+  inspections  VehicleInspection[]
+  parts        PartsReplacement[]
+  media        JobCardMedia[]
+  workLogs     WorkLog[]
 
   @@index([customerId])
   @@index([vehicleId])
@@ -177,12 +179,12 @@ model PartsReplacement {
 //////////////////////////////////////////////////////
 
 model JobCardMedia {
-  id         Int          @id @default(autoincrement())
+  id         Int            @id @default(autoincrement())
   jobCardId  Int
   fileUrl    String
   fileType   MediaType
-  context    MediaContext @default(GENERAL)
-  uploadedAt DateTime     @default(now())
+  context    MediaContext   @default(GENERAL)
+  uploadedAt DateTime       @default(now())
 
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
 
@@ -207,6 +209,8 @@ model ServiceBooking {
   customer Customer @relation(fields: [customerId], references: [id])
 }
 
+
+
 //////////////////////////////////////////////////////
 // ENUMS
 //////////////////////////////////////////////////////
@@ -215,15 +219,6 @@ enum JobStatus {
   OPEN
   IN_PROGRESS
   CLOSED
-}
-
-enum ServiceType {
-  GENERAL
-  PAID
-  WARRANTY
-  COMPLAINT
-  BATTERY
-  CHARGER
 }
 
 enum WorkType {
@@ -271,4 +266,13 @@ enum MediaContext {
   COMPLAINT
   PART_REPLACEMENT
   GENERAL
+}
+enum ServiceType {
+  GENERAL
+  COMPLAINT
+  BATTERY
+  CHARGER
+  PAID_SERVICE_REPAIRABLE
+  PAID_SERVICE_WARRANTY
+  SPARES_DISPATCH
 }

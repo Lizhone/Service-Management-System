@@ -14,19 +14,23 @@ export const authenticate = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
-  // 2. Verify token
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ["HS256"],
     });
 
-    // 3. Validate expected payload
-    if (!decoded?.id || !decoded?.role) {
+    // 🔥 NORMALIZE USER (ADMIN + CUSTOMER SAFE)
+    const userId = decoded.id || decoded.customerId;
+
+    if (!userId || !decoded.role) {
       return res.status(401).json({ error: "Invalid token payload" });
     }
 
-    // 4. Attach user to request
-    req.user = decoded;
+    // ✅ Unified user object
+    req.user = {
+      id: userId,
+      role: decoded.role,
+    };
 
     next();
   } catch (err) {
@@ -44,7 +48,7 @@ export const authorizeRoles = (...allowedRoles) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Admin bypass
+    // ✅ ADMIN BYPASS (UNCHANGED)
     if (req.user.role === "ADMIN") {
       return next();
     }

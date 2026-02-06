@@ -4,21 +4,17 @@ const client = axios.create({
   baseURL: "http://localhost:4000/api",
 });
 
-client.interceptors.request.use((config) => {
-  // Admin login token
-  const adminToken = localStorage.getItem("token");
+client.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
 
-  // Customer login token
-  const customerToken = localStorage.getItem("customerToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
-  // Prefer admin token if both exist
-  const token = adminToken || customerToken;
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  return config;
-});
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default client;

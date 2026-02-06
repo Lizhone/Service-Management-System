@@ -19,9 +19,9 @@ import reportingRoutes from "./routes/reportingRoutes.js";
 import workLogRoutes from "./routes/workLogRoutes.js";
 
 import customerAuthRoutes from "./routes/customerAuthRoutes.js";
-import customerMeRoutes from "./routes/customerMeRoutes.js";
 import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
 import serviceBookingRoutes from "./routes/serviceBookingRoutes.js";
+import adminComplaintRoutes from "./routes/adminComplaintRoutes.js";
 
 // ===============================
 // MIDDLEWARE
@@ -53,8 +53,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(prismaMiddleware);
 
 // ===============================
-// ✅ STATIC FILES (MEDIA UPLOADS) — PUBLIC
-// THIS IS REQUIRED FOR <img src="..."> TO WORK
+// STATIC FILES (MEDIA UPLOADS) — PUBLIC
 // ===============================
 app.use(
   "/uploads",
@@ -66,12 +65,12 @@ app.use(
 // ===============================
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
+app.use("/api/auth/customer", customerAuthRoutes);
 
 // ===============================
 // AUTHENTICATION BOUNDARY
 // ===============================
 app.use(authenticate);
-app.use("/api/auth/customer", customerAuthRoutes);
 
 // ===============================
 // PROTECTED DOMAIN ROUTES
@@ -94,16 +93,19 @@ app.use("/api", workLogRoutes);
 app.use("/api/reports", reportingRoutes);
 
 // Customers Me
-app.use("/api/customers/me", customerMeRoutes);
+app.use("/api/customers", customerRoutes);
 
 // Service Requests
 app.use("/api/service-requests", serviceRequestRoutes);
 
-///////////////////////////////////////////////
 // Service Bookings
 app.use("/api/service-bookings", serviceBookingRoutes);
 
-///////////////////////////////////////////////
+// ===============================
+// ✅ ADMIN COMPLAINTS (GLOBAL)
+// ===============================
+app.use("/api/complaints", adminComplaintRoutes); // ✅ REQUIRED
+app.use("/api", adminComplaintRoutes); // kept as-is
 
 // ===============================
 // SERVER STARTUP

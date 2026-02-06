@@ -4,157 +4,199 @@ import client from "../api/client";
 import { useAuth } from "../hooks/useAuth";
 
 export default function CustomerDashboard() {
-  const { user } = useAuth();
-  const [jobCards, setJobCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const { user, loading } = useAuth(); // ✅ include loading
   const navigate = useNavigate();
 
+  const [jobCards, setJobCards] = useState([]);
+  const [serviceBookings, setServiceBookings] = useState([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [error, setError] = useState("");
+
+  /* 🚫 WAIT FOR AUTH */
   useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login/customer", { replace: true });
+    }
+  }, [loading, user, navigate]);
+
+  /* ================= JOB CARDS ================= */
+  useEffect(() => {
+    if (loading || !user) return; // ✅ GUARD
+
     const loadJobCards = async () => {
       try {
         const res = await client.get("/customers/me/job-cards");
-        setJobCards(Array.isArray(res.data) ? res.data : res.data.data || []);
+        setJobCards(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
+        console.error(err);
         setError("Failed to load job cards");
       } finally {
-        setLoading(false);
+        setLoadingJobs(false);
       }
     };
-    loadJobCards();
-  }, []);
 
-  const filtered = jobCards.filter(j => {
-    return (
-      (!search || j.jobCardNumber?.toLowerCase().includes(search.toLowerCase())) &&
-      (!statusFilter || j.status === statusFilter) &&
-      (!typeFilter || j.serviceType === typeFilter)
-    );
-  });
+    loadJobCards();
+  }, [loading, user]);
+
+  /* ================= SERVICE BOOKINGS ================= */
+  useEffect(() => {
+    if (loading || !user) return; // ✅ GUARD
+
+    const loadServiceBookings = async () => {
+      try {
+        const res = await client.get("/customers/me/service-bookings");
+        setServiceBookings(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    loadServiceBookings();
+  }, [loading, user]);
+
+  /* ⏳ WAIT SCREEN */
+  if (loading || !user) {
+    return null;
+  }
 
   const statusColors = {
     OPEN: "bg-yellow-100 text-yellow-800",
     IN_PROGRESS: "bg-blue-100 text-blue-800",
-    COMPLETED: "bg-green-100 text-green-800",
+    CLOSED: "bg-green-100 text-green-800",
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-1">Welcome, {user?.name}</h1>
-      <div className="mb-6 text-gray-700">
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-1">
+        Welcome, {user?.name}
+      </h1>
+
+      <p className="mb-6 text-gray-700">
         Manage and track your service requests
-      </div>
+      </p>
 
-      {/* Top Action */}
-      <div className="flex gap-3 mb-6">
-        <button
-  className="bg-blue-600 text-white px-4 py-2 rounded"
-  onClick={() => navigate("/customer/book-service")}
->
-  + Book Service
-</button>
+      <button
+        className="bg-blue-600 text-white px-4 py-2 rounded mb-8"
+        onClick={() => navigate("/customer/book-service")}
+      >
+        + Book Service
+      </button>
 
-      </div>
+      {/* ================= SERVICE BOOKINGS ================= */}
+      <h2 className="text-lg font-semibold mb-3">
+        Service Bookings
+      </h2>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4 items-end">
-        <div>
-          <label className="block text-sm font-medium mb-1">Search Job Card #</label>
-          <input
-            className="border p-2 rounded w-40"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="e.g. 000123"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Status</label>
-          <select
-            className="border p-2 rounded w-32"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="OPEN">Open</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Service Type</label>
-          <select
-            className="border p-2 rounded w-36"
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="GENERAL">General</option>
-            <option value="BATTERY">Battery</option>
-            <option value="COMPLAINT">Complaint</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border bg-white">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="py-2 px-3 border-b">Job Card #</th>
-              <th className="py-2 px-3 border-b">Vehicle</th>
-              <th className="py-2 px-3 border-b">Service Type</th>
-              <th className="py-2 px-3 border-b">Status</th>
-              <th className="py-2 px-3 border-b">Created Date</th>
-              <th className="py-2 px-3 border-b">Actions</th>
+      {loadingBookings ? (
+        <p className="text-gray-500 mb-10">Loading...</p>
+      ) : serviceBookings.length === 0 ? (
+        <p className="text-gray-500 mb-10">
+          No service bookings found.
+        </p>
+      ) : (
+        <table className="min-w-full border bg-white mb-12">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-2 px-3 text-left">Booking Ref</th>
+              <th className="py-2 px-3 text-left">Part</th>
+              <th className="py-2 px-3 text-left">Date</th>
+              <th className="py-2 px-3 text-left">Time</th>
+              <th className="py-2 px-3 text-left">Status</th>
             </tr>
           </thead>
-
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="p-4 text-center">Loading...</td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="p-4 text-center text-gray-500">
-                  No job cards found.
+            {serviceBookings.map((b) => (
+              <tr key={b.id} className="border-t">
+                <td className="py-2 px-3 font-mono">SB-{b.id}</td>
+                <td className="py-2 px-3">{b.vehiclePart}</td>
+                <td className="py-2 px-3">
+                  {new Date(b.preferredDate).toLocaleDateString()}
                 </td>
+                <td className="py-2 px-3">{b.timeSlot}</td>
+                <td className="py-2 px-3 font-semibold">{b.status}</td>
               </tr>
-            ) : (
-              filtered.map(job => (
-                <tr key={job.id} className="border-b">
-                  <td className="py-2 px-3 font-mono">{job.jobCardNumber}</td>
-                  <td className="py-2 px-3">{job.vehicle?.model || "-"}</td>
-                  <td className="py-2 px-3">{job.serviceType}</td>
-                  <td className="py-2 px-3">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${statusColors[job.status] || ""}`}>
-                      {job.status.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td className="py-2 px-3">
-                    {new Date(job.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="py-2 px-3">
-                    <Link
-                      to={`/job-cards/${job.id}`}
-                      className="text-blue-600 underline"
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
-      </div>
+      )}
 
-      {error && <div className="text-red-600 mt-4">{error}</div>}
+      {/* ================= JOB CARDS ================= */}
+      <h2 className="text-lg font-semibold mb-3">
+        Job Cards
+      </h2>
+
+      {loadingJobs ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : jobCards.length === 0 ? (
+        <p className="text-gray-500">
+          No job cards found.
+        </p>
+      ) : (
+        <table className="min-w-full border bg-white">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-2 px-3 text-left">Job Card #</th>
+              <th className="py-2 px-3 text-left">Vehicle</th>
+              <th className="py-2 px-3 text-left">Service Type</th>
+              <th className="py-2 px-3 text-left">Status</th>
+              <th className="py-2 px-3 text-left">Created</th>
+              <th className="py-2 px-3 text-left">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {jobCards.map((job) => (
+              <tr key={job.id} className="border-t">
+                <td className="px-3 py-2 font-mono">
+                  {job.jobCardNumber}
+                </td>
+                <td className="px-3 py-2">
+                  {job.vehicle?.model || "-"}
+                </td>
+                <td className="px-3 py-2">
+                  {job.serviceType}
+                </td>
+                <td className="px-3 py-2">
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${
+                      statusColors[job.status] ||
+                      "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {job.status}
+                  </span>
+                </td>
+                <td className="px-3 py-2">
+                  {new Date(job.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-3 py-2 space-x-3">
+                  <Link
+                    to={`/job-cards/${job.id}`}
+                    className="text-blue-600 underline"
+                  >
+                    View
+                  </Link>
+
+                  <span style={{ margin: "0 12px" }}>|</span>
+
+                  <Link
+                    to={`/customer/raise-complaint?jobCardId=${job.id}`}
+                    className="text-red-600 underline"
+                  >
+                    Raise Complaint
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {error && (
+        <p className="text-red-600 mt-6">{error}</p>
+      )}
     </div>
   );
 }

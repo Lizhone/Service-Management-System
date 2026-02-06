@@ -9,22 +9,29 @@ import {
   deleteCustomer,
   getMyVehicles,
 } from "../controllers/customerController.js";
+import {
+  createServiceComplaint,
+  getMyServiceComplaints,
+} from "../controllers/serviceComplaintController.js";
 
+import { getMyServiceBookings } from "../controllers/serviceBookingController.js";
 import { requireCustomer } from "../middleware/customerAuth.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /* ===============================
-   CUSTOMER SELF ROUTES (IMPORTANT)
-   ORDER MATTERS – DO NOT MOVE
+   CUSTOMER SELF ROUTES
 ================================ */
 
-/* Logged-in customer job cards */
 router.get("/me/job-cards", requireCustomer, getMyJobCards);
+router.get("/me/service-bookings", requireCustomer, getMyServiceBookings);
 
-/* Logged-in customer vehicles (FIXED) */
-router.get("/me/vehicles", authenticate, getMyVehicles);
+/* 🔥 FIX HERE: use requireCustomer */
+router.get("/me/vehicles", requireCustomer, getMyVehicles);
+
+router.post("/me/complaints", requireCustomer, createServiceComplaint);
+router.get("/me/complaints", requireCustomer, getMyServiceComplaints);
 
 /* ===============================
    ADMIN / STAFF ROUTES

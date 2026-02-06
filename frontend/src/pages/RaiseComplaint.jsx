@@ -1,111 +1,92 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import client from "../api/client";
-import { useNavigate } from "react-router-dom";
 
 export default function RaiseComplaint() {
-  const [vehicles, setVehicles] = useState([]);
-  const [vehicleId, setVehicleId] = useState("");
-  const [title, setTitle] = useState("");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const jobCardId = searchParams.get("jobCardId");
+
+  const [category, setCategory] = useState("Battery");
   const [description, setDescription] = useState("");
-  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Fetch customer's vehicles
-    client.get("/customers/me/vehicles").then(res => {
-      setVehicles(res.data || []);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+
+  try {
+    await client.post("/customers/me/complaints", {
+      jobCardId: Number(jobCardId),
+      category,
+      description,
     });
-  }, []);
 
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
-  };
+    // ✅ MUST MATCH App.jsx ROUTE
+    navigate("/dashboard");
+  } catch (err) {
+    console.error("Raise complaint failed:", err);
+    setError("Failed to raise complaint. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      // 1. Create Job Card
-      const jobCardRes = await client.post("/job-cards", {
-        vehicleId,
-        serviceType: "COMPLAINT",
-        status: "OPEN",
-        title,
-        description,
-      });
-      const jobCard = jobCardRes.data;
-      // 2. Upload attachments (if any)
-      if (files.length > 0) {
-        const formData = new FormData();
-        files.forEach(f => formData.append("files", f));
-        formData.append("context", "COMPLAINT");
-        await client.post(`/job-cards/${jobCard.id}/media`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-      navigate(`/job-cards/${jobCard.id}`);
-    } catch (err) {
-      setError("Failed to raise complaint");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
+    <div className="max-w-xl mx-auto p-6 bg-white border rounded">
       <h1 className="text-xl font-bold mb-4">Raise Complaint</h1>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1 font-medium">Vehicle</label>
+          <label className="block text-sm font-semibold">Job Card ID</label>
+          <input
+            value={jobCardId || ""}
+            disabled
+            className="border p-2 w-full bg-gray-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold">
+            Complaint Category
+          </label>
           <select
             className="border p-2 w-full"
-            value={vehicleId}
-            onChange={e => setVehicleId(e.target.value)}
-            required
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="">Select vehicle</option>
-            {vehicles.map(v => (
-              <option key={v.id} value={v.id}>
-                {v.model} ({v.registrationNumber})
-              </option>
-            ))}
+            <option value="Battery">Battery</option>
+            <option value="Charger">Charger</option>
+            <option value="Brakes">Brakes</option>
+            <option value="Suspension">Suspension</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Display">Display</option>
+            <option value="Power">Power</option>
+            <option value="Others">Others</option>
           </select>
         </div>
+
         <div>
-          <label className="block mb-1 font-medium">Complaint Title</label>
-          <input
-            className="border p-2 w-full"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Complaint Description</label>
+          <label className="block text-sm font-semibold">Description</label>
           <textarea
             className="border p-2 w-full"
+            rows={4}
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             required
           />
         </div>
-        <div>
-          <label className="block mb-1 font-medium">Attachments</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="block"
-          />
-        </div>
-        {error && <div className="text-red-600">{error}</div>}
+
+        {error && <p className="text-red-600">{error}</p>}
+
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
           disabled={loading}
+          className="bg-red-600 text-white px-4 py-2 rounded"
         >
           {loading ? "Submitting..." : "Submit Complaint"}
         </button>

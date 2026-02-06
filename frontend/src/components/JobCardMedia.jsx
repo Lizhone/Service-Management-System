@@ -60,32 +60,61 @@ export default function JobCardMedia({ jobCardId }) {
     <div style={{ marginTop: 24 }}>
       {error && <div style={{ color: "red" }}>{error}</div>}
 
-      <div style={{ marginBottom: 16 }}>
-        <input
-          type="file"
-          accept="image/*,video/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
+  <h3 className="mb-4 text-sm font-semibold text-gray-800">
+    Upload Media
+  </h3>
 
-        <select
-          value={mediaContext}
-          onChange={(e) => setMediaContext(e.target.value)}
-        >
-          <option value="GENERAL">General</option>
-          <option value="INSPECTION">Inspection</option>
-          <option value="COMPLAINT">Complaint</option>
-          <option value="PART_REPLACEMENT">Part Replacement</option>
-        </select>
+  {/* File selector */}
+ <div className="flex items-center gap-3">
+  <label className="inline-flex cursor-pointer items-center rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+    Select file
+    <input
+      type="file"
+      accept="image/*,video/*"
+      className="hidden"
+      onChange={(e) => setFile(e.target.files?.[0] || null)}
+    />
+  </label>
 
-        <button onClick={handleUpload} disabled={uploading}>
-          {uploading ? "Uploading..." : "Upload"}
-        </button>
-      </div>
+  <span className="text-sm text-gray-500">
+    {file ? file.name : "No file selected"}
+  </span>
+</div>
 
+  {/* Context */}
+  <div className="mt-4">
+    <label className="mb-1 block text-xs font-semibold uppercase text-gray-500">
+      Media Context
+    </label>
+    <select
+      value={mediaContext}
+      onChange={(e) => setMediaContext(e.target.value)}
+      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    >
+      <option value="GENERAL">General</option>
+      <option value="INSPECTION">Inspection</option>
+      <option value="COMPLAINT">Complaint</option>
+      <option value="PART_REPLACEMENT">Part Replacement</option>
+    </select>
+  </div>
+
+  {/* Action */}
+  <div className="mt-4 flex justify-end">
+    <button
+      onClick={handleUpload}
+      disabled={!file || uploading}
+      className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+    >
+      {uploading ? "Uploading..." : "Upload"}
+    </button>
+  </div>
+</div>
       {loading ? (
-        <div>Loading media…</div>
-      ) : (
-        <MediaList jobCardId={jobCardId} media={media} />
+        <p>Loading media...</p>
+      ) : (   
+        <MediaList media={media} jobCardId={jobCardId} />
+
       )}
     </div>
   );
