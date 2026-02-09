@@ -22,6 +22,9 @@ import customerAuthRoutes from "./routes/customerAuthRoutes.js";
 import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
 import serviceBookingRoutes from "./routes/serviceBookingRoutes.js";
 import adminComplaintRoutes from "./routes/adminComplaintRoutes.js";
+import adminNotificationRoutes from "./routes/adminNotificationRoutes.js";
+import serviceAdvisorRoutes from "./routes/serviceAdvisorRoutes.js";
+
 
 // ===============================
 // MIDDLEWARE
@@ -73,6 +76,13 @@ app.use("/api/auth/customer", customerAuthRoutes);
 app.use(authenticate);
 
 // ===============================
+
+// ADMIN NOTIFICATIONS
+
+app.use("/api", adminNotificationRoutes);
+
+//////////////////////////////////////////
+
 // PROTECTED DOMAIN ROUTES
 // ===============================
 
@@ -102,6 +112,12 @@ app.use("/api/service-requests", serviceRequestRoutes);
 app.use("/api/service-bookings", serviceBookingRoutes);
 
 // ===============================
+// SERVICE ADVISOR DASHBOARD
+app.use("/api/service-advisor", serviceAdvisorRoutes);
+app.use("/api/advisor", advisorServiceBookingRoutes);
+
+//==============================
+
 // ✅ ADMIN COMPLAINTS (GLOBAL)
 // ===============================
 app.use("/api/complaints", adminComplaintRoutes); // ✅ REQUIRED

@@ -27,7 +27,8 @@ router.put("/:id/approve", approveServiceBooking);
 // ================================
 // ADMIN: approve service booking
 // ================================
-router.patch("/service-bookings/:id/approve", approveServiceBooking);
+router.put("/:id/approve", approveServiceBooking);
+
 
 
 export default router;

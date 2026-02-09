@@ -1,52 +1,216 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import client from "../../api/client";
 
 export default function ServiceAdvisorDashboard() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  /* =============================
+     FETCH ADVISOR BOOKINGS
+  ============================== */
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await client.get("/service-advisor/bookings");
+        setBookings(res.data);
+      } catch (err) {
+        console.error("Failed to load advisor bookings", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  /* =============================
+     VALIDATE BOOKING
+  ============================== */
+  const handleValidate = async (id, advisorNotes) => {
+    try {
+      await client.patch(`/service-advisor/bookings/${id}/validate`, {
+        advisorNotes,
+      });
+
+      // Remove validated booking from advisor list
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to validate booking");
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Service Advisor Dashboard</h1>
-        <p className="text-gray-600 text-sm">Limited operational visibility</p>
+    <div style={{ padding: "32px" }}>
+      <h1 style={{ fontSize: "28px", fontWeight: 600, marginBottom: "8px" }}>
+        Service Advisor Dashboard
+      </h1>
+
+      <p style={{ color: "#555", marginBottom: "32px" }}>
+        Review and validate customer service bookings before admin approval.
+      </p>
+
+      {/* =============================
+          ADVISOR WORKFLOW
+      ============================== */}
+      <div style={{ marginBottom: "40px" }}>
+        <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>
+          Advisor Workflow
+        </h2>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "24px",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <ActionCard
+            title="Review Booking"
+            description="Check customer request, date and service type"
+          />
+          <Arrow />
+          <ActionCard
+            title="Validate Booking"
+            description="Add advisor notes and validate booking"
+          />
+          <Arrow />
+          <ActionCard
+            title="Forward to Admin"
+            description="Validated booking moves to admin approval"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Section 1: Job Cards Overview */}
-        <div className="border rounded p-4">
-          <h2 className="text-lg font-semibold mb-3">Job Cards</h2>
-          <p className="text-gray-600 text-sm mb-3">View and manage job cards</p>
-          {/* TODO: Implement job card list for service advisors */}
-          <p className="text-yellow-600 text-xs">TODO: Load job cards with filtered access</p>
-        </div>
+      {/* =============================
+          PENDING BOOKINGS
+      ============================== */}
+      <div>
+        <h2 style={{ fontSize: "20px", marginBottom: "16px" }}>
+          Pending Service Bookings
+        </h2>
 
-        {/* Section 2: Customers */}
-        <div className="border rounded p-4">
-          <h2 className="text-lg font-semibold mb-3">Customers</h2>
-          <p className="text-gray-600 text-sm mb-3">View customer information</p>
-          {/* TODO: Implement customer list for service advisors */}
-          <p className="text-yellow-600 text-xs">TODO: Load customers with details</p>
-        </div>
+        {loading && <p>Loading bookings…</p>}
 
-        {/* Section 3: Reports */}
-        <div className="border rounded p-4">
-          <h2 className="text-lg font-semibold mb-3">Reports</h2>
-          <p className="text-gray-600 text-sm mb-3">View operational reports</p>
-          {/* TODO: Implement reports for service advisors */}
-          <p className="text-yellow-600 text-xs">TODO: Build advisory reports dashboard</p>
-        </div>
+        {!loading && bookings.length === 0 && (
+          <p style={{ color: "#666" }}>
+            No pending bookings for validation.
+          </p>
+        )}
 
-        {/* Section 4: Quick Actions */}
-        <div className="border rounded p-4">
-          <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
-          <p className="text-gray-600 text-sm mb-3">Common tasks</p>
-          {/* TODO: Add quick action buttons */}
-          <p className="text-yellow-600 text-xs">TODO: Add shortcut buttons for frequent tasks</p>
-        </div>
-      </div>
-
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
-        <p className="text-blue-800 text-sm">
-          Service Advisor role features coming soon. For now, contact admin for access to full job card management.
-        </p>
+        {bookings.map((booking) => (
+          <BookingCard
+            key={booking.id}
+            booking={booking}
+            onValidate={handleValidate}
+          />
+        ))}
       </div>
     </div>
   );
+}
+
+/* =============================
+   BOOKING CARD
+============================= */
+
+function BookingCard({ booking, onValidate }) {
+  const [notes, setNotes] = useState("");
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: "10px",
+        padding: "20px",
+        marginBottom: "16px",
+        background: "#fff",
+      }}
+    >
+      <h3 style={{ fontSize: "16px", marginBottom: "6px" }}>
+        {booking.customer?.name}
+      </h3>
+
+      <p style={{ fontSize: "13px", color: "#555" }}>
+        <strong>Vehicle Part:</strong> {booking.vehiclePart}
+      </p>
+
+      <p style={{ fontSize: "13px", color: "#555" }}>
+        <strong>Service Type:</strong> {booking.serviceType}
+      </p>
+
+      <p style={{ fontSize: "13px", color: "#555" }}>
+        <strong>Date:</strong>{" "}
+        {new Date(booking.preferredDate).toLocaleDateString()}
+      </p>
+
+      <p style={{ fontSize: "13px", color: "#555" }}>
+        <strong>Time Slot:</strong> {booking.timeSlot}
+      </p>
+
+      {booking.notes && (
+        <p style={{ fontSize: "13px", color: "#555", marginTop: "6px" }}>
+          <strong>Customer Notes:</strong> {booking.notes}
+        </p>
+      )}
+
+      <textarea
+        placeholder="Advisor notes (required)"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        rows={3}
+        style={{
+          width: "100%",
+          marginTop: "12px",
+          padding: "8px",
+          borderRadius: "6px",
+          border: "1px solid #d1d5db",
+          fontSize: "13px",
+        }}
+      />
+
+      <div style={{ marginTop: "12px", textAlign: "right" }}>
+        <button
+          onClick={() => onValidate(booking.id, notes)}
+          disabled={!notes.trim()}
+          style={{
+            background: "#2563eb",
+            color: "#fff",
+            padding: "8px 14px",
+            borderRadius: "6px",
+            border: "none",
+            cursor: notes.trim() ? "pointer" : "not-allowed",
+            opacity: notes.trim() ? 1 : 0.6,
+          }}
+        >
+          Validate Booking
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =============================
+   UI HELPERS
+============================= */
+
+function ActionCard({ title, description }) {
+  return (
+    <div
+      style={{
+        minWidth: "220px",
+        padding: "20px",
+        border: "1px solid #e5e7eb",
+        borderRadius: "10px",
+        background: "#f9fafb",
+      }}
+    >
+      <h3 style={{ fontSize: "16px", marginBottom: "6px" }}>{title}</h3>
+      <p style={{ fontSize: "13px", color: "#555" }}>{description}</p>
+    </div>
+  );
+}
+
+function Arrow() {
+  return <div style={{ fontSize: "24px", color: "#999" }}>→</div>;
 }

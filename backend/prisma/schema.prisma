@@ -100,9 +100,13 @@ model JobCard {
   media        JobCardMedia[]
   workLogs     WorkLog[]
 
+  // ✅ ADD THIS LINE ONLY (required opposite relation)
+  serviceBooking ServiceBooking?
+
   @@index([customerId])
   @@index([vehicleId])
 }
+
 
 //////////////////////////////////////////////////////
 // WORK TRACKING (KEY FEATURE)
@@ -154,6 +158,7 @@ model ServiceComplaint {
   jobCard JobCard @relation(fields: [jobCardId], references: [id], onDelete: Cascade)
 
   @@index([jobCardId])
+   viewedByAdminAt DateTime?
 }
 
 //////////////////////////////////////////////////////
@@ -206,9 +211,17 @@ model ServiceBooking {
   status        String   @default("PENDING")
   createdAt     DateTime @default(now())
 
+  // 🔥 NEW (Advisor workflow)
+  validatedByAdvisorAt DateTime?
+  advisorNotes         String?
+
+  // Existing
+  jobCardId Int?     @unique
+  jobCard   JobCard? @relation(fields: [jobCardId], references: [id])
+  viewedByAdminAt DateTime?
+
   customer Customer @relation(fields: [customerId], references: [id])
 }
-
 
 
 //////////////////////////////////////////////////////

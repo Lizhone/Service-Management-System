@@ -1,4 +1,6 @@
 import { useAdminTabs } from "../../context/AdminTabsContext";
+import client from "../../api/client";
+
 
 export default function AdminSidebar({ open = true }) {
   return (
@@ -57,12 +59,42 @@ function Section({ title, children, open }) {
 }
 
 function Item({ id, label, component, open }) {
-  const { openTab, activeTab } = useAdminTabs();
+  const {
+    openTab,
+    activeTab,
+
+    // ✅ ADD: notification state (NOT removing anything)
+    adminNotifications,
+    setAdminNotifications,
+  } = useAdminTabs();
+
   const isActive = activeTab === id;
+
+  // ✅ ADD: white dot condition
+  const showDot =
+    (id === "service-bookings" && adminNotifications?.bookings) ||
+    (id === "complaints" && adminNotifications?.complaints);
 
   return (
     <div
-      onClick={() => openTab(id, label, component)}
+      onClick={async () => {
+  openTab(id, label, component);
+
+  try {
+    if (id === "service-bookings" && adminNotifications?.bookings) {
+      await client.patch("/admin/notifications/bookings/viewed");
+      setAdminNotifications(prev => ({ ...prev, bookings: false }));
+    }
+
+    if (id === "complaints" && adminNotifications?.complaints) {
+      await client.patch("/admin/notifications/complaints/viewed");
+      setAdminNotifications(prev => ({ ...prev, complaints: false }));
+    }
+  } catch (err) {
+    console.error("Failed to clear admin notification", err);
+  }
+}}
+
       style={{
         cursor: "pointer",
         padding: "10px 12px",
@@ -70,9 +102,26 @@ function Item({ id, label, component, open }) {
         borderRadius: "6px",
         background: isActive ? "#2563eb" : "transparent",
         whiteSpace: "nowrap",
+
+        // ✅ ADD: layout for dot
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
       }}
     >
-      {open ? label : label[0]}
+      <span>{open ? label : label[0]}</span>
+
+      {/* ✅ ADD: WHITE DOT */}
+      {showDot && (
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: "#ffffff",
+          }}
+        />
+      )}
     </div>
   );
 }

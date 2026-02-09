@@ -26,7 +26,7 @@ export default function ServiceBookings() {
     if (!ok) return;
 
     try {
-      await client.patch(`/service-bookings/${id}/approve`);
+      await client.put(`/service-bookings/${id}/approve`);
       loadBookings();
     } catch (err) {
       console.error("Approve failed", err);

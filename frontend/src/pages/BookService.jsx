@@ -32,7 +32,8 @@ export default function BookService() {
     try {
       setSubmitting(true);
 
-      await client.post("/service-bookings", {
+     await client.post("/service-bookings/me/service-bookings", {
+
         vehiclePart: form.vehiclePart,
         serviceType: form.serviceType,
         preferredDate: form.serviceDate,

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import client from "../api/client";
 
 const AdminTabsContext = createContext();
 
@@ -7,6 +8,26 @@ export function AdminTabsProvider({ children }) {
     { id: "overview", title: "Overview", component: "overview" }
   ]);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // ✅ ADD: admin notification state
+  const [adminNotifications, setAdminNotifications] = useState({
+    bookings: false,
+    complaints: false
+  });
+
+  // ✅ ADD: fetch notification status ONCE
+  useEffect(() => {
+    const fetchNotificationStatus = async () => {
+      try {
+        const res = await client.get("/admin/notifications/status");
+        setAdminNotifications(res.data);
+      } catch (err) {
+        console.error("Failed to fetch admin notifications", err);
+      }
+    };
+
+    fetchNotificationStatus();
+  }, []);
 
   const openTab = (id, title, component) => {
     setTabs(prev => {
@@ -29,7 +50,17 @@ export function AdminTabsProvider({ children }) {
 
   return (
     <AdminTabsContext.Provider
-      value={{ tabs, activeTab, openTab, closeTab, setActiveTab }}
+      value={{
+        tabs,
+        activeTab,
+        openTab,
+        closeTab,
+        setActiveTab,
+
+        // ✅ EXPOSE notification state
+        adminNotifications,
+        setAdminNotifications
+      }}
     >
       {children}
     </AdminTabsContext.Provider>
