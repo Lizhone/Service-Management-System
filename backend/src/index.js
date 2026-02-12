@@ -23,8 +23,9 @@ import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
 import serviceBookingRoutes from "./routes/serviceBookingRoutes.js";
 import adminComplaintRoutes from "./routes/adminComplaintRoutes.js";
 import adminNotificationRoutes from "./routes/adminNotificationRoutes.js";
+import advisorServiceBookingRoutes from "./routes/advisorServiceBookingRoutes.js";
 import serviceAdvisorRoutes from "./routes/serviceAdvisorRoutes.js";
-
+import testRideRoutes from "./routes/testRideRoutes.js";
 
 // ===============================
 // MIDDLEWARE
@@ -69,6 +70,10 @@ app.use(
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/auth/customer", customerAuthRoutes);
+
+// ✅ TEST RIDE — PUBLIC
+app.use("/api/test-rides", testRideRoutes);
+
 
 // ===============================
 // AUTHENTICATION BOUNDARY

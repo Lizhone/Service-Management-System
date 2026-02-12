@@ -5,14 +5,18 @@ export default function ServiceBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* =============================
+     LOAD BOOKINGS
+  ============================== */
   useEffect(() => {
     loadBookings();
   }, []);
 
   const loadBookings = async () => {
     try {
+      // Admin sees ALL bookings (read-only)
       const res = await client.get("/service-bookings");
-      setBookings(Array.isArray(res.data) ? res.data : res.data.data || []);
+      setBookings(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load service bookings", err);
       setBookings([]);
@@ -21,68 +25,92 @@ export default function ServiceBookings() {
     }
   };
 
-  const approveBooking = async (id) => {
-    const ok = window.confirm("Approve this service booking?");
-    if (!ok) return;
-
-    try {
-      await client.put(`/service-bookings/${id}/approve`);
-      loadBookings();
-    } catch (err) {
-      console.error("Approve failed", err);
-      alert("Failed to approve booking");
-    }
-  };
-
   if (loading) return <p>Loading service bookings…</p>;
 
   return (
-    <div>
-      <h2>Service Bookings</h2>
+    <div style={{ padding: "24px" }}>
+      <h2 style={{ fontSize: "20px", fontWeight: 600 }}>
+        Service Bookings
+      </h2>
 
-      <table style={{ width: "100%", marginTop: "16px" }}>
+      <table
+        style={{
+          width: "100%",
+          marginTop: "16px",
+          borderCollapse: "collapse",
+          background: "#fff",
+        }}
+      >
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>Customer</th>
-            <th>Vehicle Part</th>
-            <th>Date</th>
-            <th>Time Slot</th>
-            <th>Status</th>
-            <th>Action</th>
+          <tr style={{ background: "#f1f5f9" }}>
+            <Th>ID</Th>
+            <Th>Customer</Th>
+            <Th>Vehicle Part</Th>
+            <Th>Service Type</Th>
+            <Th>Date</Th>
+            <Th>Time</Th>
           </tr>
         </thead>
 
         <tbody>
           {bookings.length === 0 ? (
             <tr>
-              <td colSpan="7" style={{ textAlign: "center" }}>
+              <Td colSpan={6} center>
                 No service bookings
-              </td>
+              </Td>
             </tr>
           ) : (
             bookings.map((b) => (
-              <tr key={b.id}>
-                <td>{b.id}</td>
-                <td>{b.customer?.name || "-"}</td>
-                <td>{b.vehiclePart}</td>
-                <td>{new Date(b.preferredDate).toLocaleDateString()}</td>
-                <td>{b.timeSlot}</td>
-                <td>{b.status}</td>
-                <td>
-                  {b.status === "PENDING" ? (
-                    <button onClick={() => approveBooking(b.id)}>
-                      Approve
-                    </button>
-                  ) : (
-                    "—"
-                  )}
-                </td>
+              <tr key={b.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                <Td>{b.id}</Td>
+                <Td>{b.customer?.name || "-"}</Td>
+                <Td>{b.vehiclePart}</Td>
+                <Td>{b.serviceType}</Td>
+                <Td>
+                  {new Date(b.preferredDate).toLocaleDateString()}
+                </Td>
+                <Td>{b.timeSlot}</Td>
               </tr>
             ))
           )}
         </tbody>
       </table>
     </div>
+  );
+}
+
+/* =============================
+   UI HELPERS
+============================= */
+
+function Th({ children }) {
+  return (
+    <th
+      style={{
+        padding: "10px",
+        fontSize: "13px",
+        textAlign: "left",
+        color: "#334155",
+        borderBottom: "1px solid #e5e7eb",
+      }}
+    >
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, colSpan, center }) {
+  return (
+    <td
+      colSpan={colSpan}
+      style={{
+        padding: "10px",
+        fontSize: "13px",
+        color: "#111827",
+        textAlign: center ? "center" : "left",
+      }}
+    >
+      {children}
+    </td>
   );
 }

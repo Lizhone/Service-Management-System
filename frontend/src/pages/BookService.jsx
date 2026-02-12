@@ -21,34 +21,39 @@ export default function BookService() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
 
-    if (!form.vehiclePart || !form.serviceDate || !form.timeSlot) {
-      setError("Please fill all required fields");
-      return;
-    }
+  if (!form.vehiclePart || !form.serviceDate || !form.timeSlot) {
+    alert("Please fill all required fields");
+    return;
+  }
 
-    try {
-      setSubmitting(true);
+  try {
+    setSubmitting(true);
 
-     await client.post("/service-bookings/me/service-bookings", {
+    await client.post("/service-bookings/me/service-bookings", {
+      vehiclePart: form.vehiclePart,
+      serviceType: form.serviceType,
+      preferredDate: form.serviceDate,
+      timeSlot: form.timeSlot,
+      notes: form.notes,
+    });
 
-        vehiclePart: form.vehiclePart,
-        serviceType: form.serviceType,
-        preferredDate: form.serviceDate,
-        timeSlot: form.timeSlot,
-        notes: form.notes,
-      });
+    alert("Service booked and confirmed successfully.");
+    navigate("/dashboard");
 
-      alert("Service booked successfully. Waiting for approval.");
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to book service");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  } catch (err) {
+    const message =
+      err.response?.data?.error ||
+      "Failed to book service";
+
+    alert(message);   // 🔥 popup for failure
+
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
  return (
   <div className="w-full mt-10 px-4">

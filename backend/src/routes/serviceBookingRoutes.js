@@ -4,7 +4,6 @@ import {
   createServiceBooking,
   getMyServiceBookings,
   getAllServiceBookings,
-  approveServiceBooking,
 } from "../controllers/serviceBookingController.js";
 
 const router = express.Router();
@@ -21,14 +20,5 @@ router.post("/me/service-bookings", createServiceBooking);
    ADMIN
 ============================== */
 router.get("/", getAllServiceBookings);
-router.put("/:id/approve", approveServiceBooking);
-
-
-// ================================
-// ADMIN: approve service booking
-// ================================
-router.put("/:id/approve", approveServiceBooking);
-
-
 
 export default router;

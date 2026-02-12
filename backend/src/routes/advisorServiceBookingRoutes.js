@@ -1,18 +1,43 @@
 import express from "express";
 import { authenticate } from "../middleware/authMiddleware.js";
 import {
-  getPendingBookingsForAdvisor,
+  getAdvisorBookings,
   validateServiceBooking,
+  rejectServiceBooking,
+  getAdvisorBookingHistory,
 } from "../controllers/advisorServiceBookingController.js";
 
 const router = express.Router();
 
 router.use(authenticate);
 
-// Advisor sees only pending bookings
-router.get("/service-bookings", getPendingBookingsForAdvisor);
+/* ================================
+   ADVISOR: PENDING BOOKINGS
+================================ */
+router.get("/service-bookings/pending", getAdvisorBookings);
 
-// Advisor validates booking
-router.patch("/service-bookings/:id/validate", validateServiceBooking);
+/* ================================
+   ADVISOR: VALIDATE BOOKING
+================================ */
+router.patch(
+  "/service-bookings/:id/validate",
+  validateServiceBooking
+);
+
+/* ================================
+   ADVISOR: REJECT BOOKING ✅ FIXED
+================================ */
+router.patch(
+  "/service-bookings/:id/reject",
+  rejectServiceBooking
+);
+
+/* ================================
+   ADVISOR: BOOKING HISTORY
+================================ */
+router.get(
+  "/service-bookings/history",
+  getAdvisorBookingHistory
+);
 
 export default router;

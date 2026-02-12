@@ -1,26 +1,25 @@
 import { useState } from "react";
+import { Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import client from "../../api/client";
 import { useAuth } from "../../hooks/useAuth";
+import client from "../../api/client";
 
 export default function CustomerLogin() {
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [mobileNumber, setMobileNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
+    setError(null);
+    setLoading(true);
 
     try {
-      // ✅ CORRECT ROUTE
       const res = await client.post("/auth/customer/login", {
         mobileNumber,
         password,
@@ -28,46 +27,87 @@ export default function CustomerLogin() {
 
       const { token, customer } = res.data;
 
-      if (!token || !customer) {
-        throw new Error("Invalid response");
-      }
-
-      // ✅ ONLY place auth state is set
       login(customer, token);
-
       navigate("/dashboard");
     } catch (err) {
-      console.error("LOGIN ERROR ❌", err);
+      console.log(err);
       setError("Invalid mobile number or password");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>Customer Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-[#01263B]">
 
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Mobile Number</label>
-          <input
-            value={mobileNumber}
-            onChange={(e) => setMobileNumber(e.target.value)}
-          />
-        </div>
+      <div className="bg-white w-105 rounded-3xl shadow-2xl p-10">
 
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <h1 className="text-3xl font-bold text-[#01263B] text-center">
+          Welcome Back!
+        </h1>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        <p className="text-center text-gray-500 mt-2 mb-8">
+          Please login to your account.
+        </p>
 
-        <button type="submit">Login</button>
-      </form>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+          {/* Mobile Field */}
+          <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3 border border-gray-200">
+            <Phone className="text-[#01263B] mr-3" size={20} />
+
+            <input
+              type="text"
+              placeholder="Mobile Number"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+            />
+          </div>
+
+          {/* Password Field */}
+          <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3 border border-gray-200">
+            <Lock className="text-[#01263B] mr-3" size={20} />
+
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-[#01263B]"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          {/* Forgot Password */}
+          <div className="text-right">
+            <a href="#" className="text-[#01263B] text-sm hover:underline">
+              Forgot password?
+            </a>
+          </div>
+
+          {error && (
+            <p className="text-red-500 text-sm text-center">{error}</p>
+          )}
+
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#01263B] text-white py-3 rounded-xl text-lg font-semibold hover:opacity-90 transition disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+
+        </form>
+      </div>
     </div>
   );
 }

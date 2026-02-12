@@ -1,13 +1,17 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import authClient from '../../api/authClient';
+import { useState } from "react";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import authClient from "../../api/authClient";
 
 export default function StaffLogin() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -15,76 +19,124 @@ export default function StaffLogin() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
     try {
-      const res = await authClient.post('/auth/staff/login', {
+      const res = await authClient.post("/auth/staff/login", {
         email,
         password,
       });
 
       const { token, user } = res.data;
 
-      // Store token and user using auth hook
       login(user, token);
 
-      // Redirect based on role
       const dashboardRoutes = {
-        ADMIN: '/dashboard/admin',
-        SERVICE_ADVISOR: '/dashboard/service-advisor',
-        TECHNICIAN: '/dashboard/technician',
-        SUPPLY_CHAIN: '/dashboard/supply-chain',
-        SALES: '/dashboard/sales',
+        ADMIN: "/dashboard/admin",
+        SERVICE_ADVISOR: "/dashboard/service-advisor",
+        TECHNICIAN: "/dashboard/technician",
+        SUPPLY_CHAIN: "/dashboard/supply-chain",
+        SALES: "/dashboard/sales",
       };
 
-      const redirectPath = dashboardRoutes[user.role] || '/dashboard/admin';
-      navigate(redirectPath);
+      navigate(dashboardRoutes[user.role] || "/dashboard/admin");
     } catch (err) {
-      setError(err.response?.data?.error || 'Staff login failed');
+      console.log(err);
+      setError("Staff login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow w-80">
-        <h1 className="text-xl font-bold mb-4">Staff Login</h1>
-        <p className="text-sm text-gray-600 mb-4">Enter your staff credentials</p>
-
-        {error && <p className="text-red-600 mb-3 text-sm">{error}</p>}
-
-        <input
-          className="border w-full mb-3 p-2 rounded"
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
-        />
-
-        <input
-          className="border w-full mb-4 p-2 rounded"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-        />
-
-        <button
-          className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-700"
-          disabled={loading}
-        >
-          {loading ? 'Logging in…' : 'Staff Login'}
-        </button>
-
-        <div className="mt-4 text-center text-sm">
-          <p className="text-gray-600">
-            Customer?{' '}
-            <a href="/login/customer" className="text-blue-600 underline">
-              Customer Login
-            </a>
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#01263B]">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col items-center gap-7 w-120"
+      >
+        {/* Avatar Circle */}
+        <div className="w-32 h-32 rounded-full border-4 border-[#01263B] bg-white flex items-center justify-center">
+          <User size={52} strokeWidth={3} className="text-[#01263B]" />
         </div>
+
+        <h2 className="text-white text-2xl font-semibold">
+          Staff Login
+        </h2>
+
+        {/* Show Error */}
+        {error && (
+          <p className="text-red-400 text-sm">{error}</p>
+        )}
+
+        {/* Email Field */}
+        <div
+          className="w-120 flex items-center gap-3 px-4 py-3 
+                     border-2 border-white 
+                     rounded-xl bg-transparent"
+        >
+          <User size={30} className="text-white" />
+
+          <input
+            type="email"
+            placeholder="Username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-1 bg-transparent 
+                       outline-none 
+                       text-white 
+                       placeholder-gray-300"
+          />
+        </div>
+
+        {/* Password Field */}
+        <div
+          className="w-120 flex items-center gap-3 px-4 py-3 
+                     border-2 border-white 
+                     rounded-xl bg-transparent"
+        >
+          <Lock size={30} className="text-white" />
+
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="flex-1 bg-transparent 
+                       outline-none 
+                       text-white 
+                       placeholder-gray-300"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-white"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+
+        {/* Links */}
+        <div className="flex justify-between w-full text-white text-sm">
+          <span>
+            Customer?{" "}
+            <a href="/login/customer" className="underline font-medium">
+              Login here
+            </a>
+          </span>
+
+          <a href="#" className="underline">
+            Forgot password?
+          </a>
+        </div>
+
+        {/* Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-16 rounded-2xl bg-white text-[#01263B] text-xl tracking-wide shadow-lg hover:opacity-90 transition disabled:opacity-60"
+        >
+          {loading ? "Logging in..." : "LOGIN"}
+        </button>
       </form>
     </div>
   );

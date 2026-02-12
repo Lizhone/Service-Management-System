@@ -74,7 +74,7 @@ export default function Header() {
 
 const headerStyle = {
   height: "150px",
-  backgroundColor: "#6a6a6a",
+  backgroundColor: "#01263B",
   display: "flex",
   alignItems: "center",
   padding: "0 48px",

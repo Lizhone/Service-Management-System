@@ -208,19 +208,34 @@ model ServiceBooking {
   preferredDate DateTime
   timeSlot      String
   notes         String?
-  status        String   @default("PENDING")
+  status        String   @default("CONFIRMED")
   createdAt     DateTime @default(now())
 
-  // 🔥 NEW (Advisor workflow)
-  validatedByAdvisorAt DateTime?
-  advisorNotes         String?
+  viewedByAdminAt DateTime?   // 
 
-  // Existing
   jobCardId Int?     @unique
   jobCard   JobCard? @relation(fields: [jobCardId], references: [id])
-  viewedByAdminAt DateTime?
 
   customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([preferredDate, timeSlot])
+}
+/////////////////////////////////////////////////////////////
+//TestRide
+//////////////////////////////////////////////////////////
+
+model TestRide {
+  id        Int      @id @default(autoincrement())
+  bikeName  String
+  location  String
+  date      DateTime
+  timeSlot  String
+  fullName  String
+  phone     String
+  email     String?
+  status    String
+  isViewed  Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 

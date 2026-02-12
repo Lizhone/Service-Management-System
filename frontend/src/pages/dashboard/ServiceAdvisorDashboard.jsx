@@ -5,212 +5,124 @@ export default function ServiceAdvisorDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* =============================
-     FETCH ADVISOR BOOKINGS
-  ============================== */
+  /* ===============================
+     LOAD BOOKINGS (READ ONLY)
+  =============================== */
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const res = await client.get("/service-advisor/bookings");
-        setBookings(res.data);
-      } catch (err) {
-        console.error("Failed to load advisor bookings", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
+    loadBookings();
   }, []);
 
-  /* =============================
-     VALIDATE BOOKING
-  ============================== */
-  const handleValidate = async (id, advisorNotes) => {
+  const loadBookings = async () => {
     try {
-      await client.patch(`/service-advisor/bookings/${id}/validate`, {
-        advisorNotes,
-      });
-
-      // Remove validated booking from advisor list
-      setBookings((prev) => prev.filter((b) => b.id !== id));
+      // Advisor now sees bookings in read-only mode
+      const res = await client.get("/service-bookings");
+      setBookings(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to validate booking");
+      console.error("Failed to load bookings", err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (loading) return <p>Loading…</p>;
+
   return (
-    <div style={{ padding: "32px" }}>
-      <h1 style={{ fontSize: "28px", fontWeight: 600, marginBottom: "8px" }}>
-        Service Advisor Dashboard
-      </h1>
+    <div style={{ padding: 50 }}>
+      <h1 className="text-3xl font-bold">
+  Service Advisor Dashboard
+</h1>
 
-      <p style={{ color: "#555", marginBottom: "32px" }}>
-        Review and validate customer service bookings before admin approval.
-      </p>
+      
 
-      {/* =============================
-          ADVISOR WORKFLOW
-      ============================== */}
-      <div style={{ marginBottom: "40px" }}>
-        <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>
-          Advisor Workflow
-        </h2>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "24px",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <ActionCard
-            title="Review Booking"
-            description="Check customer request, date and service type"
-          />
-          <Arrow />
-          <ActionCard
-            title="Validate Booking"
-            description="Add advisor notes and validate booking"
-          />
-          <Arrow />
-          <ActionCard
-            title="Forward to Admin"
-            description="Validated booking moves to admin approval"
-          />
-        </div>
-      </div>
-
-      {/* =============================
-          PENDING BOOKINGS
-      ============================== */}
-      <div>
-        <h2 style={{ fontSize: "20px", marginBottom: "16px" }}>
-          Pending Service Bookings
-        </h2>
-
-        {loading && <p>Loading bookings…</p>}
-
-        {!loading && bookings.length === 0 && (
-          <p style={{ color: "#666" }}>
-            No pending bookings for validation.
-          </p>
+      <Table
+        headers={[
+          "ID",
+          "Customer",
+          "Part",
+          "Service Type",
+          "Date",
+          "Time",
+          "Customer Notes",
+        ]}
+      >
+        {bookings.length === 0 ? (
+          <EmptyRow colSpan={7} text="No service bookings" />
+        ) : (
+          bookings.map((b) => (
+            <tr key={b.id}>
+              <Td>{b.id}</Td>
+              <Td>{b.customer?.name || "-"}</Td>
+              <Td>{b.vehiclePart}</Td>
+              <Td>{b.serviceType.replaceAll("_", " ")}</Td>
+              <Td>{new Date(b.preferredDate).toLocaleDateString()}</Td>
+              <Td>{b.timeSlot}</Td>
+              <Td style={{ maxWidth: 260 }}>{b.notes || "—"}</Td>
+            </tr>
+          ))
         )}
-
-        {bookings.map((booking) => (
-          <BookingCard
-            key={booking.id}
-            booking={booking}
-            onValidate={handleValidate}
-          />
-        ))}
-      </div>
+      </Table>
     </div>
   );
 }
 
-/* =============================
-   BOOKING CARD
-============================= */
+/* ===============================
+   REUSABLE UI COMPONENTS
+=============================== */
 
-function BookingCard({ booking, onValidate }) {
-  const [notes, setNotes] = useState("");
-
+function Table({ headers, children }) {
   return (
-    <div
+    <table
       style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: "10px",
-        padding: "20px",
-        marginBottom: "16px",
+        width: "100%",
+        borderCollapse: "collapse",
+        marginTop: 12,
         background: "#fff",
       }}
     >
-      <h3 style={{ fontSize: "16px", marginBottom: "6px" }}>
-        {booking.customer?.name}
-      </h3>
-
-      <p style={{ fontSize: "13px", color: "#555" }}>
-        <strong>Vehicle Part:</strong> {booking.vehiclePart}
-      </p>
-
-      <p style={{ fontSize: "13px", color: "#555" }}>
-        <strong>Service Type:</strong> {booking.serviceType}
-      </p>
-
-      <p style={{ fontSize: "13px", color: "#555" }}>
-        <strong>Date:</strong>{" "}
-        {new Date(booking.preferredDate).toLocaleDateString()}
-      </p>
-
-      <p style={{ fontSize: "13px", color: "#555" }}>
-        <strong>Time Slot:</strong> {booking.timeSlot}
-      </p>
-
-      {booking.notes && (
-        <p style={{ fontSize: "13px", color: "#555", marginTop: "6px" }}>
-          <strong>Customer Notes:</strong> {booking.notes}
-        </p>
-      )}
-
-      <textarea
-        placeholder="Advisor notes (required)"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        rows={3}
-        style={{
-          width: "100%",
-          marginTop: "12px",
-          padding: "8px",
-          borderRadius: "6px",
-          border: "1px solid #d1d5db",
-          fontSize: "13px",
-        }}
-      />
-
-      <div style={{ marginTop: "12px", textAlign: "right" }}>
-        <button
-          onClick={() => onValidate(booking.id, notes)}
-          disabled={!notes.trim()}
-          style={{
-            background: "#2563eb",
-            color: "#fff",
-            padding: "8px 14px",
-            borderRadius: "6px",
-            border: "none",
-            cursor: notes.trim() ? "pointer" : "not-allowed",
-            opacity: notes.trim() ? 1 : 0.6,
-          }}
-        >
-          Validate Booking
-        </button>
-      </div>
-    </div>
+      <thead style={{ background: "#f1f5f9" }}>
+        <tr>
+          {headers.map((h) => (
+            <th
+              key={h}
+              style={{
+                padding: 10,
+                textAlign: "left",
+                fontSize: 13,
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>{children}</tbody>
+    </table>
   );
 }
 
-/* =============================
-   UI HELPERS
-============================= */
-
-function ActionCard({ title, description }) {
+function Td({ children, style }) {
   return (
-    <div
+    <td
       style={{
-        minWidth: "220px",
-        padding: "20px",
-        border: "1px solid #e5e7eb",
-        borderRadius: "10px",
-        background: "#f9fafb",
+        padding: 10,
+        fontSize: 13,
+        borderBottom: "1px solid #e5e7eb",
+        ...style,
       }}
     >
-      <h3 style={{ fontSize: "16px", marginBottom: "6px" }}>{title}</h3>
-      <p style={{ fontSize: "13px", color: "#555" }}>{description}</p>
-    </div>
+      {children}
+    </td>
   );
 }
 
-function Arrow() {
-  return <div style={{ fontSize: "24px", color: "#999" }}>→</div>;
+function EmptyRow({ colSpan, text }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} style={{ padding: 16, textAlign: "center" }}>
+        {text}
+      </td>
+    </tr>
+  );
 }

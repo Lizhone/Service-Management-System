@@ -42,6 +42,9 @@ import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
 import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
 import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
+import TestRide from "./pages/TestRide";
+import BikeDetails from "./pages/BikeDetails";
+
 
 /* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -226,6 +229,18 @@ export default function App() {
           </RoleBasedRoute>
         }
       />
+      {/*=============================================================
+         TEST RIDE PAGE (TEMP)
+         ====================================================== */}
+
+      <Route path="/test-ride" element={<TestRide />} />
+
+      {/*=============================================================}
+          BIKE DETAILS PAGE (TEMP)
+      ====================================================== */}
+      
+      <Route path="/bike/:id" element={<BikeDetails />} />
+
 
       {/* ======================================================
          FALLBACK

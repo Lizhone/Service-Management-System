@@ -42,26 +42,9 @@ export default function HeroSection() {
           FLEE
         </h1>
 
-        <p style={{ margin: "16px 0", maxWidth: "800px", fontSize: "3.5rem"}}>
+        <p style={{ margin: "16px 0", maxWidth: "1000px", fontSize: "3.5rem"}}>
           Smart. Stylish. Sustainable 
         </p>
-
-        <button
-          onClick={() => navigate("/login/customer")}
-           style={{
-           backgroundColor: "#facc15", // unchanged
-           color: "black",
-           padding: "28px 64px",       // ⬅️ BIGGER (height + width)
-           borderRadius: "999px",      // ⬅️ pill shape like image
-           fontWeight: 400,            // ⬅️ slightly bolder, still clean
-           fontSize: "18px",           // ⬅️ matches screenshot scale
-           cursor: "pointer",
-           
-           }}
-
-        >
-          Test Ride 
-        </button>
       </div>
     </section>
   );
