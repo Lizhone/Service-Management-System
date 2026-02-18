@@ -17,6 +17,7 @@ import {
 import { getMyServiceBookings } from "../controllers/serviceBookingController.js";
 import { requireCustomer } from "../middleware/customerAuth.js";
 import { authenticate } from "../middleware/authMiddleware.js";
+import { getMyProfile } from "../controllers/customerController.js";
 
 const router = express.Router();
 
@@ -27,8 +28,11 @@ const router = express.Router();
 router.get("/me/job-cards", requireCustomer, getMyJobCards);
 router.get("/me/service-bookings", requireCustomer, getMyServiceBookings);
 
-/* 🔥 FIX HERE: use requireCustomer */
+/* use requireCustomer */
 router.get("/me/vehicles", requireCustomer, getMyVehicles);
+router.get("/me", authenticate, getMyProfile);
+router.get("/:id", getCustomerById);
+
 
 router.post("/me/complaints", requireCustomer, createServiceComplaint);
 router.get("/me/complaints", requireCustomer, getMyServiceComplaints);

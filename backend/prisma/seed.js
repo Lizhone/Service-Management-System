@@ -4,10 +4,17 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log("🌱 Seeding started...");
+
+  // ===============================
+  // 1️⃣ ADMIN USER (SAFE UPSERT)
+  // ===============================
   const passwordHash = await bcrypt.hash("admin123", 10);
 
-  const admin = await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: "admin@example.com" },
+    update: {},
+    create: {
       name: "Admin",
       email: "admin@example.com",
       passwordHash,
@@ -16,16 +23,35 @@ async function main() {
     }
   });
 
-  console.log("✅ Admin user created:");
-  console.log({
-    email: admin.email,
-    password: "admin123"
-  });
+  console.log("✅ Admin ready (admin@example.com / admin123)");
+
+  // ===============================
+  // 2️⃣ TECHNICIAN PROFILES
+  // (NO LOGIN, NO PASSWORD)
+  // ===============================
+  const technicians = [
+    "Ramjan",
+    "Rahul",
+    "Balu",
+    "Ragu",
+    "Imran Pasha"
+  ];
+
+  for (const name of technicians) {
+    await prisma.technicianProfile.upsert({
+      where: { name },
+      update: {},
+      create: { name }
+    });
+  }
+
+  console.log("✅ Technician profiles created");
+  console.log("🌱 Seeding completed successfully");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seeding failed:", e);
     process.exit(1);
   })
   .finally(async () => {

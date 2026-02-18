@@ -44,6 +44,9 @@ import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
 import TestRide from "./pages/TestRide";
 import BikeDetails from "./pages/BikeDetails";
+import TechnicianJobDetail from "./pages/dashboard/TechnicianJobDetail";
+import CustomerBookingDetail from "./pages/CustomerBookingDetail";
+
 
 
 /* ================= ROUTE GUARDS ================= */
@@ -80,6 +83,15 @@ export default function App() {
           </RoleBasedRoute>
         }
       />
+      <Route
+  path="/dashboard/customer/booking/:bookingId"
+  element={
+    <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+      <CustomerBookingDetail />
+    </RoleBasedRoute>
+  }
+/>
+
 
       {/* ======================================================
          CUSTOMER ACTIONS
@@ -157,13 +169,23 @@ export default function App() {
       />
 
       <Route
-        path="/dashboard/technician"
-        element={
-          <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
-            <TechnicianDashboard />
-          </RoleBasedRoute>
-        }
-      />
+  path="/dashboard/technician"
+  element={
+    <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+      <TechnicianDashboard />
+    </RoleBasedRoute>
+  }
+/>
+
+<Route
+  path="/dashboard/technician/:technicianId"
+  element={
+    <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+      <TechnicianDashboard />
+    </RoleBasedRoute>
+  }
+/>
+
 
       <Route
         path="/dashboard/supply-chain"
@@ -240,6 +262,18 @@ export default function App() {
       ====================================================== */}
       
       <Route path="/bike/:id" element={<BikeDetails />} />
+      {/* ======================================================
+         TECHNICIAN JOB DETAIL
+      ====================================================== */}
+      <Route
+       path="/dashboard/technician/job/:bookingId"
+       element={
+      <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+      <TechnicianJobDetail />
+    </RoleBasedRoute>
+  }
+/>
+
 
 
       {/* ======================================================

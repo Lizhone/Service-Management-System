@@ -7,20 +7,37 @@ export function AdminTabsProvider({ children }) {
   const [tabs, setTabs] = useState([
     { id: "overview", title: "Overview", component: "overview" }
   ]);
+
   const [activeTab, setActiveTab] = useState("overview");
 
-  // ✅ ADD: admin notification state
   const [adminNotifications, setAdminNotifications] = useState({
     bookings: false,
-    complaints: false
+    complaints: false,
+    testRides: false,
   });
 
-  // ✅ ADD: fetch notification status ONCE
+  /* =====================================================
+     FETCH ALL NOTIFICATIONS (BOOKINGS + COMPLAINTS + TEST RIDES)
+  ====================================================== */
+
   useEffect(() => {
     const fetchNotificationStatus = async () => {
       try {
-        const res = await client.get("/admin/notifications/status");
-        setAdminNotifications(res.data);
+        // 1️⃣ Existing admin notifications (bookings + complaints)
+        const adminRes = await client.get("/admin/notifications/status");
+
+        // 2️⃣ Test ride unviewed count
+        const testRideRes = await client.get(
+          "/test-rides/unviewed-count"
+        );
+
+        setAdminNotifications(prev => ({
+          ...prev,
+          bookings: adminRes.data?.bookings || false,
+          complaints: adminRes.data?.complaints || false,
+          testRides: testRideRes.data?.count > 0,
+        }));
+
       } catch (err) {
         console.error("Failed to fetch admin notifications", err);
       }
@@ -29,21 +46,28 @@ export function AdminTabsProvider({ children }) {
     fetchNotificationStatus();
   }, []);
 
+  /* =====================================================
+     TAB LOGIC
+  ====================================================== */
+
   const openTab = (id, title, component) => {
     setTabs(prev => {
       const exists = prev.find(t => t.id === id);
       if (exists) return prev;
       return [...prev, { id, title, component }];
     });
+
     setActiveTab(id);
   };
 
   const closeTab = (id) => {
     setTabs(prev => {
       const filtered = prev.filter(t => t.id !== id);
+
       if (activeTab === id && filtered.length) {
         setActiveTab(filtered[filtered.length - 1].id);
       }
+
       return filtered;
     });
   };
@@ -56,10 +80,8 @@ export function AdminTabsProvider({ children }) {
         openTab,
         closeTab,
         setActiveTab,
-
-        // ✅ EXPOSE notification state
         adminNotifications,
-        setAdminNotifications
+        setAdminNotifications,
       }}
     >
       {children}

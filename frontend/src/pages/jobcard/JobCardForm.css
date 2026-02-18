@@ -1,64 +1,136 @@
+/* =========================
+   PAGE LAYOUT
+========================= */
 
-/* Page */
 .jobcard-page {
-  background: #f8fafc;
+  background: #f4f6f9;
   min-height: 100vh;
-  padding: 32px;
+  padding: 40px 20px;
+  font-family: "Inter", sans-serif;
 }
 
-/* Container */
 .jobcard-container {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 32px;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
-/* Header */
+/* =========================
+   HEADER
+========================= */
+
 .jobcard-title {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 6px;
+  color: #111827;
 }
 
 .jobcard-subtitle {
+  font-size: 14px;
   color: #6b7280;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
-/* Form */
+/* =========================
+   MODE TOGGLE
+========================= */
+
+.mode-toggle-wrapper {
+  margin-bottom: 30px;
+}
+
+.mode-toggle {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.toggle-btn:hover {
+  background: #e5e7eb;
+}
+
+.toggle-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.mode-description {
+  font-size: 13px;
+  margin-top: 10px;
+  color: #6b7280;
+}
+
+/* =========================
+   FORM STRUCTURE
+========================= */
+
 .jobcard-form {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 32px;
+}
+
+.form-section {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.form-section:last-child {
+  border-bottom: none;
 }
 
 .form-section h3 {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  color: #111827;
 }
 
-/* Inputs */
+/* =========================
+   LABELS
+========================= */
+
 label {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 6px;
   display: block;
+  color: #374151;
 }
+
+/* =========================
+   INPUTS
+========================= */
 
 input,
 select,
 textarea {
   width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 16px;
-  border-radius: 6px;
+  padding: 11px 14px;
+  margin-bottom: 18px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   font-size: 14px;
+  background: #ffffff;
+  transition: all 0.2s ease;
 }
 
 input:focus,
@@ -66,9 +138,13 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Actions */
+/* =========================
+   BUTTONS
+========================= */
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -78,45 +154,107 @@ textarea:focus {
 
 .btn-primary {
   background: #2563eb;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 6px;
+  color: #ffffff;
+  padding: 12px 22px;
+  border-radius: 8px;
   border: none;
   font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
 }
 
 .btn-secondary {
   background: transparent;
   border: 1px solid #d1d5db;
-  padding: 10px 18px;
-  border-radius: 6px;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
-/* ============================= */
-/* Vehicle Service-In Checklist  */
-/* ============================= */
+
+.btn-secondary:hover {
+  background: #f3f4f6;
+}
+
+/* =========================
+   JOB CARD HISTORY
+========================= */
+
+.job-history-section {
+  margin-top: 20px;
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.job-history-section h4 {
+  font-size: 14px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.job-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-card-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.job-card-item:last-child {
+  border-bottom: none;
+}
+
+.job-card-number {
+  font-weight: 600;
+}
+
+.job-card-status {
+  font-weight: 600;
+}
+
+/* =========================
+   VEHICLE CONDITION CHECKLIST
+========================= */
 
 .condition-checklist-section {
-  margin-top: 32px;
+  margin-top: 28px;
 }
 
 .condition-checklist-section h4 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-/* Table layout */
+/* Table */
 .condition-table {
-  width: 90%;
+  width: 100%;
   border-collapse: collapse;
-  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.condition-table thead {
+  background: #f3f4f6;
 }
 
 .condition-table th,
 .condition-table td {
-  border: 1px solid #e5e7eb;
   padding: 10px;
-  font-size: 14px;
+  border: 1px solid #e5e7eb;
   text-align: center;
 }
 
@@ -127,17 +265,15 @@ textarea:focus {
   width: 35%;
 }
 
-.condition-table thead {
-  background-color: #f9fafb;
-}
-
-/* Radio alignment */
 .condition-table input[type="radio"] {
   transform: scale(1.1);
   cursor: pointer;
 }
 
-/* Status colors (optional but clean) */
+/* =========================
+   STATUS COLORS
+========================= */
+
 .status-ok {
   color: #16a34a;
 }
@@ -148,4 +284,28 @@ textarea:focus {
 
 .status-damaged {
   color: #dc2626;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .jobcard-container {
+    padding: 24px;
+  }
+
+  .toggle-btn {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
 }

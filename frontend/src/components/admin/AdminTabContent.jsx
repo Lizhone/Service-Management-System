@@ -10,16 +10,19 @@ import Complaints from "../../pages/admin/Complaints.jsx";
 import Customers from "../../pages/admin/Customers.jsx";
 import Vehicles from "../../pages/admin/Vehicles.jsx";
 import WorkLogs from "../../pages/admin/WorkLogs.jsx";
+import TestRidesPanel from "../../pages/admin/TestRidesPanel.jsx";
+
 
 
 const COMPONENT_MAP = {
   overview: Overview,
-  "service-bookings": ServiceBookings, // ✅ ADD THIS
+  "service-bookings": ServiceBookings, // 
   "job-cards": AdminDashboard,
   complaints: Complaints,
   customers: Customers,
   vehicles: Vehicles,
   "work-logs": WorkLogs,
+  "test-rides": TestRidesPanel,
 };
 
 

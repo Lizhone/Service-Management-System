@@ -26,6 +26,11 @@ import adminNotificationRoutes from "./routes/adminNotificationRoutes.js";
 import advisorServiceBookingRoutes from "./routes/advisorServiceBookingRoutes.js";
 import serviceAdvisorRoutes from "./routes/serviceAdvisorRoutes.js";
 import testRideRoutes from "./routes/testRideRoutes.js";
+import adminStatsRoutes from "./routes/adminStatsRoutes.js";
+import technicianRoutes from "./routes/technicianRoutes.js";
+
+
+
 
 // ===============================
 // MIDDLEWARE
@@ -82,6 +87,11 @@ app.use(authenticate);
 
 // ===============================
 
+// PROTECTED ADMIN ROUTES
+app.use("/api/admin", adminStatsRoutes);
+
+//==============================
+
 // ADMIN NOTIFICATIONS
 
 app.use("/api", adminNotificationRoutes);
@@ -120,13 +130,18 @@ app.use("/api/service-bookings", serviceBookingRoutes);
 // SERVICE ADVISOR DASHBOARD
 app.use("/api/service-advisor", serviceAdvisorRoutes);
 app.use("/api/advisor", advisorServiceBookingRoutes);
+app.use("/api/service-advisor", serviceAdvisorRoutes);
+app.use("/api/advisor", advisorServiceBookingRoutes);
+
 
 //==============================
+// TECHNICIAN DASHBOARD
+app.use("/api/technicians", technicianRoutes);
 
 // ✅ ADMIN COMPLAINTS (GLOBAL)
 // ===============================
 app.use("/api/complaints", adminComplaintRoutes); // ✅ REQUIRED
-app.use("/api", adminComplaintRoutes); // kept as-is
+app.use("/api", adminComplaintRoutes); 
 
 // ===============================
 // SERVER STARTUP

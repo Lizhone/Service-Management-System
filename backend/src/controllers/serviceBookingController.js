@@ -19,16 +19,16 @@ export const createServiceBooking = async (req, res) => {
 
     // 🔒 Create booking (unique constraint prevents double slot booking)
     const booking = await prisma.serviceBooking.create({
-      data: {
-        customerId,
-        vehiclePart,
-        serviceType,
-        preferredDate: new Date(preferredDate),
-        timeSlot,
-        notes: notes || null,
-        status: "CONFIRMED",
-      },
-    });
+  data: {
+    customerId,
+    vehiclePart,
+    serviceType,
+    preferredDate: new Date(preferredDate),
+    timeSlot,
+    notes: notes || null,
+  },
+});
+
 
     // 🔥 Auto-create Job Card
     const jobCard = await prisma.jobCard.create({
@@ -105,9 +105,16 @@ export const getAllServiceBookings = async (req, res) => {
     const bookings = await prisma.serviceBooking.findMany({
       include: {
         customer: true,
-        jobCard: true,
+        claimedByProfile: true, // 🔥 technician name
+        jobCard: {
+          include: {
+            workLogs: {
+              orderBy: { createdAt: "asc" }
+            }
+          }
+        }
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" }
     });
 
     return res.json(bookings);
@@ -117,5 +124,37 @@ export const getAllServiceBookings = async (req, res) => {
     return res.status(500).json({
       error: "Failed to fetch service bookings",
     });
+  }
+};
+
+// ==========================================
+// CUSTOMER VIEW BOOKING WORK DETAILS
+// ==========================================
+export const getCustomerBookingDetail = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await prisma.serviceBooking.findUnique({
+      where: { id: Number(bookingId) },
+      include: {
+        jobCard: {
+          include: {
+            workLogs: {
+              orderBy: { createdAt: "asc" }
+            }
+          }
+        }
+      }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json(booking);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch booking detail" });
   }
 };

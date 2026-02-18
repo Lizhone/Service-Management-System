@@ -1,7 +1,6 @@
 import { useAdminTabs } from "../../context/AdminTabsContext";
 import client from "../../api/client";
 
-
 export default function AdminSidebar({ open = true }) {
   return (
     <aside
@@ -23,9 +22,33 @@ export default function AdminSidebar({ open = true }) {
       </Section>
 
       <Section title="Operations" open={open}>
-        <Item id="service-bookings" label="Service Bookings" component="service-bookings" open={open} />
-        <Item id="job-cards" label="Job Cards" component="job-cards" open={open} />
-        <Item id="complaints" label="Complaints" component="complaints" open={open} />
+        <Item
+          id="service-bookings"
+          label="Service Bookings"
+          component="service-bookings"
+          open={open}
+        />
+
+        <Item
+          id="test-rides"
+          label="Test Rides"
+          component="test-rides"
+          open={open}
+        />
+
+        <Item
+          id="job-cards"
+          label="Job Cards"
+          component="job-cards"
+          open={open}
+        />
+
+        <Item
+          id="complaints"
+          label="Complaints"
+          component="complaints"
+          open={open}
+        />
       </Section>
 
       <Section title="Roles" open={open}>
@@ -45,11 +68,19 @@ export default function AdminSidebar({ open = true }) {
   );
 }
 
+/* ================= SECTION ================= */
+
 function Section({ title, children, open }) {
   return (
     <div style={{ marginTop: "16px" }}>
       {open && (
-        <div style={{ fontSize: "12px", opacity: 0.6, padding: "0 12px" }}>
+        <div
+          style={{
+            fontSize: "12px",
+            opacity: 0.6,
+            padding: "0 12px",
+          }}
+        >
           {title}
         </div>
       )}
@@ -58,60 +89,80 @@ function Section({ title, children, open }) {
   );
 }
 
+/* ================= ITEM ================= */
+
 function Item({ id, label, component, open }) {
   const {
     openTab,
     activeTab,
-
-    // ✅ ADD: notification state (NOT removing anything)
     adminNotifications,
     setAdminNotifications,
   } = useAdminTabs();
 
   const isActive = activeTab === id;
 
-  // ✅ ADD: white dot condition
   const showDot =
     (id === "service-bookings" && adminNotifications?.bookings) ||
-    (id === "complaints" && adminNotifications?.complaints);
+    (id === "complaints" && adminNotifications?.complaints) ||
+    (id === "test-rides" && adminNotifications?.testRides);
+
+  const handleClick = async () => {
+    openTab(id, label, component);
+
+    try {
+      /* ================= TEST RIDES ================= */
+      if (id === "test-rides" && adminNotifications?.testRides) {
+        await client.put("/test-rides/mark-viewed");
+
+        const res = await client.get("/test-rides/unviewed-count");
+
+        setAdminNotifications(prev => ({
+          ...prev,
+          testRides: res.data.count > 0,
+        }));
+      }
+
+      /* ================= SERVICE BOOKINGS ================= */
+      if (id === "service-bookings" && adminNotifications?.bookings) {
+        await client.patch("/admin/notifications/bookings/viewed");
+
+        setAdminNotifications(prev => ({
+          ...prev,
+          bookings: false,
+        }));
+      }
+
+      /* ================= COMPLAINTS ================= */
+      if (id === "complaints" && adminNotifications?.complaints) {
+        await client.patch("/admin/notifications/complaints/viewed");
+
+        setAdminNotifications(prev => ({
+          ...prev,
+          complaints: false,
+        }));
+      }
+
+    } catch (err) {
+      console.error("Notification clear error:", err);
+    }
+  };
 
   return (
     <div
-      onClick={async () => {
-  openTab(id, label, component);
-
-  try {
-    if (id === "service-bookings" && adminNotifications?.bookings) {
-      await client.patch("/admin/notifications/bookings/viewed");
-      setAdminNotifications(prev => ({ ...prev, bookings: false }));
-    }
-
-    if (id === "complaints" && adminNotifications?.complaints) {
-      await client.patch("/admin/notifications/complaints/viewed");
-      setAdminNotifications(prev => ({ ...prev, complaints: false }));
-    }
-  } catch (err) {
-    console.error("Failed to clear admin notification", err);
-  }
-}}
-
+      onClick={handleClick}
       style={{
         cursor: "pointer",
         padding: "10px 12px",
         margin: "4px 0",
         borderRadius: "6px",
         background: isActive ? "#2563eb" : "transparent",
-        whiteSpace: "nowrap",
-
-        // ✅ ADD: layout for dot
         display: "flex",
-        alignItems: "center",
         justifyContent: "space-between",
+        alignItems: "center",
       }}
     >
       <span>{open ? label : label[0]}</span>
 
-      {/* ✅ ADD: WHITE DOT */}
       {showDot && (
         <span
           style={{

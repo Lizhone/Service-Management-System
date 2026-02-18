@@ -29,17 +29,29 @@ export default function CreateJobCard() {
   });
 
   const [form, setForm] = useState({
-    serviceType: "GENERAL",
-    serviceInDatetime: "",
-    customerId: "",
-    customerName: "",
-    customerPhone: "",
-    Address: "",
-    vehicleId: "",
-    vin: "",
-    vehicleModel: "",
-    remarks: "",
-  });
+  serviceType: "GENERAL",
+  serviceInDatetime: "",
+  odometer: "",
+  batteryVoltage: "",
+
+  customerId: "",
+  customerName: "",
+  customerPhone: "",
+  customerEmail: "",
+  customerAddress: "",
+
+  vehicleId: "",
+  vin: "",
+  vehicleModel: "",
+  registrationNumber: "",
+  batteryNumber: "",
+  motorNumber: "",
+  chargerNumber: "",
+  warrantyStatus: "",
+
+  remarks: "",
+});
+
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -143,13 +155,16 @@ export default function CreateJobCard() {
         return;
       }
 
-      payload = {
-        customerId: Number(form.customerId),
-        vehicleId: Number(form.vehicleId),
-        serviceType: form.serviceType,
-        serviceInDatetime: form.serviceInDatetime,
-        remarks: form.remarks,
-      };
+     payload = {
+  customerId: Number(form.customerId),
+  vehicleId: Number(form.vehicleId),
+  serviceType: form.serviceType,
+  serviceInDatetime: form.serviceInDatetime,
+  odometer: form.odometer,
+  batteryVoltage: form.batteryVoltage,
+  remarks: form.remarks,
+};
+
 
       endpoint = "/job-cards";
     } else {
@@ -165,14 +180,25 @@ export default function CreateJobCard() {
       }
 
       payload = {
-        serviceType: form.serviceType,
-        serviceInDatetime: form.serviceInDatetime,
-        customerName: form.customerName,
-        customerPhone: form.customerPhone,
-        vin: form.vin,
-        vehicleModel: form.vehicleModel,
-        remarks: form.remarks,
-      };
+  serviceType: form.serviceType,
+  serviceInDatetime: form.serviceInDatetime,
+  odometer: form.odometer,
+  batteryVoltage: form.batteryVoltage,
+  remarks: form.remarks,
+
+  customerName: form.customerName,
+  customerPhone: form.customerPhone,
+  customerEmail: form.customerEmail,
+  customerAddress: form.customerAddress,
+
+  vin: form.vin,
+  vehicleModel: form.vehicleModel,
+  registrationNumber: form.registrationNumber,
+  batteryNumber: form.batteryNumber,
+  motorNumber: form.motorNumber,
+  chargerNumber: form.chargerNumber,
+  warrantyStatus: form.warrantyStatus,
+};
 
       endpoint = "/job-cards/create-with-details";
     }
@@ -195,26 +221,36 @@ export default function CreateJobCard() {
   return (
     <div className="jobcard-page">
       <div className="jobcard-container">
-        <h1>Create Job Card</h1>
+        <h1>Create Job Card<b></b></h1>
         <p>Fill in service, customer, and vehicle details</p>
 
         {/* Mode Selection */}
-        <div className="mode-selection">
-          <button
-            type="button"
-            className={mode === "new" ? "mode-btn active" : "mode-btn"}
-            onClick={() => handleModeChange("new")}
-          >
-            Create New Customer & Vehicle
-          </button>
-          <button
-            type="button"
-            className={mode === "existing" ? "mode-btn active" : "mode-btn"}
-            onClick={() => handleModeChange("existing")}
-          >
-            Use Existing Customer & Vehicle
-          </button>
-        </div>
+        <div className="mode-toggle-wrapper">
+  <div className="mode-toggle">
+    <button
+      type="button"
+      className={mode === "new" ? "toggle-btn active" : "toggle-btn"}
+      onClick={() => handleModeChange("new")}
+    >
+      + New Customer & Vehicle
+    </button>
+
+    <button
+      type="button"
+      className={mode === "existing" ? "toggle-btn active" : "toggle-btn"}
+      onClick={() => handleModeChange("existing")}
+    >
+      ↺ Existing Customer & Vehicle
+    </button>
+  </div>
+
+  <p className="mode-description">
+    {mode === "new"
+      ? "Creating a brand new customer and vehicle record."
+      : "Using already registered customer and vehicle."}
+  </p>
+</div>
+
 
         <form onSubmit={handleSubmit} className="jobcard-form">
           {/* Service */}
@@ -245,6 +281,23 @@ export default function CreateJobCard() {
               onChange={handleChange}
               required
             />
+            <label>Odometer</label>
+<input
+  type="number"
+  name="odometer"
+  value={form.odometer}
+  onChange={handleChange}
+/>
+
+<label>Battery Voltage</label>
+<input
+  type="number"
+  step="0.01"
+  name="batteryVoltage"
+  value={form.batteryVoltage}
+  onChange={handleChange}
+/>
+
           </div>
 
           {/* Customer */}
@@ -358,6 +411,20 @@ export default function CreateJobCard() {
                   onChange={handleChange}
                   required
                 />
+                <label>Email</label>
+<input
+  name="customerEmail"
+  value={form.customerEmail}
+  onChange={handleChange}
+/>
+
+<label>Address</label>
+<input
+  name="customerAddress"
+  value={form.customerAddress}
+  onChange={handleChange}
+/>
+
               </>
             )}
 
@@ -407,6 +474,41 @@ export default function CreateJobCard() {
                   <option value="Shera">Shera</option>
                   <option value="White Carbon">White Carbon</option>
                 </select>
+                <label>Registration Number</label>
+<input
+  name="registrationNumber"
+  value={form.registrationNumber}
+  onChange={handleChange}
+/>
+
+<label>Battery Number</label>
+<input
+  name="batteryNumber"
+  value={form.batteryNumber}
+  onChange={handleChange}
+/>
+
+<label>Motor Number</label>
+<input
+  name="motorNumber"
+  value={form.motorNumber}
+  onChange={handleChange}
+/>
+
+<label>Charger Number</label>
+<input
+  name="chargerNumber"
+  value={form.chargerNumber}
+  onChange={handleChange}
+/>
+
+<label>Warranty Status</label>
+<input
+  name="warrantyStatus"
+  value={form.warrantyStatus}
+  onChange={handleChange}
+/>
+
               </>
             )}
 

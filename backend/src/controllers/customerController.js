@@ -102,6 +102,40 @@ export const getMyVehicles = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch vehicles" });
   }
 };
+/* ===============================
+   GET /api/customers/me
+   (CUSTOMER PROFILE)
+================================ */
+export const getMyProfile = async (req, res) => {
+  try {
+    const customerId = req.user?.id;
+
+    if (!customerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: {
+        id: true,
+        name: true,
+        mobileNumber: true,
+        email: true,
+        address: true,
+      },
+    });
+
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    res.json(customer);
+  } catch (error) {
+    console.error("Failed to fetch profile:", error);
+    res.status(500).json({ error: "Failed to load profile" });
+  }
+};
+
 
 /* ===============================
    POST /api/customers

@@ -31,46 +31,61 @@ enum Role {
   SALES
 }
 
+//////////////////////////////////////////////////////
+// TECHNICIAN PROFILES (NO LOGIN, SHARED AUTH)
+//////////////////////////////////////////////////////
+
+model TechnicianProfile {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  serviceBookings ServiceBooking[]
+}
+
 
 
 //////////////////////////////////////////////////////
 // CUSTOMER & VEHICLE
 //////////////////////////////////////////////////////
-
 model Customer {
   id           Int      @id @default(autoincrement())
   name         String
   mobileNumber String   @unique
+  email        String?   // 👈 ADD THIS
   address      String?
   gstNumber    String?
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  passwordHash String?  // For password-based login
+  passwordHash String?
 
   vehicles Vehicle[]
   jobCards JobCard[]
-  serviceBookings  ServiceBooking[] 
+  serviceBookings ServiceBooking[]
 }
 
 model Vehicle {
-  id                 Int      @id @default(autoincrement())
-  customerId         Int
-  vinNumber          String   @unique
-  model              String
+  id               Int      @id @default(autoincrement())
+  customerId       Int
+  vinNumber        String @unique
+  model            String
   registrationNumber String?
-  batteryNumber      String?
-  motorNumber        String?
-  chargerNumber      String?
-  warrantyStatus     String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  batteryNumber    String?
+  motorNumber      String?
+  chargerNumber    String?
+  warrantyStatus   String?
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  jobCards JobCard[]
+  customer Customer @relation(fields: [customerId], references: [id])
 
-  @@index([customerId])
+  jobCards JobCard[]   
 }
+
+
 
 //////////////////////////////////////////////////////
 // JOB CARD (CORE)
@@ -100,7 +115,7 @@ model JobCard {
   media        JobCardMedia[]
   workLogs     WorkLog[]
 
-  // ✅ ADD THIS LINE ONLY (required opposite relation)
+  // ==============
   serviceBooking ServiceBooking?
 
   @@index([customerId])
@@ -197,8 +212,12 @@ model JobCardMedia {
 }
 
 ////////////////////////////////////////////////////
-//Service Booking 
-////////////////////////////////////////////////////
+enum BookingStatus {
+  NEW
+  CLAIMED
+  IN_PROGRESS
+  COMPLETED
+}
 
 model ServiceBooking {
   id            Int      @id @default(autoincrement())
@@ -208,18 +227,25 @@ model ServiceBooking {
   preferredDate DateTime
   timeSlot      String
   notes         String?
-  status        String   @default("CONFIRMED")
+
+  status        BookingStatus @default(NEW)
   createdAt     DateTime @default(now())
 
-  viewedByAdminAt DateTime?   // 
+  viewedByAdminAt DateTime?
 
   jobCardId Int?     @unique
   jobCard   JobCard? @relation(fields: [jobCardId], references: [id])
 
   customer Customer @relation(fields: [customerId], references: [id])
 
+  claimedByProfileId Int?
+  claimedByProfile   TechnicianProfile? @relation(fields: [claimedByProfileId], references: [id])
+
   @@unique([preferredDate, timeSlot])
 }
+
+
+
 /////////////////////////////////////////////////////////////
 //TestRide
 //////////////////////////////////////////////////////////

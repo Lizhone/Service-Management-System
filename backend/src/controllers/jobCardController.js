@@ -16,9 +16,6 @@ const ALLOWED_SERVICE_TYPES = [
   "SPARES_DISPATCH",
 ];
 
-/* ================================
-   HELPERS
-================================ */
 function isValidServiceType(value) {
   return ALLOWED_SERVICE_TYPES.includes(value);
 }
@@ -31,7 +28,7 @@ function parseDateOrFail(value) {
 }
 
 /* ================================
-   CREATE JOB CARD
+   CREATE JOBCARD
 ================================ */
 export const createJobCard = async (req, res) => {
   try {
@@ -40,6 +37,8 @@ export const createJobCard = async (req, res) => {
       vehicleId,
       serviceType,
       serviceInDatetime,
+      odometer,
+      batteryVoltage,
       remarks,
     } = req.body;
 
@@ -50,9 +49,7 @@ export const createJobCard = async (req, res) => {
     }
 
     if (!isValidServiceType(serviceType)) {
-      return res.status(400).json({
-        error: `Invalid serviceType: ${serviceType}`,
-      });
+      return res.status(400).json({ error: "Invalid serviceType" });
     }
 
     const parsedDate = parseDateOrFail(serviceInDatetime);
@@ -70,6 +67,10 @@ export const createJobCard = async (req, res) => {
         serviceType,
         status: "OPEN",
         serviceInDatetime: parsedDate,
+        odometer: odometer ? Number(odometer) : null,
+        batteryVoltage: batteryVoltage
+          ? Number(batteryVoltage)
+          : null,
         remarks: remarks || null,
       },
     });
@@ -82,19 +83,26 @@ export const createJobCard = async (req, res) => {
 };
 
 /* ================================
-   CREATE JOB CARD WITH DETAILS
+   CREATE WITH DETAILS
 ================================ */
 export const createJobCardWithDetails = async (req, res) => {
   try {
     const {
       customerName,
       customerPhone,
+      customerEmail,
+      customerAddress,
       vin,
       vehicleModel,
-      customerId,
-      vehicleId,
+      registrationNumber,
+      batteryNumber,
+      motorNumber,
+      chargerNumber,
+      warrantyStatus,
       serviceType,
       serviceInDatetime,
+      odometer,
+      batteryVoltage,
       remarks,
     } = req.body;
 
@@ -109,65 +117,71 @@ export const createJobCardWithDetails = async (req, res) => {
       });
     }
 
-    let finalCustomerId = customerId;
-    let finalVehicleId = vehicleId;
-
-    if (!finalCustomerId) {
-      let customer = await prisma.customer.findUnique({
+    const result = await prisma.$transaction(async (tx) => {
+      let customer = await tx.customer.findUnique({
         where: { mobileNumber: customerPhone },
       });
 
       if (!customer) {
-        customer = await prisma.customer.create({
+        customer = await tx.customer.create({
           data: {
             name: customerName,
             mobileNumber: customerPhone,
+            email: customerEmail || null,
+            address: customerAddress || null,
           },
         });
       }
 
-      finalCustomerId = customer.id;
-    }
-
-    if (!finalVehicleId) {
-      let vehicle = await prisma.vehicle.findUnique({
+      let vehicle = await tx.vehicle.findUnique({
         where: { vinNumber: vin },
       });
 
       if (!vehicle) {
-        vehicle = await prisma.vehicle.create({
+        vehicle = await tx.vehicle.create({
           data: {
             vinNumber: vin,
             model: vehicleModel,
-            customerId: finalCustomerId,
+            customerId: customer.id,
+            registrationNumber: registrationNumber || null,
+            batteryNumber: batteryNumber || null,
+            motorNumber: motorNumber || null,
+            chargerNumber: chargerNumber || null,
+            warrantyStatus: warrantyStatus || null,
           },
         });
       }
 
-      finalVehicleId = vehicle.id;
-    }
+      const jobCard = await tx.jobCard.create({
+        data: {
+          jobCardNumber: `JC-${Date.now()}`,
+          customerId: customer.id,
+          vehicleId: vehicle.id,
+          serviceType,
+          status: "OPEN",
+          serviceInDatetime: parsedDate,
+          odometer: odometer ? Number(odometer) : null,
+          batteryVoltage: batteryVoltage
+            ? Number(batteryVoltage)
+            : null,
+          remarks: remarks || null,
+        },
+      });
 
-    const jobCard = await prisma.jobCard.create({
-      data: {
-        jobCardNumber: `JC-${Date.now()}`,
-        customerId: finalCustomerId,
-        vehicleId: finalVehicleId,
-        serviceType,
-        status: "OPEN",
-        serviceInDatetime: parsedDate,
-        remarks: remarks || null,
-      },
+      return jobCard;
     });
 
-    return res.status(201).json(jobCard);
+    return res.status(201).json(result);
   } catch (error) {
     console.error("createJobCardWithDetails failed:", error);
-    return res.status(500).json({ error: "Failed to create job card" });
+    return res.status(500).json({
+      error: error.message || "Failed to create job card",
+    });
   }
 };
 
 /* ================================
-   GET SINGLE JOB CARD ✅ FINAL
+   GET SINGLE JOBCARD
 ================================ */
 export const getJobCard = async (req, res) => {
   try {
@@ -178,12 +192,7 @@ export const getJobCard = async (req, res) => {
       include: {
         customer: true,
         vehicle: true,
-
-        // 🔥 REAL PRISMA RELATION
-        complaints: {
-          orderBy: { createdAt: "desc" },
-        },
-
+        complaints: true,
         inspections: true,
         parts: true,
         workLogs: true,
@@ -195,11 +204,7 @@ export const getJobCard = async (req, res) => {
       return res.status(404).json({ error: "Job card not found" });
     }
 
-    // 🔥 NORMALIZED RESPONSE FOR FRONTEND
-    return res.json({
-      ...jobCard,
-      serviceComplaints: jobCard.complaints, // 👈 THIS MAKES UI WORK
-    });
+    return res.json(jobCard);
   } catch (error) {
     console.error("Fetch job card failed:", error);
     return res.status(500).json({ error: "Failed to fetch job card" });
@@ -207,24 +212,12 @@ export const getJobCard = async (req, res) => {
 };
 
 /* ================================
-   UPDATE JOB CARD
+   UPDATE JOBCARD
 ================================ */
 export const updateJobCard = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const data = { ...req.body };
-
-    if (data.serviceType && !isValidServiceType(data.serviceType)) {
-      return res.status(400).json({ error: "Invalid serviceType" });
-    }
-
-    if (data.serviceInDatetime) {
-      const parsedDate = parseDateOrFail(data.serviceInDatetime);
-      if (!parsedDate) {
-        return res.status(400).json({ error: "Invalid serviceInDatetime" });
-      }
-      data.serviceInDatetime = parsedDate;
-    }
 
     const jobCard = await prisma.jobCard.update({
       where: { id },
@@ -239,7 +232,7 @@ export const updateJobCard = async (req, res) => {
 };
 
 /* ================================
-   UPDATE JOB STATUS
+   UPDATE STATUS
 ================================ */
 export const updateJobStatus = async (req, res) => {
   try {
@@ -259,7 +252,7 @@ export const updateJobStatus = async (req, res) => {
 };
 
 /* ================================
-   DELETE JOB CARD
+   DELETE JOBCARD
 ================================ */
 export const deleteJobCard = async (req, res) => {
   try {
@@ -273,15 +266,11 @@ export const deleteJobCard = async (req, res) => {
 };
 
 /* ================================
-   JOB CARD HISTORY BY CUSTOMER
+   HISTORY
 ================================ */
 export const getJobCardHistoryByCustomer = async (req, res) => {
   try {
     const customerId = Number(req.params.customerId);
-
-    if (!customerId || Number.isNaN(customerId)) {
-      return res.status(400).json({ error: "Invalid customer ID" });
-    }
 
     const jobCards = await prisma.jobCard.findMany({
       where: { customerId },
@@ -291,7 +280,7 @@ export const getJobCardHistoryByCustomer = async (req, res) => {
 
     return res.json(jobCards);
   } catch (error) {
-    console.error("Job card history fetch failed:", error);
-    return res.status(500).json({ error: "Failed to fetch job card history" });
+    console.error("History fetch failed:", error);
+    return res.status(500).json({ error: "Failed to fetch history" });
   }
 };

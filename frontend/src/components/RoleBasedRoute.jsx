@@ -4,9 +4,13 @@ import { useAuth } from "../hooks/useAuth";
 export default function RoleBasedRoute({ allowedRoles, children }) {
   const { user, loading } = useAuth();
 
-  // 🔥 DO NOTHING while auth is loading
+  // 🔥 Show minimal loader instead of null
   if (loading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#01263B] text-white">
+        Loading...
+      </div>
+    );
   }
 
   if (!user) {

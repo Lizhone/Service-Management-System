@@ -4,25 +4,45 @@ import client from "../api/client";
 import { useAuth } from "../hooks/useAuth";
 
 export default function CustomerDashboard() {
-  const { user, loading } = useAuth(); // ✅ include loading
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  const [vehicles, setVehicles] = useState([]);
   const [jobCards, setJobCards] = useState([]);
   const [serviceBookings, setServiceBookings] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [error, setError] = useState("");
+  const [profile, setProfile] = useState(null);
 
-  /* 🚫 WAIT FOR AUTH */
+
+  /* ================= AUTH GUARD ================= */
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login/customer", { replace: true });
     }
   }, [loading, user, navigate]);
 
-  /* ================= JOB CARDS ================= */
+  /* ================= LOAD VEHICLES ================= */
   useEffect(() => {
-    if (loading || !user) return; // ✅ GUARD
+    if (loading || !user) return;
+
+    const loadVehicles = async () => {
+      try {
+        const res = await client.get("/customers/me/vehicles");
+        setVehicles(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Failed to load vehicles:", err);
+      }
+    };
+
+    loadVehicles();
+  }, [loading, user]);
+
+
+  /* ================= LOAD JOB CARDS ================= */
+  useEffect(() => {
+    if (loading || !user) return;
 
     const loadJobCards = async () => {
       try {
@@ -39,126 +59,200 @@ export default function CustomerDashboard() {
     loadJobCards();
   }, [loading, user]);
 
-  /* ================= SERVICE BOOKINGS ================= */
+  /* ================= LOAD SERVICE BOOKINGS ================= */
   useEffect(() => {
-    if (loading || !user) return; // ✅ GUARD
+    if (loading || !user) return;
 
     const loadServiceBookings = async () => {
-      try {
-        const res = await client.get("/customers/me/service-bookings");
-        setServiceBookings(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingBookings(false);
-      }
-    };
+  try {
+    const res = await client.get("/customers/me/service-bookings");
+
+    const bookingsData =
+      Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+        ? res.data.data
+        : [];
+
+    console.log("Parsed bookings:", bookingsData);
+
+    setServiceBookings(bookingsData);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoadingBookings(false);
+  }
+};
+
 
     loadServiceBookings();
   }, [loading, user]);
 
-  /* ⏳ WAIT SCREEN */
-  if (loading || !user) {
-    return null;
-  }
+  if (loading || !user) return null;
+
+  const primaryVehicle = vehicles[0];
+
+  const getBikeImage = (model) => {
+    if (!model) return "/bikes/flee-b1/default.png";
+    return `/bikes/flee-${model.toLowerCase()}/default.png`;
+  };
 
   const statusColors = {
     OPEN: "bg-yellow-100 text-yellow-800",
     IN_PROGRESS: "bg-blue-100 text-blue-800",
     CLOSED: "bg-green-100 text-green-800",
   };
+  useEffect(() => {
+  if (loading || !user) return;
+
+  const loadProfile = async () => {
+    try {
+      const res = await client.get("/customers/me");
+      setProfile(res.data);
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+    }
+  };
+
+  loadProfile();
+}, [loading, user]);
+
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-1">
-        Welcome, {user?.name}
+    <div className="min-h-screen bg-[#01263B] text-white p-8">
+
+      {/* ================= HEADER ================= */}
+      <h1 className="text-3xl font-bold mb-6">
+        Welcome back, <span className="text-cyan-400">{user.name}</span>
       </h1>
+      {profile && (
+  <div className="mb-6 text-gray-300 space-y-1">
+    <p>Phone: {profile.mobileNumber || "-"}</p>
+    <p>Email: {profile.email || "-"}</p>
+    <p>Address: {profile.address || "-"}</p>
+  </div>
+)}
 
-      <p className="mb-6 text-gray-700">
-        Manage and track your service requests
-      </p>
 
+      {/* ================= VEHICLE CARD ================= */}
+      {primaryVehicle && (
+        <div className="bg-[#0A3A55] p-6 rounded-xl mb-8 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-semibold mb-2">
+              {primaryVehicle.model}
+            </h2>
+
+            <p className="text-gray-300">VIN: {primaryVehicle.vinNumber}</p>
+            <p className="text-gray-300">
+              Registration: {primaryVehicle.registrationNumber || "-"}
+            </p>
+            <p className="text-gray-300">
+              Battery No: {primaryVehicle.batteryNumber || "-"}
+            </p>
+            <p className="text-gray-300">
+              Motor No: {primaryVehicle.motorNumber || "-"}
+            </p>
+            <p className="text-gray-300">
+              Charger No: {primaryVehicle.chargerNumber || "-"}
+            </p>
+            <p className="text-gray-300">
+              Warranty: {primaryVehicle.warrantyStatus || "-"}
+            </p>
+          </div>
+
+          <img
+            src={getBikeImage(primaryVehicle.model)}
+            alt="Bike"
+            className="w-64 object-contain"
+          />
+        </div>
+      )}
+
+      {/* ================= BOOK SERVICE BUTTON ================= */}
       <button
-        className="bg-blue-600 text-white px-4 py-2 rounded mb-8"
+        className="bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-2 rounded-lg mb-8"
         onClick={() => navigate("/customer/book-service")}
       >
         + Book Service
       </button>
 
       {/* ================= SERVICE BOOKINGS ================= */}
-      <h2 className="text-lg font-semibold mb-3">
-        Service Bookings
-      </h2>
+<h2 className="text-lg font-semibold mb-4">Service Bookings</h2>
 
-      {loadingBookings ? (
-        <p className="text-gray-500 mb-10">Loading...</p>
-      ) : serviceBookings.length === 0 ? (
-        <p className="text-gray-500 mb-10">
-          No service bookings found.
-        </p>
-      ) : (
-        <table className="min-w-full border bg-white mb-12">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-2 px-3 text-left">Booking Ref</th>
-              <th className="py-2 px-3 text-left">Part</th>
-              <th className="py-2 px-3 text-left">Date</th>
-              <th className="py-2 px-3 text-left">Time</th>
-              <th className="py-2 px-3 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {serviceBookings.map((b) => (
-              <tr key={b.id} className="border-t">
-                <td className="py-2 px-3 font-mono">SB-{b.id}</td>
-                <td className="py-2 px-3">{b.vehiclePart}</td>
-                <td className="py-2 px-3">
-                  {new Date(b.preferredDate).toLocaleDateString()}
-                </td>
-                <td className="py-2 px-3">{b.timeSlot}</td>
-                <td className="py-2 px-3 font-semibold">{b.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+{loadingBookings ? (
+  <p className="text-gray-300 mb-10">Loading...</p>
+) : serviceBookings.length === 0 ? (
+  <p className="text-gray-300 mb-10">No service bookings found.</p>
+) : (
+  <table className="min-w-full bg-white text-black rounded-xl overflow-hidden mb-12">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="py-3 px-4 text-left">Booking Ref</th>
+        <th className="py-3 px-4 text-left">Part</th>
+        <th className="py-3 px-4 text-left">Date</th>
+        <th className="py-3 px-4 text-left">Time</th>
+        <th className="py-3 px-4 text-left">Status</th>
+        <th className="py-3 px-4 text-left">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {serviceBookings.map((b) => (
+        <tr key={b.id} className="border-t">
+          <td className="py-3 px-4 font-mono">SB-{b.id}</td>
+          <td className="py-3 px-4">{b.vehiclePart}</td>
+          <td className="py-3 px-4">
+            {new Date(b.preferredDate).toLocaleDateString()}
+          </td>
+          <td className="py-3 px-4">{b.timeSlot}</td>
+          <td className="py-3 px-4 font-semibold">{b.status}</td>
+          <td className="py-3 px-4">
+            <button
+              onClick={() =>
+                navigate(`/dashboard/customer/booking/${b.id}`)
+              }
+              className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1 rounded text-sm"
+            >
+              View Work
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+)}
+
 
       {/* ================= JOB CARDS ================= */}
-      <h2 className="text-lg font-semibold mb-3">
-        Job Cards
-      </h2>
+      <h2 className="text-lg font-semibold mb-4">Job Cards</h2>
 
       {loadingJobs ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-300">Loading...</p>
       ) : jobCards.length === 0 ? (
-        <p className="text-gray-500">
-          No job cards found.
-        </p>
+        <p className="text-gray-300">No job cards found.</p>
       ) : (
-        <table className="min-w-full border bg-white">
+        <table className="min-w-full bg-white text-black rounded-xl overflow-hidden">
           <thead className="bg-gray-100">
             <tr>
-              <th className="py-2 px-3 text-left">Job Card #</th>
-              <th className="py-2 px-3 text-left">Vehicle</th>
-              <th className="py-2 px-3 text-left">Service Type</th>
-              <th className="py-2 px-3 text-left">Status</th>
-              <th className="py-2 px-3 text-left">Created</th>
-              <th className="py-2 px-3 text-left">Action</th>
+              <th className="py-3 px-4 text-left">Job Card #</th>
+              <th className="py-3 px-4 text-left">Vehicle</th>
+              <th className="py-3 px-4 text-left">Service Type</th>
+              <th className="py-3 px-4 text-left">Odometer</th>
+              <th className="py-3 px-4 text-left">Voltage</th>
+              <th className="py-3 px-4 text-left">Status</th>
+              <th className="py-3 px-4 text-left">Created</th>
+              <th className="py-3 px-4 text-left">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {jobCards.map((job) => (
               <tr key={job.id} className="border-t">
-                <td className="px-3 py-2 font-mono">
-                  {job.jobCardNumber}
-                </td>
-                <td className="px-3 py-2">
-                  {job.vehicle?.model || "-"}
-                </td>
-                <td className="px-3 py-2">
-                  {job.serviceType}
-                </td>
-                <td className="px-3 py-2">
+                <td className="px-4 py-3 font-mono">{job.jobCardNumber}</td>
+                <td className="px-4 py-3">{job.vehicle?.model || "-"}</td>
+                <td className="px-4 py-3">{job.serviceType}</td>
+                <td className="px-4 py-3">{job.odometer ?? "-"}</td>
+                <td className="px-4 py-3">{job.batteryVoltage ?? "-"}</td>
+                <td className="px-4 py-3">
                   <span
                     className={`px-2 py-1 rounded text-xs ${
                       statusColors[job.status] ||
@@ -168,19 +262,16 @@ export default function CustomerDashboard() {
                     {job.status}
                   </span>
                 </td>
-                <td className="px-3 py-2">
+                <td className="px-4 py-3">
                   {new Date(job.createdAt).toLocaleDateString()}
                 </td>
-                <td className="px-3 py-2 space-x-3">
+                <td className="px-4 py-3 space-x-4">
                   <Link
                     to={`/job-cards/${job.id}`}
                     className="text-blue-600 underline"
                   >
                     View
                   </Link>
-
-                  <span style={{ margin: "0 12px" }}>|</span>
-
                   <Link
                     to={`/customer/raise-complaint?jobCardId=${job.id}`}
                     className="text-red-600 underline"
@@ -194,9 +285,7 @@ export default function CustomerDashboard() {
         </table>
       )}
 
-      {error && (
-        <p className="text-red-600 mt-6">{error}</p>
-      )}
+      {error && <p className="text-red-400 mt-6">{error}</p>}
     </div>
   );
 }

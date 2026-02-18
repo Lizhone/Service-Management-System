@@ -43,27 +43,34 @@ export default function TestRide() {
   const back = () => setStep((prev) => prev - 1);
 
   const handleConfirm = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await axios.post("http://localhost:4000/api/test-rides", {
-        bikeName: formData.bike,
-        location: formData.location,
-        date: formData.date,
-        timeSlot: formData.time,
-        fullName: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-      });
+    await axios.post("http://localhost:4000/api/test-rides", {
+      bikeName: formData.bike,
+      location: formData.location,
+      date: formData.date,
+      timeSlot: formData.time,
+      fullName: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+    });
 
-      setStep(5);
-    } catch (error) {
-      console.error("Booking Error:", error);
-      alert("Booking failed");
-    } finally {
-      setLoading(false);
+    setStep(5); // go to success only if booking succeeds
+
+  } catch (error: any) {
+    console.log("Full error:", error);
+
+    if (error.response?.data?.message) {
+      alert(error.response.data.message);
+    } else {
+      alert("Booking failed. Please try again.");
     }
-  };
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">

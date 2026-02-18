@@ -76,15 +76,18 @@ export default function StaffLogin() {
           <User size={30} className="text-white" />
 
           <input
-            type="email"
-            placeholder="Username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 bg-transparent 
-                       outline-none 
-                       text-white 
-                       placeholder-gray-300"
-          />
+  type="email"
+  name="staff-email"           // prevents Chrome email autofill detection
+  autoComplete="new-email"     // disables autofill behavior
+  placeholder="Username"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  className="flex-1 bg-transparent 
+             outline-none 
+             text-white 
+             placeholder-gray-300"
+/>
+
         </div>
 
         {/* Password Field */}
@@ -101,9 +104,10 @@ export default function StaffLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="flex-1 bg-transparent 
-                       outline-none 
-                       text-white 
-                       placeholder-gray-300"
+           outline-none 
+           text-[#01263B] 
+           placeholder-gray-400"
+
           />
 
           <button
