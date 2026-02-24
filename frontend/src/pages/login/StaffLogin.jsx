@@ -77,16 +77,15 @@ export default function StaffLogin() {
 
           <input
   type="email"
-  name="staff-email"           // prevents Chrome email autofill detection
-  autoComplete="new-email"     // disables autofill behavior
   placeholder="Username"
   value={email}
   onChange={(e) => setEmail(e.target.value)}
   className="flex-1 bg-transparent 
              outline-none 
-             text-white 
-             placeholder-gray-300"
+             text-[#01263B] 
+             placeholder-gray-400"
 />
+
 
         </div>
 

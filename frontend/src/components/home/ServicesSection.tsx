@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 /* =========================
    Types
 ========================= */
@@ -35,9 +34,8 @@ function BikeSlide({ bike }: { bike: Bike }) {
   );
 
   return (
-    <div className="h-screen w-full bg-gradient-to-b from-gray-900 via-black to-gray-900 flex flex-col justify-between text-white">
-
-      {/* ===== IMAGE AREA (Fixed Height) ===== */}
+    <div className="min-h-screen w-full bg-linear-to-b from-gray-900 via-black to-black flex flex-col justify-between text-white py-20">
+      {/* ===== IMAGE AREA ===== */}
       <div className="flex-1 flex items-center justify-center">
         <div className="h-[55vh] w-full flex items-center justify-center">
           <img
@@ -50,43 +48,38 @@ function BikeSlide({ bike }: { bike: Bike }) {
       </div>
 
       {/* ===== GLASS PANEL ===== */}
-      <div className="w-[80%] max-w-5xl mx-auto mb-12 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
-
+      <div className="w-[80%] max-w-5xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8">
         {/* Top Row */}
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight">
               {bike.name}
             </h2>
-            <p className="text-gray-400 mt-1">
-              {bike.tagline}
-            </p>
+            <p className="text-gray-400 mt-1">{bike.tagline}</p>
           </div>
 
-          <div className="text-2xl font-semibold">
-            {bike.price}
-          </div>
+          <div className="text-2xl font-semibold">{bike.price}</div>
         </div>
 
         {/* Specs */}
         <div className="flex justify-between mt-6 text-sm text-gray-400">
           <div>
-            <p className="text-xs uppercase tracking-wide">Range</p>
-            <p className="text-lg text-white font-medium mt-1">
+            <p className="text-xl uppercase tracking-wide">Range</p>
+            <p className="text-xl text-white font-medium mt-1">
               {bike.range}
             </p>
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wide">Top Speed</p>
-            <p className="text-lg text-white font-medium mt-1">
+            <p className="text-xl uppercase tracking-wide">Top Speed</p>
+            <p className="text-xl text-white font-medium mt-1">
               {bike.speed}
             </p>
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wide">0–60</p>
-            <p className="text-lg text-white font-medium mt-1">
+            <p className="text-xl uppercase tracking-wide">0–60</p>
+            <p className="text-xl text-white font-medium mt-1">
               {bike.acceleration}
             </p>
           </div>
@@ -94,7 +87,6 @@ function BikeSlide({ bike }: { bike: Bike }) {
 
         {/* Bottom Row */}
         <div className="flex justify-between items-center mt-8">
-
           {/* Color Selector */}
           {bike.colors.length > 1 && (
             <div className="flex gap-3">
@@ -113,37 +105,26 @@ function BikeSlide({ bike }: { bike: Bike }) {
             </div>
           )}
 
-          {/* Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate(`/bike/${bike.id}`)}
-              className="px-5 py-2.5 border border-gray-500 rounded-md hover:border-white transition"
-            >
-              View Details
-            </button>
-
-            <button
-              onClick={() =>
-                navigate("/test-ride", { state: { bike: bike.name } })
-              }
-              className="px-5 py-2.5 bg-white text-black rounded-md hover:bg-gray-200 transition"
-            >
-              Test Ride
-            </button>
-          </div>
-
+          {/* View Details */}
+          <button
+            onClick={() => navigate(`/bike/${bike.id}`)}
+            className="px-5 py-2.5 border border-gray-500 rounded-md hover:border-white transition"
+          >
+            View Details
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-
 /* =========================
    Main Component
 ========================= */
 
 export default function ServicesSection() {
+  const navigate = useNavigate();
+
   const bikes: Bike[] = [
     {
       id: 1,
@@ -199,10 +180,21 @@ export default function ServicesSection() {
   ];
 
   return (
-    <section>
+    <section className="bg-black">
+      {/* Bikes */}
       {bikes.map((bike) => (
         <BikeSlide key={bike.id} bike={bike} />
       ))}
+
+      {/* ===== PREMIUM CTA BLOCK ===== */}
+      <div className="py-24 flex justify-center bg-black border-t border-white/10">
+        <button
+          onClick={() => navigate("/test-ride")}
+          className="px-12 py-5 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-gray-200 transition shadow-xl"
+        >
+          Book Test Ride
+        </button>
+      </div>
     </section>
   );
 }

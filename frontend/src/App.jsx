@@ -42,12 +42,14 @@ import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
 import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
 import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
 import SalesDashboard from "./pages/dashboard/SalesDashboard";
+/* ================= OTHER PAGES ================= */
 import TestRide from "./pages/TestRide";
 import BikeDetails from "./pages/BikeDetails";
 import TechnicianJobDetail from "./pages/dashboard/TechnicianJobDetail";
 import CustomerBookingDetail from "./pages/CustomerBookingDetail";
-
-
+import SlotsAvailability from "./pages/public/SlotsAvailability";
+import LocationRoute from "./pages/LocationRoute";
+import TestRideFeedback from "./pages/TestRideFeedback";
 
 /* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -63,6 +65,8 @@ export default function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/login/customer" element={<CustomerLogin />} />
       <Route path="/login/staff" element={<StaffLogin />} />
+      <Route path="/slots-availability" element={<SlotsAvailability />} />
+
 
       {/* ======================================================
          CUSTOMER MEDIA (NO AUTH)
@@ -256,6 +260,8 @@ export default function App() {
          ====================================================== */}
 
       <Route path="/test-ride" element={<TestRide />} />
+      <Route path="/location-route" element={<LocationRoute />} />
+      <Route path="/test-ride-feedback" element={<TestRideFeedback />} />
 
       {/*=============================================================}
           BIKE DETAILS PAGE (TEMP)
@@ -273,9 +279,6 @@ export default function App() {
     </RoleBasedRoute>
   }
 />
-
-
-
       {/* ======================================================
          FALLBACK
       ====================================================== */}

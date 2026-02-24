@@ -99,6 +99,38 @@ export default function CustomerBookingDetail() {
           )}
         </div>
       ))}
+
+      {/* ================= WORK PROOF MEDIA ================= */}
+      {booking.media && booking.media.length > 0 && (
+        <>
+          <h3 className="text-lg font-semibold mt-6 mb-3">
+            Work Proof
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            {booking.media.map((m) =>
+              m.fileType === "image" ? (
+                <img
+                  key={m.id}
+                  src={`http://localhost:4000${m.fileUrl}`}
+                  alt="Work proof"
+                  className="rounded shadow"
+                />
+              ) : (
+                <video
+                  key={m.id}
+                  controls
+                  className="rounded shadow"
+                >
+                  <source
+                    src={`http://localhost:4000${m.fileUrl}`}
+                  />
+                </video>
+              )
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

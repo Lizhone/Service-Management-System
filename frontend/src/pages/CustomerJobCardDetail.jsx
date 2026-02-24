@@ -47,7 +47,7 @@ export default function CustomerJobCardDetail() {
       {/* Complaint/Service Details */}
       <div className="mb-4">
         <div className="font-medium mb-1">Description</div>
-        <div className="border p-2 bg-gray-50 rounded min-h-[40px]">{jobCard.description || "-"}</div>
+        <div className="border p-2 bg-gray-50 rounded min-h-10">{jobCard.description || "-"}</div>
       </div>
 
       {/* Attachments */}

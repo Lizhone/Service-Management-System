@@ -137,6 +137,7 @@ export const getCustomerBookingDetail = async (req, res) => {
     const booking = await prisma.serviceBooking.findUnique({
       where: { id: Number(bookingId) },
       include: {
+        media: true, // ✅ ADD THIS
         jobCard: {
           include: {
             workLogs: {

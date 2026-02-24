@@ -145,15 +145,6 @@ export default function BikeDetails() {
             >
               Back
             </button>
-
-            <button
-              onClick={() =>
-                navigate("/test-ride", { state: { bike: bike.name } })
-              }
-              className="px-6 py-3 bg-blue-600 rounded-md hover:bg-blue-500"
-            >
-              Test Ride
-            </button>
           </div>
         </div>
       </div>

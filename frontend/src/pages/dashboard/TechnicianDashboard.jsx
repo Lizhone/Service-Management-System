@@ -12,7 +12,7 @@ export default function TechnicianDashboard() {
   const [loading, setLoading] = useState(false);
 
   /* =========================================================
-     LOAD TECHNICIANS (ON FIRST RENDER)
+     LOAD TECHNICIANS
   ========================================================= */
   useEffect(() => {
     loadTechnicians();
@@ -77,7 +77,6 @@ export default function TechnicianDashboard() {
         `/technicians/claim/${bookingId}/${selectedTech.id}`
       );
 
-      // After claiming → go to work page
       navigate(`/dashboard/technician/job/${bookingId}`);
     } catch (error) {
       console.error("Failed to claim booking:", error);
@@ -85,7 +84,7 @@ export default function TechnicianDashboard() {
   };
 
   /* =========================================================
-     GO BACK TO TECH LIST
+     GO BACK
   ========================================================= */
   const handleBack = () => {
     setSelectedTech(null);
@@ -213,25 +212,26 @@ export default function TechnicianDashboard() {
                 Status: {booking.status}
               </p>
 
-              {/* Only allow navigation if NOT completed */}
-              {booking.status !== "COMPLETED" && (
-                <button
-                  onClick={() =>
-                    navigate(
-                      `/dashboard/technician/job/${booking.id}`
-                    )
-                  }
-                  className={`px-3 py-1 rounded ${
-                    booking.status === "IN_PROGRESS"
-                      ? "bg-yellow-600 hover:bg-yellow-500"
-                      : "bg-cyan-600 hover:bg-cyan-500"
-                  }`}
-                >
-                  {booking.status === "IN_PROGRESS"
-                    ? "Resume Work"
-                    : "Start Work"}
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  navigate(
+                    `/dashboard/technician/job/${booking.id}`
+                  )
+                }
+                className={`px-3 py-1 rounded ${
+                  booking.status === "IN_PROGRESS"
+                    ? "bg-yellow-600 hover:bg-yellow-500"
+                    : booking.status === "COMPLETED"
+                    ? "bg-green-700 hover:bg-green-600"
+                    : "bg-cyan-600 hover:bg-cyan-500"
+                }`}
+              >
+                {booking.status === "IN_PROGRESS"
+                  ? "Resume Work"
+                  : booking.status === "COMPLETED"
+                  ? "View / Edit"
+                  : "Start Work"}
+              </button>
             </div>
           ))}
         </>

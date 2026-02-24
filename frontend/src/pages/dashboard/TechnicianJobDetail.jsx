@@ -12,6 +12,10 @@ export default function TechnicianJobDetail() {
   const [timer, setTimer] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // ✅ NEW STATES
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
   /* ================= FETCH BOOKING ================= */
   useEffect(() => {
     fetchDetail();
@@ -23,19 +27,15 @@ export default function TechnicianJobDetail() {
       const res = await client.get(`/technicians/booking/${bookingId}`);
       setBooking(res.data);
 
-      // If already in progress → calculate timer from startedAt
       const activeLog = res.data?.jobCard?.workLogs?.find(
         (log) => log.status === "IN_PROGRESS"
       );
 
       if (activeLog?.startedAt) {
         const seconds =
-          Math.floor(
-            (new Date() - new Date(activeLog.startedAt)) / 1000
-          );
+          Math.floor((new Date() - new Date(activeLog.startedAt)) / 1000);
         setTimer(seconds);
       }
-
     } catch (err) {
       console.error("Failed to fetch booking:", err);
     } finally {
@@ -66,7 +66,7 @@ export default function TechnicianJobDetail() {
     try {
       await client.put(`/technicians/start/${bookingId}`, {
         taskName,
-        description
+        description,
       });
 
       fetchDetail();
@@ -82,6 +82,53 @@ export default function TechnicianJobDetail() {
       fetchDetail();
     } catch (err) {
       console.error("Complete failed:", err);
+    }
+  };
+
+  /* ================= UPLOAD MEDIA ================= */
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      await client.post(
+        `/technicians/service-bookings/${bookingId}/media`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      alert("Media uploaded successfully");
+      setSelectedFile(null);
+      fetchDetail();
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /* ================= DELETE MEDIA ================= */
+  const handleDeleteMedia = async (mediaId) => {
+    if (!window.confirm("Delete this media?")) return;
+
+    try {
+      await client.delete(`/technicians/service-media/${mediaId}`);
+      fetchDetail();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Delete failed");
     }
   };
 
@@ -101,6 +148,12 @@ export default function TechnicianJobDetail() {
       </div>
     );
   }
+
+  /* ================= MEDIA SOURCE FIX ================= */
+  const mediaList =
+    booking?.media ||
+    booking?.jobCard?.media ||
+    [];
 
   /* ================= UI ================= */
   return (
@@ -126,7 +179,6 @@ export default function TechnicianJobDetail() {
       {booking.status !== "COMPLETED" && (
         <div className="bg-[#0A3A55] p-4 rounded mb-4">
 
-          {/* Show form only before starting */}
           {booking.status === "CLAIMED" && (
             <>
               <input
@@ -153,7 +205,6 @@ export default function TechnicianJobDetail() {
             </>
           )}
 
-          {/* In Progress */}
           {booking.status === "IN_PROGRESS" && (
             <>
               <p className="mb-3 text-cyan-400">
@@ -168,7 +219,6 @@ export default function TechnicianJobDetail() {
               </button>
             </>
           )}
-
         </div>
       )}
 
@@ -200,6 +250,79 @@ export default function TechnicianJobDetail() {
           )}
         </div>
       ))}
+
+      {/* ================= UPLOAD WORK PROOF ================= */}
+      {(booking.status === "IN_PROGRESS" ||
+        booking.status === "COMPLETED") && (
+        <div className="bg-[#0A3A55] p-4 rounded mt-6">
+          <h3 className="text-lg font-semibold mb-3">
+            Upload media
+          </h3>
+
+          <div className="mb-3">
+            <label className="inline-block bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded cursor-pointer">
+              Choose File
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+                className="hidden"
+              />
+            </label>
+
+            {selectedFile && (
+              <p className="text-sm text-gray-300 mt-2">
+                Selected: {selectedFile.name}
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={handleUpload}
+            disabled={uploading}
+            className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500"
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+      )}
+
+      {/* ================= DISPLAY UPLOADED MEDIA ================= */}
+      {mediaList.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-3">
+            Uploaded Media
+          </h3>
+
+          <div className="grid grid-cols-3 gap-4">
+            {mediaList.map((m) => (
+              <div key={m.id} className="relative">
+                {m.fileType === "VIDEO" ? (
+                  <video
+                    src={`http://localhost:4000${m.fileUrl || m.filePath}`}
+                    controls
+                    className="rounded"
+                  />
+                ) : (
+                  <img
+                    src={`http://localhost:4000${m.fileUrl || m.filePath}`}
+                    alt="Work proof"
+                    className="rounded"
+                  />
+                )}
+
+                {/* 🔥 DELETE BUTTON */}
+                <button
+                  onClick={() => handleDeleteMedia(m.id)}
+                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white text-xs px-2 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

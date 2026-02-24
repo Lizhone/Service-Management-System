@@ -13,21 +13,17 @@ export default function Header() {
         <img src={logo} alt="InGO Logo" style={logoStyle} />
       </div>
 
-      {/* RIGHT: Nav */}
+      {/* RIGHT: Navigation */}
       <nav style={navStyle}>
-        <Link style={navLink} to="/services">
-          services Overview
-        </Link>
-
-        <Link style={navLink} to="/service-booking">
-          service-booking
-        </Link>
-
-        <Link style={navLink} to="/slots-availability">
+        <Link to="/slots-availability" style={navLink}>
           slots-availability
         </Link>
 
-        {/* Login (hamburger with dropdown) */}
+        <Link to="/test-ride-feedback" style={navLink}>
+          feedback
+        </Link>
+
+        {/* Hamburger / Login */}
         <div style={{ position: "relative" }}>
           <div
             style={loginWrapper}
@@ -40,7 +36,6 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Dropdown */}
           {open && (
             <div style={dropdownStyle}>
               <div
@@ -70,7 +65,9 @@ export default function Header() {
   );
 }
 
-/* ---------- STYLES ---------- */
+/* ===============================
+   STYLES
+=============================== */
 
 const headerStyle = {
   height: "150px",
@@ -101,6 +98,7 @@ const navLink = {
   textDecoration: "none",
   fontSize: "35px",
   fontWeight: 500,
+  transition: "0.3s",
 };
 
 const loginWrapper = {
@@ -122,7 +120,9 @@ const bar = {
   borderRadius: "2px",
 };
 
-/* ---------- DROPDOWN ---------- */
+/* ===============================
+   DROPDOWN
+=============================== */
 
 const dropdownStyle = {
   position: "absolute" as const,

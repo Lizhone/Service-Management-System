@@ -21,57 +21,40 @@ export default function BookService() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!form.vehiclePart || !form.serviceDate || !form.timeSlot) {
-    alert("Please fill all required fields");
-    return;
-  }
+    if (!form.vehiclePart || !form.serviceDate || !form.timeSlot) {
+      alert("Please fill all required fields");
+      return;
+    }
 
-  try {
-    setSubmitting(true);
+    try {
+      setSubmitting(true);
 
-    await client.post("/service-bookings/me/service-bookings", {
-      vehiclePart: form.vehiclePart,
-      serviceType: form.serviceType,
-      preferredDate: form.serviceDate,
-      timeSlot: form.timeSlot,
-      notes: form.notes,
-    });
+      await client.post("/service-bookings/me/service-bookings", {
+        vehiclePart: form.vehiclePart,
+        serviceType: form.serviceType,
+        preferredDate: form.serviceDate,
+        timeSlot: form.timeSlot,
+        notes: form.notes,
+      });
 
-    alert("Service booked and confirmed successfully.");
-    navigate("/dashboard");
+      alert("Service booked and confirmed successfully.");
+      navigate("/dashboard");
+    } catch (err) {
+      const message =
+        err.response?.data?.error || "Failed to book service";
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  } catch (err) {
-    const message =
-      err.response?.data?.error ||
-      "Failed to book service";
-
-    alert(message);   // 🔥 popup for failure
-
-  } finally {
-    setSubmitting(false);
-  }
-};
-
-
- return (
-  <div className="w-full mt-10 px-4">
-  <div
-    style={{
-      width: "720px",
-      marginLeft: "auto",
-      marginRight: "auto",
-      background: "#fff",
-      padding: "70px",
-      borderRadius: "10px",
-      border: "1px solid #e5e7eb",
-    }}
-
-
-    >
-      {/* form stays exactly the same */}
-
+  return (
+    // ✅ DARK PAGE BACKGROUND
+    <div className="min-h-screen bg-[#01263B] py-12 px-4">
+      {/* ✅ FLOATING CARD */}
+      <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl border border-gray-200 shadow-xl">
         <h1 className="text-xl font-semibold mb-1">Book a Service</h1>
         <p className="text-sm text-gray-600 mb-5">
           Choose vehicle part, preferred date and time slot
@@ -84,7 +67,6 @@ export default function BookService() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           {/* VEHICLE PART */}
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -115,7 +97,7 @@ export default function BookService() {
             </select>
           </div>
 
-          {/* SERVICE TYPE (UNCHANGED) */}
+          {/* SERVICE TYPE */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Service Type

@@ -15,7 +15,21 @@ export default function ServiceAdvisorDashboard() {
   const loadBookings = async () => {
     try {
       const res = await client.get("/service-bookings");
-      setBookings(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data) ? res.data : [];
+
+// 🔥 Custom priority for Service Advisor Dashboard
+const priority = {
+  IN_PROGRESS: 1,
+  CLAIMED: 2,
+  NEW: 3,
+  COMPLETED: 4,
+};
+
+data.sort((a, b) => {
+  return (priority[a.status] || 5) - (priority[b.status] || 5);
+});
+
+setBookings(data);
     } catch (err) {
       console.error("Failed to load bookings", err);
       setBookings([]);

@@ -241,8 +241,23 @@ model ServiceBooking {
   claimedByProfileId Int?
   claimedByProfile   TechnicianProfile? @relation(fields: [claimedByProfileId], references: [id])
 
+  media ServiceBookingMedia[]   
+
   @@unique([preferredDate, timeSlot])
 }
+
+//////////////////////////////////////////////////////////
+model ServiceBookingMedia {
+  id               Int      @id @default(autoincrement())
+  serviceBookingId Int
+  fileUrl          String
+  fileType         String
+  uploadedBy       Int
+  createdAt        DateTime @default(now())
+
+  serviceBooking ServiceBooking @relation(fields: [serviceBookingId], references: [id], onDelete: Cascade)
+}
+
 
 
 
@@ -259,9 +274,13 @@ model TestRide {
   fullName  String
   phone     String
   email     String?
-  status    String
-  isViewed  Boolean  @default(false)
-  createdAt DateTime @default(now())
+
+  address   String?   // ✅ add this
+  feedback  String?   // ✅ add this
+
+  status    String    @default("CONFIRMED")
+  isViewed  Boolean   @default(false)
+  createdAt DateTime  @default(now())
 }
 
 

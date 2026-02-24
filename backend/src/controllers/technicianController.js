@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+import fs from "fs";
 
 /* =========================================================
    GET ALL TECHNICIANS
@@ -122,6 +123,7 @@ export const getBookingDetail = async (req, res) => {
       where: { id: Number(bookingId) },
       include: {
         customer: true,
+        media: true,
         jobCard: {
           include: {
             workLogs: {
@@ -251,5 +253,84 @@ export const completeWork = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to complete work" });
+  }
+};
+/* =========================================================
+   UPLOAD SERVICE BOOKING MEDIA
+   Allowed: IN_PROGRESS or COMPLETED
+========================================================= */
+export const uploadServiceMedia = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const booking = await prisma.serviceBooking.findUnique({
+      where: { id: Number(id) }
+    });
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    if (
+      booking.status !== "IN_PROGRESS" &&
+      booking.status !== "COMPLETED"
+    )
+      return res.status(400).json({
+        message: "Upload not allowed in this status"
+      });
+
+    if (!req.file)
+      return res.status(400).json({ message: "No file uploaded" });
+
+    const fileType = req.file.mimetype.startsWith("video")
+      ? "video"
+      : "image";
+
+    await prisma.serviceBookingMedia.create({
+      data: {
+        serviceBookingId: Number(id),
+        fileUrl: `/${req.file.path.replace(/\\/g, "/")}`,
+        fileType,
+        uploadedBy: 1 // ⚠ TEMP — we will fix auth check next
+      }
+    });
+
+    res.json({ message: "Media uploaded successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to upload media" });
+  }
+};
+/* =========================================================
+   DELETE SERVICE MEDIA
+========================================================= */
+export const deleteServiceMedia = async (req, res) => {
+  try {
+    const { mediaId } = req.params;
+
+    const media = await prisma.serviceBookingMedia.findUnique({
+      where: { id: Number(mediaId) }
+    });
+
+    if (!media) {
+      return res.status(404).json({ message: "Media not found" });
+    }
+
+    // delete file from disk
+    try {
+      fs.unlinkSync(media.filePath);
+    } catch (err) {
+      console.warn("File already missing:", err.message);
+    }
+
+    await prisma.serviceBookingMedia.delete({
+      where: { id: Number(mediaId) }
+    });
+
+    res.json({ message: "Media deleted" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to delete media" });
   }
 };
