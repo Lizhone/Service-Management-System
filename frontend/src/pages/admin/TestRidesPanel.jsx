@@ -21,91 +21,95 @@ export default function TestRidesPanel() {
     client.put("/test-rides/mark-viewed").catch(() => {});
   }, []);
 
-  if (loading)
+  if (loading) {
     return (
-      <div style={{ background: "#1263B", color: "#fff", padding: "20px" }}>
-        Loading test rides...
+      <div className="admin-card">
+        <p className="admin-text">Loading test rides...</p>
       </div>
     );
+  }
 
   return (
-    <div
-      style={{
-        padding: "20px",
-        background: "#1263B",
-        minHeight: "100vh",
-        color: "#fff",
-      }}
-    >
-      <h2 style={{ marginBottom: "16px" }}>Test Ride History</h2>
+    <div className="admin-card">
+      <div className="admin-header">
+        <h2 className="admin-heading">Test Ride History</h2>
+      </div>
 
       {rides.length === 0 ? (
-        <p>No test rides found.</p>
+        <p className="admin-text">No test rides found.</p>
       ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            background: "#0A3A55",
-          }}
-        >
+        <table className="admin-table">
           <thead>
-            <tr style={{ background: "#0F4C75" }}>
-              <th style={thStyle}>Bike</th>
-              <th style={thStyle}>Location</th>
-              <th style={thStyle}>Date</th>
-              <th style={thStyle}>Time</th>
-              <th style={thStyle}>Customer</th>
-              <th style={thStyle}>Phone</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Address</th>
-              <th style={thStyle}>Status</th>
-              <th style={thStyle}>Feedback</th>
+            <tr>
+              <th>Bike</th>
+              <th>Location</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Status</th>
+              <th>Rating</th>
+              <th>Feedback</th>
             </tr>
           </thead>
 
           <tbody>
             {rides.map((ride) => (
-              <tr
-                key={ride.id}
-                style={{
-                  borderBottom: "1px solid #1f2937",
-                  background: "transparent",
-                }}
-              >
-                <td style={tdStyle}>{ride.bikeName}</td>
-                <td style={tdStyle}>{ride.location}</td>
-                <td style={tdStyle}>
-                  {new Date(ride.date).toLocaleDateString()}
-                </td>
-                <td style={tdStyle}>{ride.timeSlot}</td>
-                <td style={tdStyle}>{ride.fullName}</td>
-                <td style={tdStyle}>{ride.phone}</td>
-                <td style={tdStyle}>{ride.email}</td>
-                <td style={tdStyle}>{ride.address || "—"}</td>
+              <tr key={ride.id}>
+                <td>{ride.bikeName}</td>
+                <td>{ride.location}</td>
+                <td>{new Date(ride.date).toLocaleDateString()}</td>
+                <td>{ride.timeSlot}</td>
+                <td>{ride.fullName}</td>
+                <td>{ride.phone}</td>
+                <td>{ride.email}</td>
+                <td>{ride.address || "—"}</td>
 
-                <td
-                  style={{
-                    ...tdStyle,
-                    color:
+                <td>
+                  <span
+                    className={
                       ride.status === "CONFIRMED"
-                        ? "#22c55e"
+                        ? "admin-badge admin-badge-open"
                         : ride.status === "PENDING"
-                        ? "#facc15"
-                        : "#ef4444",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {ride.status}
+                        ? "admin-badge"
+                        : "admin-badge admin-badge-closed"
+                    }
+                  >
+                    {ride.status}
+                  </span>
                 </td>
 
-                <td
-                  style={{
-                    ...tdStyle,
-                    fontStyle: ride.feedback ? "normal" : "italic",
-                    opacity: ride.feedback ? 1 : 0.6,
-                  }}
-                >
+                <td>
+  {ride.rating ? (
+    <div className="admin-rating">
+      <div className="admin-rating-stars">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={
+              star <= ride.rating
+                ? "admin-rating-filled"
+                : "admin-rating-empty"
+            }
+          >
+            ★
+          </span>
+        ))}
+      </div>
+
+      <span className="admin-rating-value">
+        {ride.rating.toFixed(1)} / 5
+      </span>
+    </div>
+  ) : (
+    <span className="admin-rating-none">
+      No Rating
+    </span>
+  )}
+</td>
+                <td style={{ opacity: ride.feedback ? 1 : 0.6 }}>
                   {ride.feedback || "No feedback"}
                 </td>
               </tr>
@@ -116,16 +120,3 @@ export default function TestRidesPanel() {
     </div>
   );
 }
-
-const thStyle = {
-  padding: "12px",
-  textAlign: "left",
-  fontSize: "14px",
-  color: "#ffffff",
-};
-
-const tdStyle = {
-  padding: "12px",
-  fontSize: "13px",
-  color: "#ffffff",
-};

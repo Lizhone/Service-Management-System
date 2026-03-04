@@ -97,23 +97,23 @@ export default function TechnicianDashboard() {
   ========================================================= */
   return (
     <div className="p-6 min-h-screen text-white bg-[#01263B]">
-      <h1 className="text-2xl font-bold mb-6">
+      <h1 className="text-4xl font-bold mb-6">
         Technician Dashboard
       </h1>
 
       {/* ================= SELECT TECHNICIAN ================= */}
       {!selectedTech && (
         <>
-          <h2 className="text-lg font-semibold mb-4">
+          <h2 className="text-3xl font-semibold mb-4">
             Select Technician
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-6 font-bold text-2xl">
             {technicians.map((tech) => (
               <div
                 key={tech.id}
                 onClick={() => handleSelectTechnician(tech)}
-                className="cursor-pointer p-4 rounded-lg bg-[#0A3A55] hover:bg-cyan-600 transition"
+                className="cursor-pointer p-4 rounded-2xl bg-[#0A3A55] hover:bg-cyan-600 transition"
               >
                 {tech.name}
               </div>

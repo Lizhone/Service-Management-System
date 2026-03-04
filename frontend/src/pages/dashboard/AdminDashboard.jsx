@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import client from "../../api/client";
 import { searchJobCards } from "../../api/jobCards";
-import "./AdminDashboard.css";
+
 
 export default function AdminDashboard() {
   const [jobCards, setJobCards] = useState([]);
@@ -127,53 +127,59 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="page-bg">
-      <div className="container">
-        <h1 className="page-title">Job Cards</h1>
-        <p className="page-subtitle">Manage and track all service job cards</p>
+    <div className="admin-card">
+  <div className="admin-header">
+        <h2 className="admin-heading">Job Cards</h2>
+<p className="admin-subheading">
+  Manage and track all service job cards
+</p>
 
-        <Link to="/job-cards/new" className="create-link">
-          + Create Job Card
-        </Link>
+        <div className="admin-toolbar">
 
-        {/* FILTERS */}
-        <div className="filters">
-          <div>
-            <label>Search</label>
-            <input
-              placeholder="Job card #, customer, vehicle..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+  <Link to="/job-cards/new" className="admin-create-link">
+    + Create Job Card
+  </Link>
 
-          <div>
-            <label>Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">All Status</option>
-              <option value="OPEN">Open</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
-          </div>
+  <div className="admin-filters">
 
-          <div>
-            <label>Service Type</label>
-            <select
-              value={serviceType}
-              onChange={(e) => setServiceType(e.target.value)}
-            >
-              <option value="">All Types</option>
-              <option value="GENERAL">General</option>
-              <option value="COMPLAINT">Complaint</option>
-              <option value="BATTERY">Battery</option>
-              <option value="CHARGER">Charger</option>
-            </select>
-          </div>
-        </div>
+    <div className="admin-filter-group">
+      <label>Search</label>
+      <input
+        placeholder="Job card #, customer, vehicle..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+    </div>
+
+    <div className="admin-filter-group">
+      <label>Status</label>
+      <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <option value="">All Status</option>
+        <option value="OPEN">Open</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="COMPLETED">Completed</option>
+      </select>
+    </div>
+
+    <div className="admin-filter-group">
+      <label>Service Type</label>
+      <select
+        value={serviceType}
+        onChange={(e) => setServiceType(e.target.value)}
+      >
+        <option value="">All Types</option>
+        <option value="GENERAL">General</option>
+        <option value="COMPLAINT">Complaint</option>
+        <option value="BATTERY">Battery</option>
+        <option value="CHARGER">Charger</option>
+      </select>
+    </div>
+
+  </div>
+</div>
 
         {/* TABLE */}
-        <table>
+        <table className="admin-table">
           <thead>
             <tr>
               <th>Job Card #</th>
@@ -189,7 +195,7 @@ export default function AdminDashboard() {
           <tbody>
             {jobCards.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center py-8 text-gray-500">
+                <td colSpan="7"className="admin-text">
                   No job cards found
                 </td>
               </tr>
@@ -209,7 +215,16 @@ export default function AdminDashboard() {
                   </td>
                   <td>{formatDate(jc.createdAt)}</td>
                   <td>
-                    <div className="actions">
+                    <div className="admin-actions">
+                      
+
+                       <Link
+                        to={`/job-cards/${jc.id}`}
+                        className="admin-action-link"
+                 >
+                        View
+                       </Link>
+
                       <button
                         className="action-link"
                         onClick={() => openEditModal(jc)}

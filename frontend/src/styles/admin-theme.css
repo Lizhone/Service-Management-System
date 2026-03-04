@@ -1,0 +1,576 @@
+/* ========================================
+   ADMIN THEME FOUNDATION
+======================================== */
+
+.admin-theme {
+  background: #01263B;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont,
+               "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+               "Open Sans", "Helvetica Neue", sans-serif;
+  color: #ffffff;
+}
+
+/* ========================================
+   ADMIN LAYOUT ELEMENTS
+======================================== */
+
+.admin-card {
+  background: #104A63;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.admin-header {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+}
+
+/* ========================================
+   TYPOGRAPHY
+======================================== */
+
+.admin-heading {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.admin-subheading {
+  font-size: 18px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 4px;
+}
+
+.admin-text {
+  font-size: 16px;
+}
+
+/* ========================================
+   ADMIN FORM INPUTS (Scoped)
+======================================== */
+
+.admin-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-card label {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.admin-card input,
+.admin-card select,
+.admin-card textarea {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: #123E57;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+/* ========================================
+   TABLE SYSTEM (Clean + Scaled)
+======================================== */
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #123E57;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 18px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Header */
+.admin-table thead {
+  background: #1E5678;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.admin-table thead th {
+  padding: 20px 24px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 19px;
+  color: #ffffff;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Body */
+.admin-table tbody td {
+  padding: 20px 24px;
+  font-size: 18px;
+  color: #e6f1f7;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.admin-table th:last-child,
+.admin-table td:last-child {
+  border-right: none;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(255,255,255,0.08);
+  transition: background 0.2s ease;
+}
+
+/* ========================================
+   STATUS BADGES
+======================================== */
+
+.admin-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-badge-open {
+  background: #1f8f6f;
+}
+
+.admin-badge-closed {
+  background: #9c2f2f;
+}
+
+/* ========================================
+   BUTTONS
+======================================== */
+
+.admin-button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-button-primary {
+  background: #1E5678;
+  color: #ffffff;
+}
+
+.admin-button-primary:hover {
+  background: #2a6f96;
+}
+
+.admin-button-danger {
+  background: #9c2f2f;
+  color: #ffffff;
+}
+
+.admin-button-danger:hover {
+  background: #b23a3a;
+}
+
+/* ========================================
+   ADMIN TABS
+======================================== */
+
+.admin-tabs-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 16px;
+  background: #08364D;
+  border-bottom: 2px solid #1E5678;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: #1E5678;
+  border-radius: 10px 10px 0 0;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-tab:hover {
+  background: #2a6f96;
+}
+
+.admin-tab.active {
+  background: #104A63;
+  border-bottom: 2px solid #104A63;
+  font-weight: 600;
+}
+
+.admin-tab-close {
+  margin-left: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.admin-tab-close:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ========================================
+   ADMIN TOOLBAR
+======================================== */
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 24px 0;
+  gap: 20px;
+}
+
+.admin-create-link {
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.admin-filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+/* ========================================
+   ADMIN ACTION LINKS
+======================================== */
+
+.admin-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.admin-actions button,
+.admin-actions a {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  color: #ffffff;
+}
+
+.admin-actions .danger {
+  color: #ff6b6b;
+}
+
+/* ========================================
+   MODE TOGGLE
+======================================== */
+
+.mode-toggle-wrapper {
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: #123E57;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: #1E5678;
+}
+
+.toggle-btn.active {
+  background: #1E5678;
+  border-color: #1E5678;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+.mode-description {
+  margin-top: 10px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.75);
+}
+/* ========================================
+   ADMIN RATING COLUMN
+======================================== */
+
+.admin-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-rating-stars {
+  display: flex;
+  gap: 4px;
+  font-size: 20px;
+}
+
+.admin-rating-filled {
+  color: #facc15; /* gold */
+}
+
+.admin-rating-empty {
+  color: #334155; /* muted */
+}
+
+.admin-rating-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6f1f7;
+}
+
+.admin-rating-none {
+  font-size: 14px;
+  font-style: italic;
+  opacity: 0.6;
+}
+/* Prevent job card number from breaking */
+.admin-table th:first-child,
+.admin-table td:first-child {
+  white-space: nowrap;
+}
+/* FORCE ADMIN HEADINGS TO WHITE */
+.admin-card .admin-heading {
+  color: #ffffff !important;
+}
+
+.admin-card .admin-subheading {
+  color: rgba(255,255,255,0.75) !important;
+}
+.admin-form-group label {
+  color: rgba(255,255,255,0.75);
+}
+
+.admin-text {
+  color: #ffffff;
+  font-weight: 500;
+}
+/* ========================================
+   ADMIN FORM GRID SYSTEM (MISSING)
+======================================== */
+
+.admin-form-section {
+  margin-top: 28px;
+}
+
+/* 2 column layout */
+.admin-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+/* 4 column layout */
+.admin-form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* FORCE WHITE SECTIONS INSIDE ADMIN CARD */
+
+.admin-card .jobcard-white-section {
+  background: #ffffff !important;
+  color: #111827 !important;
+  padding: 24px;
+  border-radius: 10px;
+  margin-top: 24px;
+}
+
+/* Make headings inside white section dark */
+.admin-card .jobcard-white-section h3 {
+  color: #111827 !important;
+}
+
+/* Force tables inside white section to be light */
+.admin-card .jobcard-white-section table {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Table header */
+.admin-card .jobcard-white-section th {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Table rows */
+.admin-card .jobcard-white-section td {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+/* ===============================
+   CLEAN COMPLAINT DETAIL TABLE
+================================ */
+
+.jobcard-white-section {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 24px;
+}
+
+.jobcard-white-section h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+.complaint-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 18px;
+}
+
+.complaint-table thead {
+  background: #f3f4f6;
+}
+
+.complaint-table th {
+  padding: 16px 18px;
+  text-align: left;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.complaint-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+.complaint-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.ref-cell {
+  font-family: monospace;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.description-cell {
+  max-width: 500px;
+  line-height: 1.5;
+}
+/* ===============================
+   JOB CARD SUMMARY TYPOGRAPHY
+================================ */
+
+.admin-form-section .admin-form-group label {
+  font-size: 25px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.3px;
+}
+
+.admin-form-section .admin-text {
+  font-size: 18px;   /* Increased from 16px */
+  font-weight: 600;
+  margin-top: 4px;
+}
+/* =========================================
+   JOB CARD LIGHT TABLE FORMAT
+========================================= */
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #111827;
+}
+
+.jobcard-white-section {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 16px;
+  margin-top: 28px;
+}
+
+.jobcard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 17px;
+}
+
+.jobcard-table thead {
+  background: #f3f4f6;
+}
+
+.jobcard-table th {
+  text-align: left;
+  padding: 18px 22px;
+  font-weight: 600;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.jobcard-table td {
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.jobcard-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.mono {
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* Status badge */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-badge.open {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.closed {
+  background: #dcfce7;
+  color: #166534;
+}

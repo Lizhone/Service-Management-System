@@ -32,193 +32,253 @@ export default function JobCardDetail() {
   if (error) return <div className="jobcard-page">{error}</div>;
   if (!jobCard) return <div className="jobcard-page">Not found</div>;
 
-  return (
-    <div className="jobcard-page">
-      {/* Header */}
-      <div className="jobcard-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+ return (
+  <div className="admin-card">
 
-        <h1>Job Card {jobCard.jobCardNumber}</h1>
+    {/* ================= HEADER ================= */}
+    <div className="admin-header" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <button
+        className="admin-button admin-button-primary"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
 
-        <span className={`status ${jobCard.status.toLowerCase()}`}>
-          {jobCard.status}
-        </span>
-      </div>
+      <h2 className="admin-heading" style={{ margin: 0 }}>
+        Job Card {jobCard.jobCardNumber}
+      </h2>
 
-      {/* Service Info */}
-      <div className="jobcard-info">
-        <div>
-          <label>Service Type</label>
-          <p>{jobCard.serviceType}</p>
-        </div>
-
-        <div>
-          <label>Service In</label>
-          <p>
-            {new Date(jobCard.serviceInDatetime).toLocaleString()}
-          </p>
-        </div>
-      </div>
-
-      {/* Customer */}
-      <div className="jobcard-section">
-        <h3>Customer</h3>
-        <Link
-          to={`/customers/${jobCard.customer?.id}`}
-          className="customer-link"
-        >
-          {jobCard.customer?.name}
-        </Link>
-
-        <p className="muted">
-          {jobCard.customer?.mobileNumber}
-        </p>
-      </div>
-
-      {/* Vehicle */}
-      <div className="jobcard-section">
-        <h3>Vehicle</h3>
-        <p>
-          {jobCard.vehicle?.model} — VIN{" "}
-          {jobCard.vehicle?.vinNumber}
-        </p>
-      </div>
-
-      {/* ================= COMPLAINT DETAILS ================= */}
-{Array.isArray(jobCard.serviceComplaints) &&
-  jobCard.serviceComplaints.length > 0 && (
-    <div className="jobcard-section">
-      <h3>Complaint Details</h3>
-
-      <table className="min-w-full border bg-white">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="py-2 px-3 text-left">Complaint Ref</th>
-            <th className="py-2 px-3 text-left">Category</th>
-            <th className="py-2 px-3 text-left">Description</th>
-            <th className="py-2 px-3 text-left">Raised At</th>
-            <th className="py-2 px-3 text-left">Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {jobCard.serviceComplaints.map((c) => (
-            <tr key={c.id} className="border-t">
-              <td className="py-2 px-3 font-mono">
-                CMP-{c.id}
-              </td>
-
-              <td className="py-2 px-3">
-                {c.category}
-              </td>
-
-              <td className="py-2 px-3">
-                {c.description}
-              </td>
-
-              <td className="py-2 px-3">
-                {new Date(c.createdAt).toLocaleDateString()}
-              </td>
-
-              <td className="py-2 px-3 font-semibold">
-                {c.status || "OPEN"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <span
+        className={
+          jobCard.status === "OPEN"
+            ? "admin-badge admin-badge-open"
+            : "admin-badge admin-badge-closed"
+        }
+      >
+        {jobCard.status}
+      </span>
     </div>
+
+{/* ================= JOB CARD SUMMARY ================= */}
+<div className="admin-form-section">
+  <div className="admin-form-grid-4">
+
+    <div className="admin-form-group">
+      <label>Service Type</label>
+      <div className="admin-text">
+        {jobCard.serviceType}
+      </div>
+    </div>
+
+    <div className="admin-form-group">
+      <label>Service In</label>
+      <div className="admin-text">
+        {jobCard.serviceInDatetime
+          ? new Date(jobCard.serviceInDatetime).toLocaleString()
+          : "-"}
+      </div>
+    </div>
+
+    <div className="admin-form-group">
+      <label>Customer</label>
+      <Link
+        to={`/customers/${jobCard.customer?.id}`}
+        className="admin-text"
+        style={{ textDecoration: "underline" }}
+      >
+        {jobCard.customer?.name}
+      </Link>
+    </div>
+
+    <div className="admin-form-group">
+      <label>Mobile</label>
+      <div className="admin-text">
+        {jobCard.customer?.mobileNumber}
+      </div>
+    </div>
+
+    <div className="admin-form-group">
+      <label>Model</label>
+      <div className="admin-text">
+        {jobCard.vehicle?.model}
+      </div>
+    </div>
+
+    <div className="admin-form-group">
+      <label>VIN</label>
+      <div className="admin-text">
+        {jobCard.vehicle?.vinNumber}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    {/* ================= COMPLAINTS ================= */}
+    {jobCard.complaints?.length > 0 && (
+  <div className="jobcard-white-section">
+    <h3 className="section-title">Complaint Details</h3>
+
+    <table className="jobcard-table">
+      <thead>
+        <tr>
+          <th>Complaint Ref</th>
+          <th>Category</th>
+          <th>Description</th>
+          <th>Raised</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {jobCard.complaints.map((c) => (
+          <tr key={c.id}>
+            <td className="mono">CMP-{c.id}</td>
+            <td>{c.category}</td>
+            <td>{c.description}</td>
+            <td>
+              {new Date(c.createdAt).toLocaleDateString()}
+            </td>
+            <td>
+              <span
+                className={
+                  c.status === "OPEN"
+                    ? "status-badge open"
+                    : "status-badge closed"
+                }
+              >
+                {c.status}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 )}
 
-      {/* Inspection Details */}
-      {Array.isArray(jobCard.inspections) &&
-        jobCard.inspections.length > 0 && (
-          <div className="jobcard-section">
-            <h3>Inspection Details</h3>
+    {/* ================= INSPECTIONS ================= */}
+    {jobCard.inspections?.length > 0 && (
+      <div className="admin-form-section">
+        <h3>Inspection Details</h3>
+
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Result</th>
+              <th>Notes</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
             {jobCard.inspections.map((i) => (
-              <div key={i.id} className="inspection-block">
-                <div><b>Type:</b> {i.type || "-"}</div>
-                <div><b>Result:</b> {i.result || "-"}</div>
-                <div><b>Notes:</b> {i.notes || "-"}</div>
-                <div>
-                  <b>Created:</b>{" "}
+              <tr key={i.id}>
+                <td>{i.type || "-"}</td>
+                <td>{i.result || "-"}</td>
+                <td>{i.notes || "-"}</td>
+                <td>
                   {i.createdAt
                     ? new Date(i.createdAt).toLocaleString()
                     : "-"}
-                </div>
-              </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        )}
+          </tbody>
+        </table>
+      </div>
+    )}
 
-      {/* Parts Replacement Details */}
-      {Array.isArray(jobCard.parts) &&
-        jobCard.parts.length > 0 && (
-          <div className="jobcard-section">
-            <h3>Parts Replacement Details</h3>
+    {/* ================= PARTS ================= */}
+    {jobCard.parts?.length > 0 && (
+      <div className="admin-form-section">
+        <h3>Parts Replacement</h3>
+
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Part</th>
+              <th>Qty</th>
+              <th>Notes</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
             {jobCard.parts.map((p) => (
-              <div key={p.id} className="parts-block">
-                <div><b>Part:</b> {p.partName || "-"}</div>
-                <div><b>Quantity:</b> {p.quantity || "-"}</div>
-                <div><b>Notes:</b> {p.notes || "-"}</div>
-                <div>
-                  <b>Created:</b>{" "}
+              <tr key={p.id}>
+                <td>{p.partName || "-"}</td>
+                <td>{p.quantity || "-"}</td>
+                <td>{p.notes || "-"}</td>
+                <td>
                   {p.createdAt
                     ? new Date(p.createdAt).toLocaleString()
                     : "-"}
-                </div>
-              </div>
+                </td>
+              </tr>
             ))}
-          </div>
-        )}
-
-      {/* Work Logs */}
-      {Array.isArray(jobCard.workLogs) &&
-        jobCard.workLogs.length > 0 && (
-          <div className="jobcard-section">
-            <h3>Work Logs</h3>
-            <table className="worklog-table">
-              <thead>
-                <tr>
-                  <th>Task</th>
-                  <th>Technician</th>
-                  <th>Status</th>
-                  <th>Started</th>
-                  <th>Completed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobCard.workLogs.map((w) => (
-                  <tr key={w.id}>
-                    <td>{w.taskName}</td>
-                    <td>{w.technicianName}</td>
-                    <td>{w.status}</td>
-                    <td>
-                      {w.startedAt
-                        ? new Date(w.startedAt).toLocaleString()
-                        : "-"}
-                    </td>
-                    <td>
-                      {w.completedAt
-                        ? new Date(w.completedAt).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-      {/* Media */}
-      <div className="jobcard-section">
-        <JobCardMedia
-          jobCardId={jobCard.id}
-          media={jobCard.media}
-        />
+          </tbody>
+        </table>
       </div>
+    )}
+
+    {/* ================= WORK LOGS ================= */}
+    {jobCard.workLogs?.length > 0 && (
+  <div className="jobcard-white-section">
+    <h3 className="section-title">Work Logs</h3>
+
+    <table className="jobcard-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Technician</th>
+          <th>Status</th>
+          <th>Started</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {jobCard.workLogs.map((w) => (
+          <tr key={w.id}>
+            <td>{w.taskName}</td>
+            <td>{w.technicianName}</td>
+            <td>
+              <span
+                className={
+                  w.status === "COMPLETED"
+                    ? "status-badge closed"
+                    : "status-badge open"
+                }
+              >
+                {w.status}
+              </span>
+            </td>
+            <td>
+              {w.startedAt
+                ? new Date(w.startedAt).toLocaleString()
+                : "-"}
+            </td>
+            <td>
+              {w.completedAt
+                ? new Date(w.completedAt).toLocaleString()
+                : "-"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+    {/* ================= MEDIA ================= */}
+    <div className="jobcard-white-section">
+  <h3>Media</h3>
+      <JobCardMedia
+        jobCardId={jobCard.id}
+        media={jobCard.media}
+      />
     </div>
-  );
+
+  </div>
+);
 }

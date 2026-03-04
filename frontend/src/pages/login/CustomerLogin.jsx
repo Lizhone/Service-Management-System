@@ -3,6 +3,7 @@ import { Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import client from "../../api/client";
+import { Link } from "react-router-dom";
 
 export default function CustomerLogin() {
   const { login } = useAuth();
@@ -88,9 +89,12 @@ export default function CustomerLogin() {
 
           {/* Forgot Password */}
           <div className="text-right">
-            <a href="#" className="text-[#01263B] text-sm hover:underline">
-              Forgot password?
-            </a>
+            <Link
+                to="/customer-forgot-password"
+                className="text-[#01263B] text-sm hover:underline"
+          >
+                Forgot password?
+            </Link>
           </div>
 
           {error && (

@@ -5,16 +5,12 @@ export default function ServiceBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* =============================
-     LOAD BOOKINGS
-  ============================== */
   useEffect(() => {
     loadBookings();
   }, []);
 
   const loadBookings = async () => {
     try {
-      // Admin sees ALL bookings (read-only)
       const res = await client.get("/service-bookings");
       setBookings(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
@@ -25,92 +21,45 @@ export default function ServiceBookings() {
     }
   };
 
-  if (loading) return <p>Loading service bookings…</p>;
+  if (loading) return <p className="admin-text">Loading service bookings…</p>;
 
   return (
-    <div style={{ padding: "24px" }}>
-      <h2 style={{ fontSize: "20px", fontWeight: 600 }}>
-        Service Bookings
-      </h2>
+    <div className="admin-card">
+      <div className="admin-header">
+        <h2 className="admin-heading">Service Bookings</h2>
+      </div>
 
-      <table
-        style={{
-          width: "100%",
-          marginTop: "16px",
-          borderCollapse: "collapse",
-          background: "#fff",
-        }}
-      >
+      <table className="admin-table">
         <thead>
-          <tr style={{ background: "#f1f5f9" }}>
-            <Th>ID</Th>
-            <Th>Customer</Th>
-            <Th>Vehicle Part</Th>
-            <Th>Service Type</Th>
-            <Th>Date</Th>
-            <Th>Time</Th>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Vehicle Part</th>
+            <th>Service Type</th>
+            <th>Date</th>
+            <th>Time</th>
           </tr>
         </thead>
 
         <tbody>
           {bookings.length === 0 ? (
             <tr>
-              <Td colSpan={6} center>
-                No service bookings
-              </Td>
+              <td colSpan={6}>No service bookings</td>
             </tr>
           ) : (
             bookings.map((b) => (
-              <tr key={b.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                <Td>{b.id}</Td>
-                <Td>{b.customer?.name || "-"}</Td>
-                <Td>{b.vehiclePart}</Td>
-                <Td>{b.serviceType}</Td>
-                <Td>
-                  {new Date(b.preferredDate).toLocaleDateString()}
-                </Td>
-                <Td>{b.timeSlot}</Td>
+              <tr key={b.id}>
+                <td>{b.id}</td>
+                <td>{b.customer?.name || "-"}</td>
+                <td>{b.vehiclePart}</td>
+                <td>{b.serviceType}</td>
+                <td>{new Date(b.preferredDate).toLocaleDateString()}</td>
+                <td>{b.timeSlot}</td>
               </tr>
             ))
           )}
         </tbody>
       </table>
     </div>
-  );
-}
-
-/* =============================
-   UI HELPERS
-============================= */
-
-function Th({ children }) {
-  return (
-    <th
-      style={{
-        padding: "10px",
-        fontSize: "13px",
-        textAlign: "left",
-        color: "#334155",
-        borderBottom: "1px solid #e5e7eb",
-      }}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({ children, colSpan, center }) {
-  return (
-    <td
-      colSpan={colSpan}
-      style={{
-        padding: "10px",
-        fontSize: "13px",
-        color: "#111827",
-        textAlign: center ? "center" : "left",
-      }}
-    >
-      {children}
-    </td>
   );
 }

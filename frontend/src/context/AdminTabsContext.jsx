@@ -50,15 +50,19 @@ export function AdminTabsProvider({ children }) {
      TAB LOGIC
   ====================================================== */
 
-  const openTab = (id, title, component) => {
-    setTabs(prev => {
-      const exists = prev.find(t => t.id === id);
-      if (exists) return prev;
-      return [...prev, { id, title, component }];
-    });
+ const openTab = (id, title, component) => {
+  setTabs(prev => {
+    const exists = prev.find(t => t.id === id);
+    if (exists) return prev;
 
-    setActiveTab(id);
-  };
+    return [
+      ...prev,
+      { id, title, component, closable: true }
+    ];
+  });
+
+  setActiveTab(id);
+};
 
   const closeTab = (id) => {
     setTabs(prev => {

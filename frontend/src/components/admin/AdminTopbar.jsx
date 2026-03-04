@@ -3,25 +3,37 @@ export default function AdminTopbar({ onToggleSidebar }) {
     <header
       style={{
         height: "56px",
-        borderBottom: "1px solid #e5e7eb",
+        background: "#01263B",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         display: "flex",
         alignItems: "center",
         padding: "0 16px",
+        color: "#ffffff",
       }}
     >
       <button
         onClick={onToggleSidebar}
         style={{
-          fontSize: "20px",
+          fontSize: "40px",
           background: "none",
           border: "none",
           cursor: "pointer",
+          color: "#ffffff",
         }}
       >
         ☰
       </button>
 
-      <h2 style={{ marginLeft: "16px" }}>Admin Dashboard</h2>
+      <h1
+        style={{
+          fontSize: "40px",
+          marginLeft: "16px",
+          color: "#ffffff",
+          fontWeight: "600",
+        }}
+      >
+        Admin Dashboard
+      </h1>
     </header>
   );
 }

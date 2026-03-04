@@ -30,7 +30,7 @@ async function main() {
   // (NO LOGIN, NO PASSWORD)
   // ===============================
   const technicians = [
-    "Ramjan",
+    "Ramajayam",
     "Rahul",
     "Balu",
     "Ragu",

@@ -30,7 +30,14 @@ export default function AdminTabContent() {
   const { tabs, activeTab } = useAdminTabs();
 
   return (
-    <div style={{ flex: 1, overflow: "auto", padding: "16px" }}>
+    <div
+      style={{
+        flex: 1,
+        overflow: "auto",
+        padding: "16px",
+         background: "#01263B",   
+      }}
+    >
       {tabs.map(tab => {
         const Component = COMPONENT_MAP[tab.component];
         if (!Component) return null;

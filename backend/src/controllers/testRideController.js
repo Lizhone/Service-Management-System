@@ -125,11 +125,11 @@ export const createTestRide = async (req, res) => {
 
 export const submitTestRideFeedback = async (req, res) => {
   try {
-    const { contact, feedback } = req.body;
+    const { contact, feedback, rating } = req.body;
 
-    if (!contact || !feedback) {
+    if (!contact || !feedback || !rating) {
       return res.status(400).json({
-        message: "Contact and feedback are required",
+        message: "Contact, feedback and rating are required",
       });
     }
 
@@ -139,10 +139,17 @@ export const submitTestRideFeedback = async (req, res) => {
       });
     }
 
+    // ✅ Validate rating
+    const numericRating = Number(rating);
+    if (numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
     const trimmedContact = contact.trim().toLowerCase();
     const normalizedPhone = contact.replace(/\D/g, "");
 
-    // 🔥 Detect if input is email or phone
     const isEmail = trimmedContact.includes("@");
 
     let ride;
@@ -155,9 +162,7 @@ export const submitTestRideFeedback = async (req, res) => {
             mode: "insensitive",
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       });
     } else {
       ride = await prisma.testRide.findFirst({
@@ -166,9 +171,7 @@ export const submitTestRideFeedback = async (req, res) => {
             endsWith: normalizedPhone,
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       });
     }
 
@@ -178,7 +181,7 @@ export const submitTestRideFeedback = async (req, res) => {
       });
     }
 
-    // ✅ Prevent duplicate feedback
+    // 🔒 Prevent duplicate feedback
     if (ride.feedback) {
       return res.status(400).json({
         message: "Feedback already submitted for this test ride",
@@ -187,10 +190,14 @@ export const submitTestRideFeedback = async (req, res) => {
 
     const updatedRide = await prisma.testRide.update({
       where: { id: ride.id },
-      data: { feedback: feedback.trim() },
+      data: {
+        feedback: feedback.trim(),
+        rating: numericRating,
+      },
     });
 
     return res.json(updatedRide);
+
   } catch (error) {
     console.error("Submit Feedback Error:", error);
     return res.status(500).json({

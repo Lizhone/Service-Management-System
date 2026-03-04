@@ -39,47 +39,84 @@ export default function CustomerDetail() {
   if (!customer) return <div className="p-6">Customer not found</div>;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-1">{customer.name}</h1>
-      <p className="text-gray-600 mb-6">{customer.mobileNumber}</p>
+  <div className="admin-card">
+    <div className="admin-header">
+      <h2 className="admin-heading">{customer.name}</h2>
+      <p className="admin-subheading">
+        {customer.mobileNumber}
+      </p>
+    </div>
 
-      <h2 className="text-lg font-semibold mb-3">Job Card History</h2>
+    <h2 className="admin-heading" style={{ fontSize: "24px" }}>
+  Job Card History
+</h2>
 
-      {jobCards.length === 0 ? (
-        <p className="text-gray-500">No job cards found.</p>
-      ) : (
-        <table className="w-full border-collapse">
+    {jobCards.length === 0 ? (
+      <p className="admin-text">No job cards found.</p>
+    ) : (
+      <div style={{ overflowX: "auto" }}>
+        <table className="admin-table">
           <thead>
-            <tr className="border-b">
-              <th align="left">Job Card #</th>
-              <th align="left">Vehicle</th>
-              <th align="left">Service Type</th>
-              <th align="left">Service Date/Time</th>
-              <th align="left">Status</th>
-              <th align="left">Odometer</th>
-              <th align="left">Battery Voltage</th>
-              <th align="left">Admin/Advisor Remark</th>
-              <th align="left">Created At</th>
-              <th align="left">Action</th>
+            <tr>
+              <th>Job Card #</th>
+              <th>Vehicle</th>
+              <th>Service Type</th>
+              <th>Service Date/Time</th>
+              <th>Status</th>
+              <th>Odometer</th>
+              <th>Battery Voltage</th>
+              <th>Admin/Advisor Remark</th>
+              <th>Created At</th>
+              <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             {jobCards.map((jc) => (
-              <tr key={jc.id} className="border-b">
-                <td>{jc.jobCardNumber}</td>
+              <tr key={jc.id}>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  {jc.jobCardNumber}
+                </td>
+
                 <td>{jc.vehicle?.model || "-"}</td>
                 <td>{jc.serviceType}</td>
-                <td>{jc.serviceInDatetime ? new Date(jc.serviceInDatetime).toLocaleString() : '-'}</td>
-                <td>{jc.status}</td>
-                <td>{jc.odometer ?? '-'}</td>
-                <td>{jc.batteryVoltage ?? '-'}</td>
-                <td>{jc.remarks || jc.adminRemark || jc.advisorRemark || '-'}</td>
-                <td>{jc.createdAt ? new Date(jc.createdAt).toLocaleString() : '-'}</td>
+
                 <td>
-                  <Link
-                    to={`/job-cards/${jc.id}`}
-                    className="text-blue-600 underline"
+                  {jc.serviceInDatetime
+                    ? new Date(jc.serviceInDatetime).toLocaleString()
+                    : "-"}
+                </td>
+
+                <td>
+                  <span
+                    className={
+                      jc.status === "OPEN"
+                        ? "admin-badge admin-badge-open"
+                        : "admin-badge admin-badge-closed"
+                    }
                   >
+                    {jc.status}
+                  </span>
+                </td>
+
+                <td>{jc.odometer ?? "-"}</td>
+                <td>{jc.batteryVoltage ?? "-"}</td>
+
+                <td style={{ maxWidth: "220px" }}>
+                  {jc.remarks ||
+                    jc.adminRemark ||
+                    jc.advisorRemark ||
+                    "-"}
+                </td>
+
+                <td>
+                  {jc.createdAt
+                    ? new Date(jc.createdAt).toLocaleString()
+                    : "-"}
+                </td>
+
+                <td className="admin-actions">
+                  <Link to={`/job-cards/${jc.id}`}>
                     Open
                   </Link>
                 </td>
@@ -87,7 +124,8 @@ export default function CustomerDetail() {
             ))}
           </tbody>
         </table>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 }

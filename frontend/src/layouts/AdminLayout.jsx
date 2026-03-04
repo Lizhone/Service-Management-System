@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AdminTabsProvider } from "../context/AdminTabsContext";
+import "../styles/admin-theme.css";
 
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminTopbar from "../components/admin/AdminTopbar";
@@ -11,12 +12,32 @@ export default function AdminLayout() {
 
   return (
     <AdminTabsProvider>
-      <div style={{ display: "flex", height: "100vh" }}>
+      <div
+        className="admin-theme"
+        style={{
+          display: "flex",
+          height: "100vh",
+        }}
+      >
+        {/* Sidebar */}
         <AdminSidebar open={sidebarOpen} />
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <AdminTopbar onToggleSidebar={() => setSidebarOpen(o => !o)} />
+        {/* Main Content Area */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <AdminTopbar
+            onToggleSidebar={() =>
+              setSidebarOpen((prev) => !prev)
+            }
+          />
+
           <AdminTabsBar />
+
           <AdminTabContent />
         </div>
       </div>

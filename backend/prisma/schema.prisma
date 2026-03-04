@@ -20,6 +20,8 @@ model User {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  resetToken        String?
+  resetTokenExpiry  DateTime?
 }
 
 enum Role {
@@ -53,7 +55,7 @@ model Customer {
   id           Int      @id @default(autoincrement())
   name         String
   mobileNumber String   @unique
-  email        String?   // 👈 ADD THIS
+  email        String?  @unique 
   address      String?
   gstNumber    String?
   notes        String?
@@ -64,6 +66,8 @@ model Customer {
   vehicles Vehicle[]
   jobCards JobCard[]
   serviceBookings ServiceBooking[]
+  resetToken       String?
+  resetTokenExpiry DateTime?
 }
 
 model Vehicle {
@@ -275,8 +279,9 @@ model TestRide {
   phone     String
   email     String?
 
-  address   String?   // ✅ add this
-  feedback  String?   // ✅ add this
+  address   String?   
+  feedback  String?  
+  rating    Int? 
 
   status    String    @default("CONFIRMED")
   isViewed  Boolean   @default(false)

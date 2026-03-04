@@ -36,6 +36,8 @@ import AdminVehicles from "./pages/admin/Vehicles";
 import AdminParts from "./pages/admin/Parts";
 import AdminMedia from "./pages/admin/Media";
 import AdminWorkLogs from "./pages/admin/WorkLogs";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 /* ================= OTHER STAFF ================= */
 import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
@@ -50,6 +52,8 @@ import CustomerBookingDetail from "./pages/CustomerBookingDetail";
 import SlotsAvailability from "./pages/public/SlotsAvailability";
 import LocationRoute from "./pages/LocationRoute";
 import TestRideFeedback from "./pages/TestRideFeedback";
+import CustomerForgotPassword from "./pages/CustomerForgotPassword";
+import CustomerResetPassword from "./pages/CustomerResetPassword";
 
 /* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -158,7 +162,21 @@ export default function App() {
       </AdminTabsProvider>
     </ProtectedRoute>
   }
-/>
+  />
+  
+      {/* ======================================================
+         AUTH PAGES
+      ====================================================== */}
+   <Route path="/forgot-password" element={<ForgotPassword />} />
+   <Route path="/reset-password" element={<ResetPassword />} />
+
+
+{/* ======================================================
+         CUSTOMER AUTH PAGES
+      ====================================================== */}
+   <Route path="/customer-forgot-password" element={<CustomerForgotPassword />} />
+   <Route path="/customer-reset-password" element={<CustomerResetPassword />} />
+
 
       {/* ======================================================
          OTHER STAFF DASHBOARDS
