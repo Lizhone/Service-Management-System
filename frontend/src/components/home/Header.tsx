@@ -18,11 +18,14 @@ export default function Header() {
         <Link to="/slots-availability" style={navLink}>
           slots-availability
         </Link>
+        
+       <Link to="/test-ride" style={navLink}>
+         Book Test Ride
+        </Link>
 
         <Link to="/test-ride-feedback" style={navLink}>
           feedback
         </Link>
-
         {/* Hamburger / Login */}
         <div style={{ position: "relative" }}>
           <div
@@ -141,4 +144,14 @@ const dropdownItem = {
   color: "white",
   fontSize: "16px",
   cursor: "pointer",
+};
+const ctaButton = {
+  backgroundColor: "white",
+  color: "black",
+  padding: "10px 22px",
+  borderRadius: "12px",
+  textDecoration: "none",
+  fontSize: "18px",
+  fontWeight: 600,
+  transition: "0.2s",
 };

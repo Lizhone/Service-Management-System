@@ -1,6 +1,6 @@
 import { useAdminTabs } from "../../context/AdminTabsContext";
 
-/* ✅ REAL JOB CARDS DASHBOARD */
+/*  REAL JOB CARDS DASHBOARD */
 import AdminDashboard from "../../pages/dashboard/AdminDashboard.jsx";
 
 /* OTHER ADMIN PAGES */
@@ -11,6 +11,7 @@ import Customers from "../../pages/admin/Customers.jsx";
 import Vehicles from "../../pages/admin/Vehicles.jsx";
 import WorkLogs from "../../pages/admin/WorkLogs.jsx";
 import TestRidesPanel from "../../pages/admin/TestRidesPanel.jsx";
+import Technicians from "../../pages/admin/Technicians.jsx";   
 
 
 
@@ -23,6 +24,7 @@ const COMPONENT_MAP = {
   vehicles: Vehicles,
   "work-logs": WorkLogs,
   "test-rides": TestRidesPanel,
+  technicians: Technicians,  
 };
 
 

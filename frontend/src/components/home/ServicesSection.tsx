@@ -151,6 +151,9 @@ export default function ServicesSection() {
       price: "₹1,19,999",
       colors: [
         { name: "Default", image: "/bikes/flee-b1/default.png", hex: "#444444" },
+        { name: "Blue", image: "/bikes/flee-c2/blue.png", hex: "#1D4ED8" },
+        { name: "Red", image: "/bikes/flee-c2/red.png", hex: "#C1121F" },
+        { name: "Yellow", image: "/bikes/flee-c2/yellow.png", hex: "#FACC15" },
       ],
     },
     {
@@ -163,6 +166,9 @@ export default function ServicesSection() {
       price: "₹1,29,999",
       colors: [
         { name: "Default", image: "/bikes/flee-b2/default.png", hex: "#444444" },
+        { name: "Blue", image: "/bikes/flee-c2/blue.png", hex: "#1D4ED8" },
+        { name: "Red", image: "/bikes/flee-c2/red.png", hex: "#C1121F" },
+        { name: "Yellow", image: "/bikes/flee-c2/yellow.png", hex: "#FACC15" },
       ],
     },
     {
@@ -175,6 +181,9 @@ export default function ServicesSection() {
       price: "₹1,79,999",
       colors: [
         { name: "Default", image: "/bikes/flee-b3/default.png", hex: "#444444" },
+        { name: "Blue", image: "/bikes/flee-c2/blue.png", hex: "#1D4ED8" },
+        { name: "Red", image: "/bikes/flee-c2/red.png", hex: "#C1121F" },
+        { name: "Yellow", image: "/bikes/flee-c2/yellow.png", hex: "#FACC15" },
       ],
     },
   ];

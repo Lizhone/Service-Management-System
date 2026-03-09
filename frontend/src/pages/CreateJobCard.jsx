@@ -221,9 +221,9 @@ export default function CreateJobCard() {
   <div className="admin-card">
     <div className="admin-header">
       <h2 className="admin-heading">Create Job Card</h2>
-      <p className="admin-subheading">
+      <h2 className="admin-subheading">
         Fill in service, customer, and vehicle details
-      </p>
+      </h2>
     </div>
 
     {/* WHITE FORM CONTAINER */}
@@ -571,13 +571,14 @@ export default function CreateJobCard() {
 
         {/* ================= ACTIONS ================= */}
         <div className="jobcard-actions">
-          <button type="button" onClick={() => navigate(-1)}>
-            Cancel
-          </button>
-          <button type="submit" className="admin-button-primary">
-            Create Job Card
-          </button>
-        </div>
+  <button type="button" onClick={() => navigate(-1)}>
+    Cancel
+  </button>
+
+  <button type="submit" className="admin-button-primary">
+    Create Job Card
+  </button>
+</div>
 
       </form>
     </div>

@@ -574,3 +574,174 @@
   background: #dcfce7;
   color: #166534;
 }
+/* ========================================
+   JOB CARD FORM WRAPPER (LIGHT FORM ONLY)
+   Does NOT affect other admin tables
+======================================== */
+
+.jobcard-form-wrapper {
+  background: #ffffff;
+  color: #111827;
+  padding: 28px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+/* Form headings */
+.jobcard-form-wrapper h3 {
+  color: #111827;
+  margin-top: 24px;
+  margin-bottom: 14px;
+}
+
+/* Inputs inside job card */
+.jobcard-form-wrapper input,
+.jobcard-form-wrapper select,
+.jobcard-form-wrapper textarea {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #d1d5db;
+}
+
+/* Table styling inside job card */
+.jobcard-form-wrapper .jobcard-table {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+
+.jobcard-form-wrapper .jobcard-table th {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.jobcard-form-wrapper .jobcard-table td {
+  color: #111827;
+}
+/* ========================================
+   JOB CARD TOGGLE BUTTON FIX (SCOPED)
+======================================== */
+
+.jobcard-form-wrapper .toggle-btn {
+  color: #ffffff;
+}
+
+.jobcard-form-wrapper .toggle-btn:hover {
+  color: #ffffff;
+}
+
+.jobcard-form-wrapper .toggle-btn.active {
+  color: #ffffff;
+}
+/* ========================================
+   JOB CARD ACTION BUTTONS
+======================================== */
+
+.jobcard-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+  justify-content: flex-end;   /* PUSH BUTTONS TO RIGHT */
+  align-items: center;
+}
+
+/* Cancel button */
+.jobcard-actions button:first-child {
+  padding: 10px 18px;
+  background: #e5e7eb;
+  color: #111827;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.jobcard-actions button:first-child:hover {
+  background: #d1d5db;
+}
+
+/* Create button */
+.jobcard-actions .admin-button-primary {
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+/* ========================================
+   VEHICLE CONDITION CHECKLIST ALIGNMENT
+======================================== */
+
+/* Center the status headers */
+.jobcard-table thead th:not(:first-child) {
+  text-align: center;
+}
+
+/* Center radio buttons */
+.jobcard-table tbody td:not(:first-child) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+
+/* Datepicker wrapper full width */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+}
+
+/* Calendar container */
+.react-datepicker {
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-family: inherit;
+}
+
+/* Header */
+.react-datepicker__header {
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Weekday names */
+.react-datepicker__day-name {
+  color: #6b7280;
+}
+
+/* Days */
+.react-datepicker__day {
+  border-radius: 6px;
+}
+
+.react-datepicker__day:hover {
+  background: #dbeafe;
+}
+
+/* Selected day */
+.react-datepicker__day--selected {
+  background: #2563eb;
+  color: white;
+}
+
+/* Today highlight */
+.react-datepicker__day--today {
+  border: 1px solid #2563eb;
+}
+
+/* Disabled days */
+.react-datepicker__day--disabled {
+  color: #d1d5db;
+}
+
+/* Navigation arrows */
+.react-datepicker__navigation-icon::before {
+  border-color: #111827;
+}
