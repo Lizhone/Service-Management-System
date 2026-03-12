@@ -745,3 +745,162 @@
 .react-datepicker__navigation-icon::before {
   border-color: #111827;
 }
+
+/* Hero text animation */
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 1s ease forwards;
+}
+
+/* bike fade animation */
+
+@keyframes bikeFade {
+  0% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.animate-bikeFade {
+  animation: bikeFade 0.001ms ease-in-out;
+}
+
+/*//////////////////////////////////////////*
+   REVEAL ANIMATION (FOR SCROLL-BASED ELEMENTS)
+   Add "reveal" class to any element you want to animate on scroll*/
+
+/* ===============================
+   SCROLL REVEAL
+================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(80px);
+  transition: all 0.9s cubic-bezier(.21,.9,.32,1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ===============================
+   FLOATING BIKE ANIMATION
+================================ */
+
+.float-bike {
+  animation: floatBike 6s ease-in-out infinite;
+}
+
+@keyframes floatBike {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+
+/* ===============================
+   IMAGE HOVER EFFECT
+================================ */
+
+.img-hover {
+  transition: transform 0.6s ease, filter 0.4s ease;
+}
+
+.img-hover:hover {
+  transform: scale(1.06);
+  filter: brightness(1.1);
+}
+
+
+/* ===============================
+   CARD HOVER LIFT
+================================ */
+
+.card-hover {
+  transition: all 0.35s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  border-color: #facc15;
+}
+
+
+/* ===============================
+   TITLE GLOW EFFECT
+================================ */
+
+.title-glow {
+  transition: all 0.4s ease;
+}
+
+.title-glow:hover {
+  text-shadow: 0 0 14px rgba(255,255,255,0.35);
+}
+
+/* Fade + slide in from left */
+
+@keyframes bikeSlideFade {
+  0% {
+    opacity: 0;
+    transform: translateX(-80px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateX(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.bike-slide-fade {
+  animation: bikeSlideFade 1.2s ease forwards;
+}
+
+/* gentle side movement after appearing */
+
+@keyframes bikeFloatSide {
+  0% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
+  100% { transform: translateX(-10px); }
+}
+
+.bike-float {
+  animation: bikeFloatSide 5s ease-in-out infinite;
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  border: 1px solid #d1d5db;   
+  border-radius: 0.375rem;     
+  padding: 0.5rem 0.75rem;     
+}

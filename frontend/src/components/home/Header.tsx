@@ -16,7 +16,7 @@ export default function Header() {
       {/* RIGHT: Navigation */}
       <nav style={navStyle}>
         <Link to="/slots-availability" style={navLink}>
-          slots-availability
+          Slots-availability
         </Link>
         
        <Link to="/test-ride" style={navLink}>
@@ -24,7 +24,7 @@ export default function Header() {
         </Link>
 
         <Link to="/test-ride-feedback" style={navLink}>
-          feedback
+          Feedback
         </Link>
         {/* Hamburger / Login */}
         <div style={{ position: "relative" }}>

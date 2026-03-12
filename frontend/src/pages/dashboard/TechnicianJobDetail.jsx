@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import client from "../../api/client";
 
 export default function TechnicianJobDetail() {
+
   const { bookingId } = useParams();
   const navigate = useNavigate();
 
@@ -12,11 +13,11 @@ export default function TechnicianJobDetail() {
   const [timer, setTimer] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ✅ NEW STATES
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
   /* ================= FETCH BOOKING ================= */
+
   useEffect(() => {
     fetchDetail();
   }, [bookingId]);
@@ -24,7 +25,9 @@ export default function TechnicianJobDetail() {
   const fetchDetail = async () => {
     try {
       setLoading(true);
+
       const res = await client.get(`/technicians/booking/${bookingId}`);
+
       setBooking(res.data);
 
       const activeLog = res.data?.jobCard?.workLogs?.find(
@@ -34,8 +37,10 @@ export default function TechnicianJobDetail() {
       if (activeLog?.startedAt) {
         const seconds =
           Math.floor((new Date() - new Date(activeLog.startedAt)) / 1000);
+
         setTimer(seconds);
       }
+
     } catch (err) {
       console.error("Failed to fetch booking:", err);
     } finally {
@@ -44,7 +49,9 @@ export default function TechnicianJobDetail() {
   };
 
   /* ================= TIMER ================= */
+
   useEffect(() => {
+
     let interval;
 
     if (booking?.status === "IN_PROGRESS") {
@@ -54,45 +61,58 @@ export default function TechnicianJobDetail() {
     }
 
     return () => clearInterval(interval);
+
   }, [booking]);
 
   /* ================= START WORK ================= */
+
   const handleStart = async () => {
+
     if (!taskName) {
       alert("Task name is required");
       return;
     }
 
     try {
+
       await client.put(`/technicians/start/${bookingId}`, {
         taskName,
-        description,
+        description
       });
 
       fetchDetail();
+
     } catch (err) {
       console.error("Start failed:", err);
     }
   };
 
   /* ================= COMPLETE WORK ================= */
+
   const handleComplete = async () => {
+
     try {
+
       await client.put(`/technicians/complete/${bookingId}`);
+
       fetchDetail();
+
     } catch (err) {
       console.error("Complete failed:", err);
     }
   };
 
   /* ================= UPLOAD MEDIA ================= */
+
   const handleUpload = async () => {
+
     if (!selectedFile) {
       alert("Please select a file");
       return;
     }
 
     try {
+
       setUploading(true);
 
       const formData = new FormData();
@@ -103,36 +123,53 @@ export default function TechnicianJobDetail() {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
-          },
+            "Content-Type": "multipart/form-data"
+          }
         }
       );
 
       alert("Media uploaded successfully");
+
       setSelectedFile(null);
+
       fetchDetail();
+
     } catch (err) {
+
       console.error("Upload failed:", err);
+
       alert("Upload failed");
+
     } finally {
+
       setUploading(false);
+
     }
   };
 
   /* ================= DELETE MEDIA ================= */
+
   const handleDeleteMedia = async (mediaId) => {
+
     if (!window.confirm("Delete this media?")) return;
 
     try {
+
       await client.delete(`/technicians/service-media/${mediaId}`);
+
       fetchDetail();
+
     } catch (err) {
+
       console.error("Delete failed:", err);
+
       alert("Delete failed");
+
     }
   };
 
   /* ================= LOADING ================= */
+
   if (loading) {
     return (
       <div className="p-6 text-white bg-[#01263B] min-h-screen">
@@ -149,180 +186,255 @@ export default function TechnicianJobDetail() {
     );
   }
 
-  /* ================= MEDIA SOURCE FIX ================= */
   const mediaList =
     booking?.media ||
     booking?.jobCard?.media ||
     [];
 
   /* ================= UI ================= */
+
   return (
+
     <div className="p-6 text-white bg-[#01263B] min-h-screen">
+
+      {/* BACK BUTTON */}
+
       <button
         onClick={() => navigate(-1)}
-        className="mb-4 bg-gray-600 px-3 py-1 rounded"
+        className="mb-6 bg-gray-600 px-4 py-2 rounded hover:bg-gray-500"
       >
         ← Back
       </button>
 
-      <h2 className="text-2xl font-bold mb-4">
+      {/* TITLE */}
+
+      <h2 className="text-3xl font-bold mb-6">
         Service Details
       </h2>
 
-      <div className="bg-[#0A3A55] p-4 rounded mb-4">
+      {/* BOOKING INFO */}
+
+      <div className="bg-[#0A3A55] p-5 rounded mb-6 border border-gray-700">
+
         <p><strong>Customer:</strong> {booking.customer?.name}</p>
+
         <p><strong>Service Type:</strong> {booking.serviceType}</p>
+
         <p><strong>Status:</strong> {booking.status}</p>
+
       </div>
 
       {/* ================= ACTION SECTION ================= */}
+
       {booking.status !== "COMPLETED" && (
-        <div className="bg-[#0A3A55] p-4 rounded mb-4">
+
+        <div className="bg-[#0A3A55] p-6 rounded mb-6 border border-gray-700">
 
           {booking.status === "CLAIMED" && (
+
             <>
+
+              <label className="block text-gray-300 mb-1">
+                Task Name
+              </label>
+
               <input
                 type="text"
-                placeholder="Task Name"
+                placeholder="Enter task name"
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
-                className="w-full p-2 mb-3 text-black rounded"
+                className="w-full p-3 mb-4 bg-[#01263B] border border-gray-600 text-white rounded focus:outline-none focus:border-cyan-400"
               />
 
+              <label className="block text-gray-300 mb-1">
+                Description
+              </label>
+
               <textarea
-                placeholder="Description"
+                placeholder="Describe the issue or work done"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 mb-3 text-black rounded"
+                className="w-full p-3 mb-4 bg-[#01263B] border border-gray-600 text-white rounded focus:outline-none focus:border-cyan-400"
               />
 
               <button
                 onClick={handleStart}
-                className="bg-cyan-600 px-4 py-2 rounded hover:bg-cyan-500"
+                className="bg-cyan-600 px-6 py-2 rounded hover:bg-cyan-500"
               >
                 Start Work
               </button>
+
             </>
           )}
 
           {booking.status === "IN_PROGRESS" && (
+
             <>
-              <p className="mb-3 text-cyan-400">
+
+              <p className="mb-4 text-cyan-400 text-lg">
                 Elapsed Time: {timer}s
               </p>
 
               <button
                 onClick={handleComplete}
-                className="bg-green-600 px-4 py-2 rounded hover:bg-green-500"
+                className="bg-green-600 px-6 py-2 rounded hover:bg-green-500"
               >
                 Complete Work
               </button>
+
             </>
           )}
+
         </div>
+
       )}
 
-      {/* ================= COMPLETED ================= */}
+      {/* COMPLETED */}
+
       {booking.status === "COMPLETED" && (
-        <div className="bg-green-800 p-4 rounded">
+
+        <div className="bg-green-800 p-5 rounded border border-green-600">
           Work Completed ✔ (Locked)
         </div>
+
       )}
 
       {/* ================= WORK HISTORY ================= */}
-      <h3 className="text-lg font-semibold mt-6">
+
+      <h3 className="text-xl font-semibold mt-8 mb-4">
         Work History
       </h3>
 
       {booking.jobCard?.workLogs?.length === 0 && (
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-400">
           No work history yet
         </p>
       )}
 
       {booking.jobCard?.workLogs?.map((log) => (
-        <div key={log.id} className="bg-[#0A3A55] p-3 rounded mt-2">
-          <p><strong>{log.taskName}</strong></p>
+
+        <div
+          key={log.id}
+          className="bg-[#0A3A55] p-4 rounded mb-3 border border-gray-700"
+        >
+
+          <p className="font-semibold text-lg">
+            {log.taskName}
+          </p>
+
           <p>Status: {log.status}</p>
-          <p>Started: {new Date(log.startedAt).toLocaleString()}</p>
+
+          <p>
+            Started: {new Date(log.startedAt).toLocaleString()}
+          </p>
+
           {log.completedAt && (
-            <p>Completed: {new Date(log.completedAt).toLocaleString()}</p>
+
+            <p>
+              Completed: {new Date(log.completedAt).toLocaleString()}
+            </p>
+
           )}
+
         </div>
+
       ))}
 
-      {/* ================= UPLOAD WORK PROOF ================= */}
+      {/* ================= UPLOAD MEDIA ================= */}
+
       {(booking.status === "IN_PROGRESS" ||
         booking.status === "COMPLETED") && (
-        <div className="bg-[#0A3A55] p-4 rounded mt-6">
-          <h3 className="text-lg font-semibold mb-3">
-            Upload media
+
+        <div className="bg-[#0A3A55] p-6 rounded mt-8 border border-gray-700">
+
+          <h3 className="text-xl font-semibold mb-4">
+            Upload Work Media
           </h3>
 
-          <div className="mb-3">
-            <label className="inline-block bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded cursor-pointer">
-              Choose File
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
-                className="hidden"
-              />
-            </label>
+          <label className="inline-block bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-2 rounded cursor-pointer">
 
-            {selectedFile && (
-              <p className="text-sm text-gray-300 mt-2">
-                Selected: {selectedFile.name}
-              </p>
-            )}
-          </div>
+            Choose File
+
+            <input
+              type="file"
+              accept="image/*,video/*"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="hidden"
+            />
+
+          </label>
+
+          {selectedFile && (
+
+            <p className="mt-3 text-gray-300">
+              Selected: {selectedFile.name}
+            </p>
+
+          )}
 
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500"
+            className="ml-4 bg-blue-600 px-5 py-2 rounded hover:bg-blue-500"
           >
             {uploading ? "Uploading..." : "Upload"}
           </button>
+
         </div>
+
       )}
 
-      {/* ================= DISPLAY UPLOADED MEDIA ================= */}
+      {/* ================= MEDIA DISPLAY ================= */}
+
       {mediaList.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-3">
+
+        <div className="mt-8">
+
+          <h3 className="text-xl font-semibold mb-4">
             Uploaded Media
           </h3>
 
           <div className="grid grid-cols-3 gap-4">
+
             {mediaList.map((m) => (
+
               <div key={m.id} className="relative">
+
                 {m.fileType === "VIDEO" ? (
+
                   <video
                     src={`http://localhost:4000${m.fileUrl || m.filePath}`}
                     controls
                     className="rounded"
                   />
+
                 ) : (
+
                   <img
                     src={`http://localhost:4000${m.fileUrl || m.filePath}`}
                     alt="Work proof"
                     className="rounded"
                   />
+
                 )}
 
-                {/* 🔥 DELETE BUTTON */}
                 <button
                   onClick={() => handleDeleteMedia(m.id)}
-                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-xs px-2 py-1 rounded"
                 >
                   Delete
                 </button>
+
               </div>
+
             ))}
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }

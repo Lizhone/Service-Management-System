@@ -1,17 +1,34 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+/* =========================
+   Custom Input (same style as other fields)
+========================= */
+
+const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
+  <input
+    ref={ref}
+    value={value}
+    onClick={onClick}
+    placeholder="Select date"
+    readOnly
+    className="w-full border rounded px-3 py-2 cursor-pointer"
+  />
+));
 
 export default function BookService() {
   const navigate = useNavigate();
 
+  const [selectedDate, setSelectedDate] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     vehiclePart: "",
     serviceType: "GENERAL",
-    serviceDate: "",
     timeSlot: "",
     notes: "",
   });
@@ -20,13 +37,23 @@ export default function BookService() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /* =========================
+     Submit
+  ========================= */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.vehiclePart || !form.serviceDate || !form.timeSlot) {
+    if (!form.vehiclePart || !selectedDate || !form.timeSlot) {
       alert("Please fill all required fields");
       return;
     }
+
+    const day = String(selectedDate.getDate()).padStart(2, "0");
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    const year = selectedDate.getFullYear();
+
+    const formattedDate = `${day}/${month}/${year}`;
 
     try {
       setSubmitting(true);
@@ -34,7 +61,7 @@ export default function BookService() {
       await client.post("/service-bookings/me/service-bookings", {
         vehiclePart: form.vehiclePart,
         serviceType: form.serviceType,
-        preferredDate: form.serviceDate,
+        preferredDate: formattedDate,
         timeSlot: form.timeSlot,
         notes: form.notes,
       });
@@ -51,11 +78,16 @@ export default function BookService() {
   };
 
   return (
-    // ✅ DARK PAGE BACKGROUND
     <div className="min-h-screen bg-[#01263B] py-12 px-4">
-      {/* ✅ FLOATING CARD */}
+
+      {/* CARD */}
+
       <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl border border-gray-200 shadow-xl">
-        <h1 className="text-xl font-semibold mb-1">Book a Service</h1>
+
+        <h1 className="text-xl font-semibold mb-1">
+          Book a Service
+        </h1>
+
         <p className="text-sm text-gray-600 mb-5">
           Choose vehicle part, preferred date and time slot
         </p>
@@ -67,11 +99,14 @@ export default function BookService() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+
           {/* VEHICLE PART */}
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Select Vehicle Part *
             </label>
+
             <select
               name="vehiclePart"
               value={form.vehiclePart}
@@ -98,10 +133,12 @@ export default function BookService() {
           </div>
 
           {/* SERVICE TYPE */}
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Service Type
             </label>
+
             <select
               name="serviceType"
               value={form.serviceType}
@@ -125,25 +162,29 @@ export default function BookService() {
           </div>
 
           {/* DATE */}
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Preferred Date *
             </label>
-            <input
-              type="date"
-              name="serviceDate"
-              value={form.serviceDate}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-              required
-            />
+
+            <DatePicker
+  selected={selectedDate}
+  onChange={(date) => setSelectedDate(date)}
+  dateFormat="dd/MM/yyyy"
+  minDate={new Date()}
+  placeholderText="Select date"
+  className="w-full !border !border-black bg-white rounded px-3 py-2 text-gray-900"
+/>
           </div>
 
           {/* TIME SLOT */}
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Time Slot *
             </label>
+
             <select
               name="timeSlot"
               value={form.timeSlot}
@@ -159,10 +200,12 @@ export default function BookService() {
           </div>
 
           {/* NOTES */}
+
           <div>
             <label className="block text-sm font-medium mb-1">
               Additional Notes (optional)
             </label>
+
             <textarea
               name="notes"
               value={form.notes}
@@ -172,8 +215,10 @@ export default function BookService() {
             />
           </div>
 
-          {/* ACTIONS */}
+          {/* BUTTONS */}
+
           <div className="flex justify-end gap-3 pt-4">
+
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -189,7 +234,9 @@ export default function BookService() {
             >
               {submitting ? "Booking..." : "Book Service"}
             </button>
+
           </div>
+
         </form>
       </div>
     </div>

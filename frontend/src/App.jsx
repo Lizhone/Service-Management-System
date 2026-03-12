@@ -54,6 +54,7 @@ import LocationRoute from "./pages/LocationRoute";
 import TestRideFeedback from "./pages/TestRideFeedback";
 import CustomerForgotPassword from "./pages/CustomerForgotPassword";
 import CustomerResetPassword from "./pages/CustomerResetPassword";
+import EditJobCard from "./pages/jobcard/EditJobCard";
 
 /* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -163,6 +164,7 @@ export default function App() {
     </ProtectedRoute>
   }
   />
+  <Route path="/job-cards/edit/:id" element={<EditJobCard />} />
   
       {/* ======================================================
          AUTH PAGES
