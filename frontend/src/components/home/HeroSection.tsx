@@ -1,51 +1,40 @@
 import { useNavigate } from "react-router-dom";
-import homeBg from "../../assets/home-bg.jpg";
 
 export default function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <section
-      style={{
-        backgroundImage: `url(${homeBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "calc(100vh - 64px)", // 🔑 HEADER HEIGHT FIX
-        position: "relative",
-      }}
-    >
-      {/* Dark overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: "rgba(0,0,0,0.6)",
-        }}
-      />
+    <section className="relative h-screen overflow-hidden">
 
-      {/* Content */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 10,
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "white",
-          textAlign: "center",
-          padding: "1rem",
-        }}
+      {/* 🎥 VIDEO BACKGROUND */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-1/2 left-1/2 min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 object-cover z-0"
       >
-        <h1 style={{ fontSize: "6.5rem", fontWeight: "italic" }}>
+        <source src="/assets/hero-video.mp4" type="video/mp4" />
+      </video>
+
+      {/* 🌑 DARK OVERLAY */}
+      <div className="absolute inset-0 bg-gradient-to-b from-grey via-black/10 z-10" />
+
+      {/* 🔥 CONTENT */}
+      <div className="relative z-20 h-full flex flex-col items-center justify-center text-center text-white px-4">
+
+        {/* TITLE */}
+        <h1 className="text-5xl md:text-8xl font-semibold italic tracking-wide">
           FLEE
         </h1>
 
-        <p style={{ margin: "16px 0", maxWidth: "1000px", fontSize: "3.5rem"}}>
-          Smart. Stylish. Sustainable 
+        {/* TAGLINE */}
+        <p className="mt-4 text-lg md:text-2xl text-gray-200 max-w-2xl">
+          Smart. Stylish. Sustainable Mobility for the Future
         </p>
+
       </div>
+
     </section>
   );
 }

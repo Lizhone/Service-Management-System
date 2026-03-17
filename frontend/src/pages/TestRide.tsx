@@ -7,7 +7,24 @@ import DatePicker from "react-datepicker";
 import "react-phone-input-2/lib/style.css";
 import "react-datepicker/dist/react-datepicker.css";
 
-interface BookingData {
+/* ================= LOCAL DATA ================= */
+
+const bangaloreAreas = [
+  { name: "Whitefield", area: "East Bangalore", pincode: "560066" },
+  { name: "Indiranagar", area: "Central Bangalore", pincode: "560038" },
+  { name: "Koramangala", area: "South Bangalore", pincode: "560034" },
+  { name: "BTM Layout", area: "South Bangalore", pincode: "560076" },
+  { name: "Marathahalli", area: "East Bangalore", pincode: "560037" },
+  { name: "Electronic City", area: "South Bangalore", pincode: "560100" },
+  { name: "Yelahanka", area: "North Bangalore", pincode: "560064" },
+  { name: "Hebbal", area: "North Bangalore", pincode: "560024" },
+  { name: "Jayanagar", area: "South Bangalore", pincode: "560041" },
+  { name: "HSR Layout", area: "South-East Bangalore", pincode: "560102" },
+];
+
+/* ================= TYPES ================= */
+
+interface FormData {
   bike: string;
   location: string;
   date: string;
@@ -15,313 +32,393 @@ interface BookingData {
   name: string;
   phone: string;
   email: string;
-  address?: string;
+  address: string;
+  lat?: number;
+  lng?: number;
 }
+
+interface Place {
+  display_name: string;
+  full_address?: string;
+  lat?: number;
+  lon?: number;
+  type?: "local" | "pincode" | "api";
+}
+
+/* ================= COMPONENT ================= */
 
 export default function TestRide() {
 
-const routerLocation = useLocation();
-const navigate = useNavigate();
-const selectedBike = routerLocation.state?.bike || "";
+  const routerLocation = useLocation();
+  const navigate = useNavigate();
+  const selectedBike = (routerLocation.state as any)?.bike || "";
 
-/* Scroll to top when page opens */
+  const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-useEffect(() => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}, []);
+  const [formData, setFormData] = useState<FormData>({
+    bike: selectedBike,
+    location: "",
+    date: "",
+    time: "",
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+  });
 
-const [loading,setLoading] = useState(false);
-const [errors,setErrors] = useState<any>({});
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Place[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-const [selectedDate,setSelectedDate] = useState<Date | null>(null);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
-const [formData,setFormData] = useState<BookingData>({
-  bike: selectedBike,
-  location: "",
-  date: "",
-  time: "",
-  name: "",
-  phone: "",
-  email: "",
-  address: "",
-});
+  /* ================= SMART SEARCH ================= */
 
+  const searchLocation = (value: string) => {
 
-/* ================= VALIDATION ================= */
+    setQuery(value);
 
-const validate = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
 
-let newErrors:any = {};
+    if (value.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
 
-if(!formData.bike) newErrors.bike = true;
-if(!formData.location) newErrors.location = true;
-if(!formData.date) newErrors.date = true;
-if(!formData.time) newErrors.time = true;
-if(!formData.name || formData.name.length < 3) newErrors.name = true;
-if(!formData.email) newErrors.email = true;
-if(!formData.phone) newErrors.phone = true;
+    const timeout = setTimeout(async () => {
 
-setErrors(newErrors);
+      try {
 
-return Object.keys(newErrors).length === 0;
-
-};
-
-
-/* ================= BOOK TEST RIDE ================= */
-
-const handleConfirm = async () => {
-
-if(!validate()) return;
-
-try{
-
-setLoading(true);
-
-await axios.post("http://localhost:4000/api/test-rides",{
-
-bikeName: formData.bike,
-location: formData.location,
-date: formData.date,
-timeSlot: formData.time,
-fullName: formData.name,
-phone: formData.phone,
-email: formData.email,
-address: formData.address,
-
-});
-
-alert("Test Ride Booked Successfully ✅");
-
-setFormData({
-bike:"",
-location:"",
-date:"",
-time:"",
-name:"",
-phone:"",
-email:"",
-address:"",
-});
-
-setSelectedDate(null);
-
-}
-catch(error:any){
-
-alert(
-error.response?.data?.message ||
-"Booking failed. Please try again."
-);
-
-}
-finally{
-setLoading(false);
-}
-
-};
+        /* ===== LOCAL SEARCH ===== */
+        const localResults = bangaloreAreas
+          .filter(area =>
+            area.name.toLowerCase().includes(value.toLowerCase())
+          )
+          .map(area => ({
+            display_name: area.name,
+            full_address: `${area.area} – ${area.pincode}`,
+            type: "local" as const
+          }));
 
 
-/* ================= DATA ================= */
+        /* ===== PINCODE SEARCH ===== */
+        const isPincode = /^\d{4,6}$/.test(value);
 
-const bikes = [
-{ name:"Flee C2", image:"/bikes/flee-c2/default.png" },
-{ name:"Flee B1", image:"/bikes/flee-b1/default.png" },
-{ name:"Flee B2", image:"/bikes/flee-b2/default.png" },
-{ name:"Flee B3", image:"/bikes/flee-b3/default.png" },
+        let pincodeResults: Place[] = [];
+
+        if (isPincode) {
+          pincodeResults = bangaloreAreas
+            .filter(area => area.pincode.startsWith(value))
+            .map(area => ({
+              display_name: area.name,
+              full_address: `${area.area} – ${area.pincode}`,
+              type: "pincode"
+            }));
+        }
+
+
+        /* ===== PHOTON FALLBACK ===== */
+        let apiResults: Place[] = [];
+
+        if (localResults.length < 5) {
+
+          const res = await fetch(
+            `https://photon.komoot.io/api/?q=${encodeURIComponent(value)}&limit=6&lat=12.9716&lon=77.5946`
+          );
+
+          const data = await res.json();
+
+          apiResults = data.features
+            .filter((item: any) =>
+              item.properties.state?.toLowerCase().includes("karnataka") ||
+              item.properties.city?.toLowerCase().includes("bangalore")
+            )
+            .map((item: any) => {
+
+              const p = item.properties;
+
+              const name = p.name || "";
+              const house = p.housenumber || "";
+              const street = p.street || "";
+              const suburb = p.suburb || p.district || "";
+              const city = p.city || "Bangalore";
+              const postcode = p.postcode || "";
+
+              const title = [
+                name,
+                house && street ? `${house} ${street}` : street
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+              const subtitle = [
+                suburb,
+                city,
+                postcode ? `- ${postcode}` : ""
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+              return {
+                display_name: title || suburb || city,
+                full_address: subtitle,
+                lat: item.geometry.coordinates[1],
+                lon: item.geometry.coordinates[0],
+                type: "api"
+              };
+            });
+        }
+
+
+        /* ===== MERGE ===== */
+        const finalResults = [
+          ...pincodeResults,
+          ...localResults,
+          ...apiResults
+        ].slice(0, 6);
+
+        setSuggestions(finalResults);
+        setShowSuggestions(true);
+
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+
+    }, 250);
+
+    setSearchTimeout(timeout);
+  };
+
+  /* ================= BOOK ================= */
+
+  const handleConfirm = async () => {
+
+    try {
+
+      setLoading(true);
+
+      await axios.post("http://localhost:4000/api/test-rides", {
+        bikeName: formData.bike,
+        location: formData.location,
+        date: formData.date,
+        timeSlot: formData.time,
+        fullName: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        lat: formData.lat,
+        lng: formData.lng,
+      });
+
+      alert("Test Ride Booked Successfully ✅");
+      navigate("/");
+
+    } catch (error: any) {
+
+      alert(
+        error?.response?.data?.message ||
+        "Booking failed. Please try again."
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= DATA ================= */
+
+  const bikes = [
+  {
+    name: "Flee-low-speed",
+    image: "/bikes/flee-low-speed/default.png",
+  },
+  {
+    name: "Flee-high-speed",
+    image: "/bikes/flee-high-speed/default.png",
+  }
 ];
+  const locations = ["Bangalore", "Goa"];
 
-const locations = ["Bangalore","Goa"];
+  /* ================= UI ================= */
 
+  return (
 
-/* ================= UI ================= */
+    <div className="min-h-screen bg-black flex justify-center items-start py-16 px-6">
 
-return(
+      <div className="w-full max-w-6xl bg-[#0f172a] rounded-xl p-10 grid grid-cols-1 md:grid-cols-2 gap-10">
 
-<div className="min-h-screen bg-black text-white flex justify-center p-6">
+        {/* LEFT */}
+        <div>
 
-<div className="w-full max-w-4xl">
+          <h2 className="text-xl font-semibold mb-6 text-white">Select Bike</h2>
 
+          <div className="grid grid-cols-2 gap-6 mb-8">
 
-{/* ================= BIKE SELECT ================= */}
+            {bikes.map((bike) => (
+              <div
+                key={bike.name}
+                onClick={() => setFormData({ ...formData, bike: bike.name })}
+                className={`cursor-pointer bg-gray-800 rounded-xl p-5 border transition hover:scale-105 ${
+                  formData.bike === bike.name
+                    ? "border-blue-500"
+                    : "border-gray-700 hover:border-gray-500"
+                }`}
+              >
+                <img src={bike.image} className="w-full h-32 object-contain mb-3" />
+                <p className="text-center text-white text-sm">{bike.name}</p>
+              </div>
+            ))}
 
-<h2 className="text-xl mb-6 text-center">
-Select Your Ride
-</h2>
+          </div>
 
-<div className="grid grid-cols-2 gap-6 mb-10">
+          <h2 className="text-lg font-semibold mb-3 text-white">Location</h2>
 
-{bikes.map((bike)=>(
-<div
-key={bike.name}
-onClick={()=>setFormData({...formData,bike:bike.name})}
-className={`cursor-pointer bg-gray-900 rounded-xl p-4 border ${
-formData.bike === bike.name
-? "border-blue-500"
-: "border-gray-800"
-}`}
+          <div className="flex gap-3">
+
+            {locations.map((loc) => (
+              <button
+                key={loc}
+                onClick={() => setFormData({ ...formData, location: loc })}
+                className={`px-5 py-2 rounded-lg text-sm ${
+                  formData.location === loc
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 text-white"
+                }`}
+              >
+                {loc}
+              </button>
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* RIGHT */}
+        <div>
+
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date: Date | null) => {
+              setSelectedDate(date);
+              if (date) {
+                setFormData({
+                  ...formData,
+                  date: date.toISOString().split("T")[0]
+                });
+              }
+            }}
+            minDate={new Date()}
+            placeholderText="Select Date"
+            className="w-full p-3 mb-4 bg-gray-800 text-white rounded-lg"
+          />
+
+          <select
+  value={formData.time}
+  onChange={(e) =>
+    setFormData({ ...formData, time: e.target.value })
+  }
+  className="w-full p-3 bg-gray-800 border border-gray-700 text-white rounded-lg mb-6"
 >
-
-<img
-src={bike.image}
-className="w-full h-40 object-contain mb-4"
-/>
-
-<h3>{bike.name}</h3>
-
-</div>
-))}
-
-</div>
-
-
-{/* ================= LOCATION ================= */}
-
-<h2 className="text-xl mb-4 text-center">
-Choose Location
-</h2>
-
-<div className="grid grid-cols-2 gap-4 mb-10">
-
-{locations.map((loc)=>(
-<button
-key={loc}
-onClick={()=>setFormData({...formData,location:loc})}
-className={`p-4 rounded-lg transition ${
-formData.location === loc
-? "bg-blue-600"
-: "bg-gray-800 hover:bg-gray-700"
-}`}
->
-{loc}
-</button>
-))}
-
-</div>
-
-
-{/* ================= DATE & TIME ================= */}
-
-<h2 className="text-xl mb-4 text-center">
-Select Date & Time
-</h2>
-
-<div className="w-full mb-4">
-
-<DatePicker
-selected={selectedDate}
-onChange={(date: Date | null)=>{
-
-setSelectedDate(date);
-
-if(date){
-const isoDate = date.toISOString().split("T")[0];
-setFormData({...formData,date:isoDate});
-}
-
-}}
-dateFormat="dd/MM/yyyy"
-minDate={new Date()}
-placeholderText="Select Date"
-className="w-full p-3 bg-gray-200 text-black rounded-lg"
-/>
-
-</div>
-
-<select
-value={formData.time}
-onChange={(e)=>setFormData({...formData,time:e.target.value})}
-className="w-full p-3 mb-10 bg-gray-200 text-black rounded-lg"
->
-
-<option value="">Select Time</option>
-
-<option>11:00 AM</option>
-<option>12:00 PM</option>
-<option>1:00 PM</option>
-
+  <option value="">Select Time Slot</option>
+  <option>11:00 AM</option>
+  <option>12:00 PM</option>
+  <option>1:00 PM</option>
 </select>
 
-
-{/* ================= CUSTOMER DETAILS ================= */}
-
-<h2 className="text-xl mb-4 text-center">
-Your Details
+          <h2 className="text-lg font-semibold mb-4 text-white">
+  Your Details
 </h2>
 
-
 <input
-placeholder="Full Name"
-value={formData.name}
-onChange={(e)=>setFormData({...formData,name:e.target.value})}
-className="w-full p-3 mb-4 bg-gray-200 text-black rounded-lg"
+  placeholder="Full Name"
+  value={formData.name}
+  onChange={(e) =>
+    setFormData({ ...formData, name: e.target.value })
+  }
+  className="w-full p-3 mb-4 bg-gray-800 border border-gray-700 text-white rounded-lg"
 />
-
-
-<div className="mb-4">
 
 <PhoneInput
-country={"in"}
-value={formData.phone}
-onChange={(phone)=>setFormData({...formData,phone})}
-inputStyle={{
-width:"100%",
-backgroundColor:"#111827",
-borderRadius:"8px",
-color:"white"
-}}
+  country={"in"}
+  value={formData.phone}
+  onChange={(phone) =>
+    setFormData({ ...formData, phone })
+  }
+  inputStyle={{
+    width: "100%",
+    backgroundColor: "#1f2937",
+    border: "1px solid #374151",
+    borderRadius: "8px",
+    color: "white",
+  }}
 />
-
-</div>
-
 
 <input
-type="email"
-placeholder="Email Address"
-value={formData.email}
-onChange={(e)=>setFormData({...formData,email:e.target.value})}
-className="w-full p-3 mb-4 bg-gray-200 text-black rounded-lg"
+  type="email"
+  placeholder="Email Address"
+  value={formData.email}
+  onChange={(e) =>
+    setFormData({ ...formData, email: e.target.value })
+  }
+  className="w-full p-3 mt-4 mb-6 bg-gray-800 border border-gray-700 text-white rounded-lg"
 />
 
+<input
+            type="text"
+            placeholder="Search Bangalore building, street, area, or PIN code"
+            value={query}
+            onChange={(e) => searchLocation(e.target.value)}
+            className="w-full p-3 bg-white text-black rounded-lg"
+          />
 
-<textarea
-placeholder="Address"
-value={formData.address}
-onChange={(e)=>setFormData({...formData,address:e.target.value})}
-className="w-full p-3 mb-6 bg-gray-200 text-black rounded-lg"
-/>
+          {/* Suggestions */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="bg-white mt-2 rounded-lg shadow max-h-60 overflow-y-auto">
 
+              {suggestions.map((place, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
 
-{/* ================= LOCATION ROUTE ================= */}
+                    const full = `${place.display_name}, ${place.full_address || ""}`;
 
-<button
-type="button"
-onClick={()=>navigate("/location-route",{
-state:{ location:formData.location }
-})}
-className="w-full py-3 mb-6 bg-blue-600 hover:bg-blue-700 rounded-lg"
->
-Locate Me
-</button>
+                    setQuery(full);
 
+                    setFormData({
+                      ...formData,
+                      address: full,
+                      lat: place.lat,
+                      lng: place.lon
+                    });
 
-{/* ================= CONFIRM BOOKING ================= */}
+                    setShowSuggestions(false);
+                  }}
+                  className="p-3 hover:bg-blue-100 cursor-pointer border-b"
+                >
+                  <p className="font-medium">{place.display_name}</p>
+                  <p className="text-xs text-gray-600">{place.full_address}</p>
+                </div>
+              ))}
 
-<button
-onClick={handleConfirm}
-disabled={loading}
-className="w-full py-4 rounded-xl text-lg font-semibold bg-green-600 hover:bg-green-700"
->
+            </div>
+          )}
 
-{loading ? "Booking..." : "Confirm Booking"}
+          <button
+            onClick={handleConfirm}
+            className="w-full mt-6 py-3 bg-green-600 text-white rounded-lg"
+          >
+            Confirm Booking
+          </button>
 
-</button>
+        </div>
 
+      </div>
 
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }

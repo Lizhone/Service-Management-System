@@ -29,9 +29,6 @@ import testRideRoutes from "./routes/testRideRoutes.js";
 import adminStatsRoutes from "./routes/adminStatsRoutes.js";
 import technicianRoutes from "./routes/technicianRoutes.js";
 
-
-
-
 // ===============================
 // MIDDLEWARE
 // ===============================
@@ -62,7 +59,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(prismaMiddleware);
 
 // ===============================
-// STATIC FILES (MEDIA UPLOADS) — PUBLIC
+// STATIC FILES
 // ===============================
 app.use(
   "/uploads",
@@ -76,9 +73,12 @@ app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/auth/customer", customerAuthRoutes);
 
-// ✅ TEST RIDE — PUBLIC
+// ✅ TEST RIDE (PUBLIC)
 app.use("/api/test-rides", testRideRoutes);
 
+// ✅ NOTIFICATIONS (PUBLIC + ADMIN COMPATIBILITY)
+app.use("/api/notifications", adminNotificationRoutes);
+app.use("/api/admin/notifications", adminNotificationRoutes);
 
 // ===============================
 // AUTHENTICATION BOUNDARY
@@ -86,18 +86,11 @@ app.use("/api/test-rides", testRideRoutes);
 app.use(authenticate);
 
 // ===============================
-
 // PROTECTED ADMIN ROUTES
+// ===============================
 app.use("/api/admin", adminStatsRoutes);
 
-//==============================
-
-// ADMIN NOTIFICATIONS
-
-app.use("/api", adminNotificationRoutes);
-
-//////////////////////////////////////////
-
+// ===============================
 // PROTECTED DOMAIN ROUTES
 // ===============================
 
@@ -105,43 +98,38 @@ app.use("/api", adminNotificationRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 
-// Job Cards (single canonical base)
+// Job Cards
 app.use("/api/job-cards", jobCardRoutes);
 app.use("/api/job-cards", inspectionRoutes);
 app.use("/api/job-cards", complaintRoutes);
 app.use("/api/job-cards", partRoutes);
 
 // Work Logs
-app.use("/api", workLogRoutes);
+app.use("/api/work-logs", workLogRoutes);
 
 // Reports
 app.use("/api/reports", reportingRoutes);
 
-// Customers Me
-app.use("/api/customers", customerRoutes);
-
-// Service Requests
+// Service
 app.use("/api/service-requests", serviceRequestRoutes);
-
-// Service Bookings
 app.use("/api/service-bookings", serviceBookingRoutes);
 
 // ===============================
-// SERVICE ADVISOR DASHBOARD
-app.use("/api/service-advisor", serviceAdvisorRoutes);
-app.use("/api/advisor", advisorServiceBookingRoutes);
+// SERVICE ADVISOR
+// ===============================
 app.use("/api/service-advisor", serviceAdvisorRoutes);
 app.use("/api/advisor", advisorServiceBookingRoutes);
 
-
-//==============================
-// TECHNICIAN DASHBOARD
+// ===============================
+// TECHNICIAN
+// ===============================
 app.use("/api/technicians", technicianRoutes);
 
-// ✅ ADMIN COMPLAINTS (GLOBAL)
 // ===============================
-app.use("/api/complaints", adminComplaintRoutes); // ✅ REQUIRED
-app.use("/api", adminComplaintRoutes); 
+// ADMIN COMPLAINTS
+// ===============================
+app.use("/api/complaints", adminComplaintRoutes);
+app.use("/api/admin/complaints", adminComplaintRoutes);
 
 // ===============================
 // SERVER STARTUP

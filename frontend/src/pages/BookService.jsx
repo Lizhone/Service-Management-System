@@ -4,41 +4,29 @@ import client from "../api/client";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-/* =========================
-   Custom Input (same style as other fields)
-========================= */
-
-const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
-  <input
-    ref={ref}
-    value={value}
-    onClick={onClick}
-    placeholder="Select date"
-    readOnly
-    className="w-full border rounded px-3 py-2 cursor-pointer"
-  />
-));
-
 export default function BookService() {
+
   const navigate = useNavigate();
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     vehiclePart: "",
     serviceType: "GENERAL",
     timeSlot: "",
-    notes: "",
+    notes: ""
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
   };
 
   /* =========================
-     Submit
+     SUBMIT BOOKING
   ========================= */
 
   const handleSubmit = async (e) => {
@@ -49,29 +37,29 @@ export default function BookService() {
       return;
     }
 
-    const day = String(selectedDate.getDate()).padStart(2, "0");
-    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-    const year = selectedDate.getFullYear();
-
-    const formattedDate = `${day}/${month}/${year}`;
-
     try {
+
       setSubmitting(true);
 
       await client.post("/service-bookings/me/service-bookings", {
         vehiclePart: form.vehiclePart,
         serviceType: form.serviceType,
-        preferredDate: formattedDate,
+        preferredDate: selectedDate.toISOString(),   // backend safe
         timeSlot: form.timeSlot,
-        notes: form.notes,
+        notes: form.notes
       });
 
-      alert("Service booked and confirmed successfully.");
+      alert("Service booked successfully");
+
       navigate("/dashboard");
+
     } catch (err) {
+
       const message =
         err.response?.data?.error || "Failed to book service";
+
       alert(message);
+
     } finally {
       setSubmitting(false);
     }
@@ -79,8 +67,6 @@ export default function BookService() {
 
   return (
     <div className="min-h-screen bg-[#01263B] py-12 px-4">
-
-      {/* CARD */}
 
       <div className="max-w-2xl mx-auto bg-white p-10 rounded-xl border border-gray-200 shadow-xl">
 
@@ -91,12 +77,6 @@ export default function BookService() {
         <p className="text-sm text-gray-600 mb-5">
           Choose vehicle part, preferred date and time slot
         </p>
-
-        {error && (
-          <div className="mb-4 text-red-600 text-sm font-medium">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -169,13 +149,13 @@ export default function BookService() {
             </label>
 
             <DatePicker
-  selected={selectedDate}
-  onChange={(date) => setSelectedDate(date)}
-  dateFormat="dd/MM/yyyy"
-  minDate={new Date()}
-  placeholderText="Select date"
-  className="w-full !border !border-black bg-white rounded px-3 py-2 text-gray-900"
-/>
+              selected={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              placeholderText="Select date"
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
 
           {/* TIME SLOT */}
@@ -193,7 +173,7 @@ export default function BookService() {
               required
             >
               <option value="">Choose time slot</option>
-              <option value="10:30–12 AM">10:30–12AM</option>
+              <option value="10:30–12 AM">10:30–12 AM</option>
               <option value="2–3 PM">2–3 PM</option>
               <option value="3–5 PM">3–5 PM</option>
             </select>
@@ -238,6 +218,7 @@ export default function BookService() {
           </div>
 
         </form>
+
       </div>
     </div>
   );

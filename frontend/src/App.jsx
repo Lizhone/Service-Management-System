@@ -1,28 +1,49 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 /* ================= PUBLIC PAGES ================= */
 import HomePage from "./pages/HomePage";
 import StaffLogin from "./pages/login/StaffLogin";
 import CustomerLogin from "./pages/login/CustomerLogin";
+import TestRide from "./pages/TestRide";
+import BikeDetails from "./pages/BikeDetails";
+import SlotsAvailability from "./pages/public/SlotsAvailability";
+import LocationRoute from "./pages/LocationRoute";
+import TestRideFeedback from "./pages/TestRideFeedback";
+
+/* ================= CHATBOT ================= */
+import ChatBot from "./components/ChatBot";
+
+/* ================= AUTH ================= */
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import CustomerForgotPassword from "./pages/CustomerForgotPassword";
+import CustomerResetPassword from "./pages/CustomerResetPassword";
 
 /* ================= CUSTOMER ================= */
 import CustomerDashboard from "./pages/CustomerDashboard";
 import BookService from "./pages/BookService";
 import RaiseComplaint from "./pages/RaiseComplaint";
 import CustomerDetail from "./pages/CustomerDetail";
+import CustomerBookingDetail from "./pages/CustomerBookingDetail";
 
 /* ================= JOB CARDS ================= */
 import CreateJobCard from "./pages/CreateJobCard";
 import JobCardDetail from "./pages/JobCardDetail";
+import EditJobCard from "./pages/jobcard/EditJobCard";
 
 /* ================= MEDIA ================= */
 import MediaViewerPage from "./pages/MediaViewerPage";
 import CustomerMediaViewer from "./pages/CustomerMediaViewer";
 
-/* ================= ADMIN LAYOUT ================= */
-import AdminLayout from "./layouts/AdminLayout";
+/* ================= STAFF DASHBOARDS ================= */
+import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
+import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
+import TechnicianJobDetail from "./pages/dashboard/TechnicianJobDetail";
+import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
+import SalesDashboard from "./pages/dashboard/SalesDashboard";
 
-/* ================= ADMIN PAGES ================= */
+/* ================= ADMIN ================= */
+import AdminLayout from "./layouts/AdminLayout";
 import AdminOverview from "./pages/admin/Overview";
 import AdminServiceBookings from "./pages/admin/ServiceBookings";
 import AdminJobCards from "./pages/admin/JobCards";
@@ -36,273 +57,207 @@ import AdminVehicles from "./pages/admin/Vehicles";
 import AdminParts from "./pages/admin/Parts";
 import AdminMedia from "./pages/admin/Media";
 import AdminWorkLogs from "./pages/admin/WorkLogs";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-
-/* ================= OTHER STAFF ================= */
-import ServiceAdvisorDashboard from "./pages/dashboard/ServiceAdvisorDashboard";
-import TechnicianDashboard from "./pages/dashboard/TechnicianDashboard";
-import SupplyChainDashboard from "./pages/dashboard/SupplyChainDashboard";
-import SalesDashboard from "./pages/dashboard/SalesDashboard";
-/* ================= OTHER PAGES ================= */
-import TestRide from "./pages/TestRide";
-import BikeDetails from "./pages/BikeDetails";
-import TechnicianJobDetail from "./pages/dashboard/TechnicianJobDetail";
-import CustomerBookingDetail from "./pages/CustomerBookingDetail";
-import SlotsAvailability from "./pages/public/SlotsAvailability";
-import LocationRoute from "./pages/LocationRoute";
-import TestRideFeedback from "./pages/TestRideFeedback";
-import CustomerForgotPassword from "./pages/CustomerForgotPassword";
-import CustomerResetPassword from "./pages/CustomerResetPassword";
-import EditJobCard from "./pages/jobcard/EditJobCard";
 
 /* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
+
+/* ================= CONTEXT ================= */
 import { AdminTabsProvider } from "./context/AdminTabsContext";
 
 export default function App() {
+  const location = useLocation();
+
+  const hideChatbot =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.includes("/login");
+
   return (
-    <Routes>
-      {/* ======================================================
-         PUBLIC
-      ====================================================== */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login/customer" element={<CustomerLogin />} />
-      <Route path="/login/staff" element={<StaffLogin />} />
-      <Route path="/slots-availability" element={<SlotsAvailability />} />
+    <>
+      <Routes>
 
+        {/* ================= PUBLIC ================= */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login/customer" element={<CustomerLogin />} />
+        <Route path="/login/staff" element={<StaffLogin />} />
 
-      {/* ======================================================
-         CUSTOMER MEDIA (NO AUTH)
-      ====================================================== */}
-      <Route
-        path="/customer/media/:mediaId"
-        element={<CustomerMediaViewer />}
-      />
+        <Route path="/slots-availability" element={<SlotsAvailability />} />
+        <Route path="/test-ride" element={<TestRide />} />
+        <Route path="/bike/:id" element={<BikeDetails />} />
+        <Route path="/location-route" element={<LocationRoute />} />
+        <Route path="/test-ride-feedback" element={<TestRideFeedback />} />
 
-      {/* ======================================================
-         CUSTOMER DASHBOARD
-      ====================================================== */}
-      <Route
-        path="/dashboard"
-        element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
-            <CustomerDashboard />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-  path="/dashboard/customer/booking/:bookingId"
-  element={
-    <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
-      <CustomerBookingDetail />
-    </RoleBasedRoute>
-  }
-/>
+        {/* ================= AUTH ================= */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/customer-forgot-password" element={<CustomerForgotPassword />} />
+        <Route path="/customer-reset-password" element={<CustomerResetPassword />} />
 
+        {/* ================= CUSTOMER MEDIA ================= */}
+        <Route path="/customer/media/:mediaId" element={<CustomerMediaViewer />} />
 
-      {/* ======================================================
-         CUSTOMER ACTIONS
-      ====================================================== */}
-      <Route
-        path="/customer/book-service"
-        element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
-            <BookService />
-          </RoleBasedRoute>
-        }
-      />
+        {/* ================= CUSTOMER DASHBOARD ================= */}
+        <Route
+          path="/dashboard"
+          element={
+            <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+              <CustomerDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
-      <Route
-        path="/customer/raise-complaint"
-        element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
-            <RaiseComplaint />
-          </RoleBasedRoute>
-        }
-      />
+        <Route
+          path="/dashboard/customer/booking/:bookingId"
+          element={
+            <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+              <CustomerBookingDetail />
+            </RoleBasedRoute>
+          }
+        />
 
-      {/* ======================================================
-         ADMIN DASHBOARD (PRISMA-STUDIO STYLE)
-      ====================================================== */}
-      <Route
-        path="/dashboard/admin"
-        element={
-          <ProtectedRoute roles={["ADMIN"]}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminOverview />} />
+        {/* ================= CUSTOMER ACTIONS ================= */}
+        <Route
+          path="/customer/book-service"
+          element={
+            <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+              <BookService />
+            </RoleBasedRoute>
+          }
+        />
 
-        {/* OPERATIONS */}
-        <Route path="service-bookings" element={<AdminServiceBookings />} />
-        <Route path="job-cards" element={<AdminJobCards />} />
-        <Route path="complaints" element={<AdminComplaints />} />
+        <Route
+          path="/customer/raise-complaint"
+          element={
+            <RoleBasedRoute allowedRoles={["CUSTOMER"]}>
+              <RaiseComplaint />
+            </RoleBasedRoute>
+          }
+        />
 
-        {/* ROLES */}
-        <Route path="customers" element={<AdminCustomers />} />
-        <Route path="technicians" element={<AdminTechnicians />} />
-        <Route path="advisors" element={<AdminAdvisors />} />
-        <Route path="sales" element={<AdminSales />} />
-        <Route path="supply-chain" element={<AdminSupplyChain />} />
+        {/* ================= STAFF DASHBOARDS ================= */}
+        <Route
+          path="/dashboard/service-advisor"
+          element={
+            <RoleBasedRoute allowedRoles={["SERVICE_ADVISOR"]}>
+              <ServiceAdvisorDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
-        {/* SYSTEM */}
-        <Route path="vehicles" element={<AdminVehicles />} />
-        <Route path="parts" element={<AdminParts />} />
-        <Route path="media" element={<AdminMedia />} />
-        <Route path="work-logs" element={<AdminWorkLogs />} />
-      </Route>
-      <Route
-  path="/dashboard/admin/*"
-  element={
-    <ProtectedRoute roles={["ADMIN"]}>
-      <AdminTabsProvider>
-        <AdminLayout />
-      </AdminTabsProvider>
-    </ProtectedRoute>
-  }
-  />
-  <Route path="/job-cards/edit/:id" element={<EditJobCard />} />
-  
-      {/* ======================================================
-         AUTH PAGES
-      ====================================================== */}
-   <Route path="/forgot-password" element={<ForgotPassword />} />
-   <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/dashboard/technician"
+          element={
+            <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+              <TechnicianDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
+        <Route
+          path="/dashboard/technician/:technicianId"
+          element={
+            <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+              <TechnicianDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
-{/* ======================================================
-         CUSTOMER AUTH PAGES
-      ====================================================== */}
-   <Route path="/customer-forgot-password" element={<CustomerForgotPassword />} />
-   <Route path="/customer-reset-password" element={<CustomerResetPassword />} />
+        <Route
+          path="/dashboard/technician/job/:bookingId"
+          element={
+            <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
+              <TechnicianJobDetail />
+            </RoleBasedRoute>
+          }
+        />
 
+        <Route
+          path="/dashboard/supply-chain"
+          element={
+            <RoleBasedRoute allowedRoles={["SUPPLY_CHAIN"]}>
+              <SupplyChainDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
-      {/* ======================================================
-         OTHER STAFF DASHBOARDS
-      ====================================================== */}
-      <Route
-        path="/dashboard/service-advisor"
-        element={
-          <RoleBasedRoute allowedRoles={["SERVICE_ADVISOR"]}>
-            <ServiceAdvisorDashboard />
-          </RoleBasedRoute>
-        }
-      />
+        <Route
+          path="/dashboard/sales"
+          element={
+            <RoleBasedRoute allowedRoles={["SALES"]}>
+              <SalesDashboard />
+            </RoleBasedRoute>
+          }
+        />
 
-      <Route
-  path="/dashboard/technician"
-  element={
-    <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
-      <TechnicianDashboard />
-    </RoleBasedRoute>
-  }
-/>
+        {/* ================= ADMIN ================= */}
+        <Route
+          path="/dashboard/admin/*"
+          element={
+            <ProtectedRoute roles={["ADMIN"]}>
+              <AdminTabsProvider>
+                <AdminLayout />
+              </AdminTabsProvider>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminOverview />} />
 
-<Route
-  path="/dashboard/technician/:technicianId"
-  element={
-    <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
-      <TechnicianDashboard />
-    </RoleBasedRoute>
-  }
-/>
+          <Route path="service-bookings" element={<AdminServiceBookings />} />
+          <Route path="job-cards" element={<AdminJobCards />} />
+          <Route path="complaints" element={<AdminComplaints />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="technicians" element={<AdminTechnicians />} />
+          <Route path="advisors" element={<AdminAdvisors />} />
+          <Route path="sales" element={<AdminSales />} />
+          <Route path="supply-chain" element={<AdminSupplyChain />} />
+          <Route path="vehicles" element={<AdminVehicles />} />
+          <Route path="parts" element={<AdminParts />} />
+          <Route path="media" element={<AdminMedia />} />
+          <Route path="work-logs" element={<AdminWorkLogs />} />
+        </Route>
 
+        {/* ================= JOB CARDS ================= */}
+        <Route path="/job-cards/new" element={<CreateJobCard />} />
 
-      <Route
-        path="/dashboard/supply-chain"
-        element={
-          <RoleBasedRoute allowedRoles={["SUPPLY_CHAIN"]}>
-            <SupplyChainDashboard />
-          </RoleBasedRoute>
-        }
-      />
+        <Route
+          path="/job-cards/:id"
+          element={
+            <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
+              <JobCardDetail />
+            </RoleBasedRoute>
+          }
+        />
 
-      <Route
-        path="/dashboard/sales"
-        element={
-          <RoleBasedRoute allowedRoles={["SALES"]}>
-            <SalesDashboard />
-          </RoleBasedRoute>
-        }
-      />
+        <Route path="/job-cards/edit/:id" element={<EditJobCard />} />
 
-      {/* ======================================================
-         JOB CARDS (SHARED)
-      ====================================================== */}
-      <Route
-        path="/job-cards/new"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN"]}>
-            <CreateJobCard />
-          </RoleBasedRoute>
-        }
-      />
+        {/* ================= CUSTOMER DETAILS ================= */}
+        <Route
+          path="/customers/:id"
+          element={
+            <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
+              <CustomerDetail />
+            </RoleBasedRoute>
+          }
+        />
 
-      <Route
-        path="/job-cards/:id"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
-            <JobCardDetail />
-          </RoleBasedRoute>
-        }
-      />
+        {/* ================= MEDIA VIEWER ================= */}
+        <Route
+          path="/job-cards/:jobCardId/media/:mediaId"
+          element={
+            <RoleBasedRoute allowedRoles={["ADMIN", "TECHNICIAN", "CUSTOMER"]}>
+              <MediaViewerPage />
+            </RoleBasedRoute>
+          }
+        />
 
-      {/* ======================================================
-         CUSTOMER DETAIL
-      ====================================================== */}
-      <Route
-        path="/customers/:id"
-        element={
-          <RoleBasedRoute allowedRoles={["ADMIN", "CUSTOMER"]}>
-            <CustomerDetail />
-          </RoleBasedRoute>
-        }
-      />
+        {/* ================= FALLBACK ================= */}
+        <Route path="*" element={<Navigate to="/" replace />} />
 
-      {/* ======================================================
-         MEDIA VIEWER
-      ====================================================== */}
-      <Route
-        path="/job-cards/:jobCardId/media/:mediaId"
-        element={
-          <RoleBasedRoute
-            allowedRoles={["ADMIN", "TECHNICIAN", "CUSTOMER"]}
-          >
-            <MediaViewerPage />
-          </RoleBasedRoute>
-        }
-      />
-      {/*=============================================================
-         TEST RIDE PAGE (TEMP)
-         ====================================================== */}
+     </Routes>
 
-      <Route path="/test-ride" element={<TestRide />} />
-      <Route path="/location-route" element={<LocationRoute />} />
-      <Route path="/test-ride-feedback" element={<TestRideFeedback />} />
+{/* 💬 CHATBOT */}
+<ChatBot />
 
-      {/*=============================================================}
-          BIKE DETAILS PAGE (TEMP)
-      ====================================================== */}
-      
-      <Route path="/bike/:id" element={<BikeDetails />} />
-      {/* ======================================================
-         TECHNICIAN JOB DETAIL
-      ====================================================== */}
-      <Route
-       path="/dashboard/technician/job/:bookingId"
-       element={
-      <RoleBasedRoute allowedRoles={["TECHNICIAN"]}>
-      <TechnicianJobDetail />
-    </RoleBasedRoute>
-  }
-/>
-      {/* ======================================================
-         FALLBACK
-      ====================================================== */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+</>
   );
 }

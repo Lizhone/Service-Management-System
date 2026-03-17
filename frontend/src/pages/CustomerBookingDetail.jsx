@@ -42,8 +42,17 @@ export default function CustomerBookingDetail() {
     );
   }
 
+  const workLogs = booking.jobCard?.workLogs || [];
+
+  const technicianName =
+    workLogs.length > 0
+      ? workLogs[0].technicianName
+      : "Not assigned yet";
+
   return (
     <div className="p-6 text-white bg-[#01263B] min-h-screen">
+
+      {/* BACK BUTTON */}
       <button
         onClick={() => navigate(-1)}
         className="mb-4 bg-gray-600 px-3 py-1 rounded"
@@ -56,58 +65,87 @@ export default function CustomerBookingDetail() {
       </h2>
 
       {/* ================= BASIC INFO ================= */}
-      <div className="bg-[#0A3A55] p-4 rounded mb-4">
+
+      <div className="bg-[#0A3A55] p-4 rounded mb-6">
         <p><strong>Status:</strong> {booking.status}</p>
+
         <p><strong>Service Type:</strong> {booking.serviceType}</p>
+
         <p>
           <strong>Date:</strong>{" "}
-          {new Date(booking.preferredDate).toLocaleDateString()}
+          {booking.preferredDate
+            ? new Date(booking.preferredDate).toLocaleDateString("en-GB")
+            : "-"}
+        </p>
+
+        <p>
+          <strong>Technician:</strong> {technicianName}
         </p>
       </div>
 
-      {/* ================= WORK HISTORY ================= */}
+      {/* ================= WORK TIMELINE ================= */}
+
       <h3 className="text-lg font-semibold mb-3">
         Work Timeline
       </h3>
 
-      {booking.jobCard?.workLogs?.length === 0 && (
+      {workLogs.length === 0 && (
         <p className="text-gray-400">
           Work has not started yet.
         </p>
       )}
 
-      {booking.jobCard?.workLogs?.map((log) => (
+      {workLogs.map((log) => (
         <div
           key={log.id}
           className="bg-[#0A3A55] p-4 rounded mb-3"
         >
-          <p><strong>Task:</strong> {log.taskName}</p>
-          <p>Status: {log.status}</p>
 
           <p>
-            Started:{" "}
+            <strong>Task:</strong> {log.taskName}
+          </p>
+
+          <p>
+            <strong>Technician:</strong>{" "}
+            {log.technicianName || "Unknown"}
+          </p>
+
+          {log.description && (
+            <p>
+              <strong>Description:</strong> {log.description}
+            </p>
+          )}
+
+          <p>
+            <strong>Status:</strong> {log.status}
+          </p>
+
+          <p>
+            <strong>Started:</strong>{" "}
             {log.startedAt
-              ? new Date(log.startedAt).toLocaleString()
+              ? new Date(log.startedAt).toLocaleString("en-GB")
               : "-"}
           </p>
 
           {log.completedAt && (
             <p>
-              Completed:{" "}
-              {new Date(log.completedAt).toLocaleString()}
+              <strong>Completed:</strong>{" "}
+              {new Date(log.completedAt).toLocaleString("en-GB")}
             </p>
           )}
+
         </div>
       ))}
 
       {/* ================= WORK PROOF MEDIA ================= */}
-      {booking.media && booking.media.length > 0 && (
+
+      {booking.media?.length > 0 && (
         <>
           <h3 className="text-lg font-semibold mt-6 mb-3">
             Work Proof
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {booking.media.map((m) =>
               m.fileType === "image" ? (
                 <img
@@ -131,6 +169,7 @@ export default function CustomerBookingDetail() {
           </div>
         </>
       )}
+
     </div>
   );
 }

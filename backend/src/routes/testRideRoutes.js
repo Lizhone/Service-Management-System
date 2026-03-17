@@ -13,15 +13,20 @@ import {
 
 const router = express.Router();
 
-/* PUBLIC */
+/* ================= PUBLIC ================= */
+
+// ✅ ADD THIS LINE (FIX)
+router.get("/", getTestRideSlotsRange);
+
 router.get("/slots-range", getTestRideSlotsRange);
 router.post("/", createTestRide);
-router.post("/feedback", submitTestRideFeedback);  // ✅ MUST BE HERE
+router.post("/feedback", submitTestRideFeedback);
 
-/* PROTECTED */
+/* ================= PROTECTED ================= */
+
 router.use(authenticate);
 
-router.get("/", getAllTestRides);
+router.get("/admin/all", getAllTestRides); // 👈 optional safe change
 router.get("/unviewed-count", getUnviewedTestRideCount);
 router.put("/mark-viewed", markTestRidesAsViewed);
 router.put("/:id/status", updateTestRideStatus);

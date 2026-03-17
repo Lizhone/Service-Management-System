@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import authClient from "../../api/authClient";
-import { Link } from "react-router-dom";
 
 export default function StaffLogin() {
   const { login } = useAuth();
@@ -29,6 +28,7 @@ export default function StaffLogin() {
 
       const { token, user } = res.data;
 
+      // Save user + token
       login(user, token);
 
       const dashboardRoutes = {
@@ -39,10 +39,15 @@ export default function StaffLogin() {
         SALES: "/dashboard/sales",
       };
 
-      navigate(dashboardRoutes[user.role] || "/dashboard/admin");
+      // 🔹 replace:true prevents forward navigation
+      navigate(
+        dashboardRoutes[user.role] || "/dashboard/admin",
+        { replace: true }
+      );
+
     } catch (err) {
-      console.log(err);
-      setError("Staff login failed");
+      console.error(err);
+      setError("Staff login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -50,10 +55,12 @@ export default function StaffLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#01263B]">
+
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col items-center gap-7 w-120"
+        className="flex flex-col items-center gap-7 w-[480px]"
       >
+
         {/* Avatar */}
         <div className="w-32 h-32 rounded-full border-4 border-[#01263B] bg-white flex items-center justify-center">
           <User size={52} strokeWidth={3} className="text-[#01263B]" />
@@ -68,27 +75,29 @@ export default function StaffLogin() {
         )}
 
         {/* Email */}
-        <div className="w-120 flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl bg-transparent">
-          <User size={30} className="text-white" />
+        <div className="w-full flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl">
+          <User size={26} className="text-white" />
 
           <input
             type="email"
             placeholder="Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
           />
         </div>
 
         {/* Password */}
-        <div className="w-120 flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl bg-transparent">
-          <Lock size={30} className="text-white" />
+        <div className="w-full flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl">
+          <Lock size={26} className="text-white" />
 
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
           />
 
@@ -103,20 +112,27 @@ export default function StaffLogin() {
 
         {/* Links */}
         <div className="flex justify-between w-full text-white text-sm">
+
           <span>
             Customer?{" "}
-            <a href="/login/customer" className="underline font-medium">
+            <Link
+              to="/login/customer"
+              className="underline font-medium"
+            >
               Login here
-            </a>
+            </Link>
           </span>
 
-          <Link to="/forgot-password" className="underline">
-           Forgot password?
+          <Link
+            to="/forgot-password"
+            className="underline"
+          >
+            Forgot password?
           </Link>
-        
+
         </div>
 
-        {/* Button */}
+        {/* Login Button */}
         <button
           type="submit"
           disabled={loading}
@@ -124,7 +140,9 @@ export default function StaffLogin() {
         >
           {loading ? "Logging in..." : "LOGIN"}
         </button>
+
       </form>
+
     </div>
   );
 }

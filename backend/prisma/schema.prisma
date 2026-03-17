@@ -135,6 +135,7 @@ model WorkLog {
   id             Int        @id @default(autoincrement())
   jobCardId      Int
   taskName       String
+  description    String?    
   technicianName String
   status         WorkStatus @default(PENDING)
   startedAt      DateTime?

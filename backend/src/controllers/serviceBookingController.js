@@ -132,30 +132,45 @@ export const getAllServiceBookings = async (req, res) => {
 // ==========================================
 export const getCustomerBookingDetail = async (req, res) => {
   try {
+
     const { bookingId } = req.params;
 
     const booking = await prisma.serviceBooking.findUnique({
       where: { id: Number(bookingId) },
+
       include: {
-        media: true, // ✅ ADD THIS
+        media: true,
+
         jobCard: {
           include: {
+
+            // 🔹 ADD THIS
+            complaints: true,
+
             workLogs: {
               orderBy: { createdAt: "asc" }
             }
+
           }
         }
+
       }
     });
 
     if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
+      return res.status(404).json({
+        message: "Booking not found"
+      });
     }
 
     res.json(booking);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch booking detail" });
+
+    console.error("Booking detail error:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch booking detail"
+    });
   }
 };

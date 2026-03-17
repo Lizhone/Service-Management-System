@@ -299,51 +299,69 @@ const isBlockedSaturday = (date) => {
 
 export const getTestRideSlotsRange = async (req, res) => {
   try {
-    const { location } = req.query;
+    const slots = ["11:00 AM", "12:00 PM", "1:00 PM"];
 
-    const start = new Date();
-    const end = new Date();
-    end.setMonth(start.getMonth() + 2);
+    const bookings = await prisma.testRide.findMany({
+      select: {
+        date: true,
+        timeSlot: true,
+      },
+    });
 
-    const timeSlots = ["11:00 AM", "12:00 PM", "1:00 PM"];
-    const days = [];
+    const bookedMap = {};
 
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      if (d.getDay() === 0) continue;
-      if (isBlockedSaturday(d)) continue;
+    bookings.forEach((b) => {
+      const formattedDate = new Date(b.date).toISOString().split("T")[0];
+      const key = `${formattedDate}-${b.timeSlot.trim()}`;
+      bookedMap[key] = true;
+    });
 
-      const dateStr = d.toISOString().split("T")[0];
+    const result = [];
 
-      const rides = await prisma.testRide.findMany({
-        where: {
-          status: "CONFIRMED",
-          ...(location ? { location } : {}),
-          date: {
-            gte: new Date(dateStr),
-            lt: new Date(
-              new Date(dateStr).getTime() + 24 * 60 * 60 * 1000
-            ),
-          },
-        },
-        select: { timeSlot: true },
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 2); // 🔥 2 months range
+
+    let current = new Date(today);
+
+    while (current <= endDate) {
+      const day = current.getDay(); // 0 = Sunday, 6 = Saturday
+
+      // ❌ Skip Sundays
+      if (day === 0) {
+        current.setDate(current.getDate() + 1);
+        continue;
+      }
+
+      // ❌ Skip 2nd & 4th Saturday
+      if (day === 6) {
+        const date = current.getDate();
+        const weekOfMonth = Math.ceil(date / 7);
+
+        if (weekOfMonth === 2 || weekOfMonth === 4) {
+          current.setDate(current.getDate() + 1);
+          continue;
+        }
+      }
+
+      const formattedDate = current.toISOString().split("T")[0];
+
+      const daySlots = slots.map((slot) => ({
+        time: slot,
+        isBooked: !!bookedMap[`${formattedDate}-${slot}`],
+      }));
+
+      result.push({
+        date: formattedDate,
+        slots: daySlots,
       });
 
-      const bookedSet = new Set(rides.map((r) => r.timeSlot));
-
-      days.push({
-        date: dateStr,
-        slots: timeSlots.map((slot) => ({
-          time: slot,
-          available: !bookedSet.has(slot),
-        })),
-      });
+      current.setDate(current.getDate() + 1);
     }
 
-    return res.json(days);
+    res.json(result);
   } catch (error) {
-    console.error("Slots Range Error:", error);
-    return res.status(500).json({
-      message: "Failed to fetch test ride slots",
-    });
+    console.error(error);
+    res.status(500).json({ message: "Error fetching slots" });
   }
 };

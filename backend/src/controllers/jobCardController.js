@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 /* ================================
    CONSTANTS
 ================================ */
+
 const ALLOWED_SERVICE_TYPES = [
   "GENERAL",
   "COMPLAINT",
@@ -22,14 +23,17 @@ function isValidServiceType(value) {
 
 function parseDateOrFail(value) {
   if (!value) return null;
+
   const d = new Date(value);
   if (isNaN(d.getTime())) return null;
+
   return d;
 }
 
 /* ================================
    CREATE JOBCARD
 ================================ */
+
 export const createJobCard = async (req, res) => {
   try {
     const {
@@ -49,10 +53,13 @@ export const createJobCard = async (req, res) => {
     }
 
     if (!isValidServiceType(serviceType)) {
-      return res.status(400).json({ error: "Invalid serviceType" });
+      return res.status(400).json({
+        error: "Invalid serviceType",
+      });
     }
 
     const parsedDate = parseDateOrFail(serviceInDatetime);
+
     if (!parsedDate) {
       return res.status(400).json({
         error: "Valid serviceInDatetime is required",
@@ -68,9 +75,7 @@ export const createJobCard = async (req, res) => {
         status: "OPEN",
         serviceInDatetime: parsedDate,
         odometer: odometer ? Number(odometer) : null,
-        batteryVoltage: batteryVoltage
-          ? Number(batteryVoltage)
-          : null,
+        batteryVoltage: batteryVoltage ? Number(batteryVoltage) : null,
         remarks: remarks || null,
       },
     });
@@ -78,13 +83,16 @@ export const createJobCard = async (req, res) => {
     return res.status(201).json(jobCard);
   } catch (error) {
     console.error("Create job card failed:", error);
-    return res.status(500).json({ error: "Failed to create job card" });
+    return res.status(500).json({
+      error: "Failed to create job card",
+    });
   }
 };
 
 /* ================================
-   CREATE WITH DETAILS
+   CREATE JOBCARD WITH DETAILS
 ================================ */
+
 export const createJobCardWithDetails = async (req, res) => {
   try {
     const {
@@ -107,10 +115,13 @@ export const createJobCardWithDetails = async (req, res) => {
     } = req.body;
 
     if (!isValidServiceType(serviceType)) {
-      return res.status(400).json({ error: "Invalid serviceType" });
+      return res.status(400).json({
+        error: "Invalid serviceType",
+      });
     }
 
     const parsedDate = parseDateOrFail(serviceInDatetime);
+
     if (!parsedDate) {
       return res.status(400).json({
         error: "Valid serviceInDatetime is required",
@@ -118,6 +129,9 @@ export const createJobCardWithDetails = async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
+
+      /* ---------- CUSTOMER ---------- */
+
       let customer = await tx.customer.findUnique({
         where: { mobileNumber: customerPhone },
       });
@@ -132,6 +146,8 @@ export const createJobCardWithDetails = async (req, res) => {
           },
         });
       }
+
+      /* ---------- VEHICLE ---------- */
 
       let vehicle = await tx.vehicle.findUnique({
         where: { vinNumber: vin },
@@ -152,6 +168,8 @@ export const createJobCardWithDetails = async (req, res) => {
         });
       }
 
+      /* ---------- JOBCARD ---------- */
+
       const jobCard = await tx.jobCard.create({
         data: {
           jobCardNumber: `JC-${Date.now()}`,
@@ -161,9 +179,7 @@ export const createJobCardWithDetails = async (req, res) => {
           status: "OPEN",
           serviceInDatetime: parsedDate,
           odometer: odometer ? Number(odometer) : null,
-          batteryVoltage: batteryVoltage
-            ? Number(batteryVoltage)
-            : null,
+          batteryVoltage: batteryVoltage ? Number(batteryVoltage) : null,
           remarks: remarks || null,
         },
       });
@@ -174,6 +190,7 @@ export const createJobCardWithDetails = async (req, res) => {
     return res.status(201).json(result);
   } catch (error) {
     console.error("createJobCardWithDetails failed:", error);
+
     return res.status(500).json({
       error: error.message || "Failed to create job card",
     });
@@ -183,6 +200,7 @@ export const createJobCardWithDetails = async (req, res) => {
 /* ================================
    GET SINGLE JOBCARD
 ================================ */
+
 export const getJobCard = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -195,25 +213,31 @@ export const getJobCard = async (req, res) => {
         complaints: true,
         inspections: true,
         parts: true,
-        workLogs: true,
+        workLogs: true,   // correct for schema (technicianName)
         media: true,
       },
     });
 
     if (!jobCard) {
-      return res.status(404).json({ error: "Job card not found" });
+      return res.status(404).json({
+        error: "Job card not found",
+      });
     }
 
     return res.json(jobCard);
   } catch (error) {
     console.error("Fetch job card failed:", error);
-    return res.status(500).json({ error: "Failed to fetch job card" });
+
+    return res.status(500).json({
+      error: "Failed to fetch job card",
+    });
   }
 };
 
 /* ================================
    UPDATE JOBCARD
 ================================ */
+
 export const updateJobCard = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -227,13 +251,17 @@ export const updateJobCard = async (req, res) => {
     return res.json(jobCard);
   } catch (error) {
     console.error("Update job card failed:", error);
-    return res.status(500).json({ error: "Failed to update job card" });
+
+    return res.status(500).json({
+      error: "Failed to update job card",
+    });
   }
 };
 
 /* ================================
    UPDATE STATUS
 ================================ */
+
 export const updateJobStatus = async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -247,40 +275,59 @@ export const updateJobStatus = async (req, res) => {
     return res.json(jobCard);
   } catch (error) {
     console.error("Update job status failed:", error);
-    return res.status(500).json({ error: "Failed to update job status" });
+
+    return res.status(500).json({
+      error: "Failed to update job status",
+    });
   }
 };
 
 /* ================================
    DELETE JOBCARD
 ================================ */
+
 export const deleteJobCard = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    await prisma.jobCard.delete({ where: { id } });
+
+    await prisma.jobCard.delete({
+      where: { id },
+    });
+
     return res.json({ success: true });
   } catch (error) {
     console.error("Delete job card failed:", error);
-    return res.status(500).json({ error: "Failed to delete job card" });
+
+    return res.status(500).json({
+      error: "Failed to delete job card",
+    });
   }
 };
 
 /* ================================
-   HISTORY
+   CUSTOMER SERVICE HISTORY
 ================================ */
+
 export const getJobCardHistoryByCustomer = async (req, res) => {
   try {
     const customerId = Number(req.params.customerId);
 
     const jobCards = await prisma.jobCard.findMany({
       where: { customerId },
-      include: { vehicle: true },
-      orderBy: { createdAt: "desc" },
+      include: {
+        vehicle: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return res.json(jobCards);
   } catch (error) {
     console.error("History fetch failed:", error);
-    return res.status(500).json({ error: "Failed to fetch history" });
+
+    return res.status(500).json({
+      error: "Failed to fetch history",
+    });
   }
 };

@@ -10,12 +10,31 @@ const prisma = new PrismaClient();
 export const getAllCustomers = async (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
-    const customers = await customerService.getAllCustomers(
-      Number(limit),
-      Number(offset)
-    );
+
+    const customers = await prisma.customer.findMany({
+      skip: Number(offset),
+      take: Number(limit),
+
+      select: {
+        id: true,
+        name: true,
+        mobileNumber: true,
+        email: true,
+        address: true,
+
+        _count: {
+          select: {
+            vehicles: true,
+            jobCards: true,
+            serviceBookings: true,
+          },
+        },
+      },
+    });
+
     res.json(customers);
   } catch (error) {
+    console.error("Error fetching customers:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -26,9 +45,11 @@ export const getAllCustomers = async (req, res) => {
 export const getCustomerById = async (req, res) => {
   try {
     const customer = await customerService.getCustomerById(req.params.id);
+
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
     }
+
     res.json(customer);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,7 +90,7 @@ export const getCustomerJobCards = async (req, res) => {
 ================================ */
 export const getMyJobCards = async (req, res) => {
   try {
-    const customerId = req.user.id; // from customer JWT
+    const customerId = req.user.id;
 
     const jobCards = await prisma.jobCard.findMany({
       where: { customerId },
@@ -77,7 +98,7 @@ export const getMyJobCards = async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.json(jobCards); // ✅ ARRAY ONLY
+    res.json(jobCards);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to load job cards" });
@@ -90,7 +111,7 @@ export const getMyJobCards = async (req, res) => {
 ================================ */
 export const getMyVehicles = async (req, res) => {
   try {
-    const customerId = req.user.id; // from auth middleware
+    const customerId = req.user.id;
 
     const vehicles = await prisma.vehicle.findMany({
       where: { customerId },
@@ -102,6 +123,7 @@ export const getMyVehicles = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch vehicles" });
   }
 };
+
 /* ===============================
    GET /api/customers/me
    (CUSTOMER PROFILE)
@@ -136,7 +158,6 @@ export const getMyProfile = async (req, res) => {
   }
 };
 
-
 /* ===============================
    POST /api/customers
 ================================ */
@@ -158,6 +179,7 @@ export const updateCustomer = async (req, res) => {
       req.params.id,
       req.body
     );
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });

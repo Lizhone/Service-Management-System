@@ -1,5 +1,8 @@
 import prisma from "../../prisma/client.js";
 
+/* ===============================
+   GET WORK LOGS FOR A JOB CARD
+================================ */
 export const getWorkLogsByJobCard = async (req, res) => {
   try {
     const jobCardId = Number(req.params.id);
@@ -10,76 +13,95 @@ export const getWorkLogsByJobCard = async (req, res) => {
     });
 
     res.json(logs);
+
   } catch (error) {
     console.error("Fetch work logs failed:", error);
     res.status(500).json({ error: "Failed to fetch work logs" });
   }
 };
 
+
+/* ===============================
+   CREATE WORK LOG
+================================ */
 export const createWorkLog = async (req, res) => {
   try {
+
     const jobCardId = Number(req.params.id);
-    const { taskName, technicianName } = req.body;
+
+    const {
+      taskName,
+      description,
+      technicianName
+    } = req.body;
 
     if (!taskName || !technicianName) {
-      return res.status(400).json({ error: "taskName and technicianName required" });
+      return res.status(400).json({
+        error: "taskName and technicianName are required"
+      });
     }
 
     const log = await prisma.workLog.create({
       data: {
         jobCardId,
         taskName,
-        technicianName,
-      },
+        description: description || null,
+        technicianName
+      }
     });
 
     res.status(201).json(log);
+
   } catch (error) {
     console.error("Create work log failed:", error);
     res.status(500).json({ error: "Failed to create work log" });
   }
 };
 
+
+/* ===============================
+   START WORK
+================================ */
 export const startWorkLog = async (req, res) => {
   try {
+
     const id = Number(req.params.id);
 
-    const log = await prisma.workLog.findUnique({ where: { id } });
-    if (!log) {
-      return res.status(404).json({ error: "Work log not found" });
-    }
-
-    const updated = await prisma.workLog.update({
+    const log = await prisma.workLog.update({
       where: { id },
-      data: { status: "IN_PROGRESS", startedAt: new Date() },
+      data: {
+        status: "IN_PROGRESS",
+        startedAt: new Date()
+      }
     });
 
-    res.json(updated);
+    res.json(log);
+
   } catch (error) {
     console.error("Start work log failed:", error);
     res.status(500).json({ error: "Failed to start work log" });
   }
 };
 
+
+/* ===============================
+   COMPLETE WORK
+================================ */
 export const completeWorkLog = async (req, res) => {
   try {
+
     const id = Number(req.params.id);
 
-    const log = await prisma.workLog.findUnique({ where: { id } });
-    if (!log) {
-      return res.status(404).json({ error: "Work log not found" });
-    }
-
-    if (log.status !== "IN_PROGRESS") {
-      return res.status(400).json({ error: "Work log must be IN_PROGRESS to complete" });
-    }
-
-    const updated = await prisma.workLog.update({
+    const log = await prisma.workLog.update({
       where: { id },
-      data: { status: "COMPLETED", completedAt: new Date() },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date()
+      }
     });
 
-    res.json(updated);
+    res.json(log);
+
   } catch (error) {
     console.error("Complete work log failed:", error);
     res.status(500).json({ error: "Failed to complete work log" });
