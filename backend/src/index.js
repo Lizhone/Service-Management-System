@@ -28,13 +28,18 @@ import serviceAdvisorRoutes from "./routes/serviceAdvisorRoutes.js";
 import testRideRoutes from "./routes/testRideRoutes.js";
 import adminStatsRoutes from "./routes/adminStatsRoutes.js";
 import technicianRoutes from "./routes/technicianRoutes.js";
+import chatRoute from "./routes/chat.js";
+import publicServiceBookingRoutes from "./routes/publicServiceBookingRoutes.js";
+import publicTestRideRoutes from "./routes/public/testRide.js";
+
+// ✅ ADDED (WHATSAPP)
+import whatsappRoutes from "./routes/whatsapp.js";
 
 // ===============================
 // MIDDLEWARE
 // ===============================
 import { prismaMiddleware } from "./middleware/prismaMiddleware.js";
 import { authenticate } from "./middleware/authMiddleware.js";
-
 // ===============================
 // ES MODULE HELPERS
 // ===============================
@@ -46,13 +51,14 @@ const __dirname = path.dirname(__filename);
 // ===============================
 const app = express();
 
-// ===============================
-// GLOBAL MIDDLEWARE
-// ===============================
+app.use((req, res, next) => {
+  res.setHeader("ngrok-skip-browser-warning", "true");
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+app.use(express.urlencoded({ extended: false }));
 // ===============================
 // PRISMA CONTEXT
 // ===============================
@@ -61,25 +67,28 @@ app.use(prismaMiddleware);
 // ===============================
 // STATIC FILES
 // ===============================
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "../", config.uploadPath))
-);
+app.use("/uploads", express.static("uploads"));
 
-// ===============================
+/// ===============================
 // PUBLIC ROUTES (NO AUTH)
 // ===============================
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/auth/customer", customerAuthRoutes);
 
-// ✅ TEST RIDE (PUBLIC)
+// ✅ USE THIS (NEW PUBLIC ROUTE)
+app.use("/api/public/service-bookings", publicServiceBookingRoutes);
+app.use("/api/public/test-rides", publicTestRideRoutes);
+// Test Ride + Chat
 app.use("/api/test-rides", testRideRoutes);
+app.use("/api/chat", chatRoute);
 
-// ✅ NOTIFICATIONS (PUBLIC + ADMIN COMPATIBILITY)
+// ✅ WHATSAPP (PUBLIC)
+app.use("/api/whatsapp", whatsappRoutes);
+
+// Notifications
 app.use("/api/notifications", adminNotificationRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
-
 // ===============================
 // AUTHENTICATION BOUNDARY
 // ===============================

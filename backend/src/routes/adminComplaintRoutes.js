@@ -5,7 +5,7 @@ import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get(
-  "/complaints",
+  "/admin/all",
   authenticate,
   authorizeRoles("ADMIN"),
   getAllComplaintsAdmin

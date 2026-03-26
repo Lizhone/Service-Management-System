@@ -13,7 +13,7 @@ export default function Complaints() {
   const fetchComplaints = async () => {
     try {
       // 🔥 ADMIN: fetch ALL complaints
-      const res = await client.get("/complaints");
+      const res = await client.get("/complaints/admin/all");
       setComplaints(res.data);
     } catch (err) {
       console.error("Failed to fetch complaints", err);

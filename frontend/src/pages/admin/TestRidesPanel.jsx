@@ -12,8 +12,7 @@ const fetchRides = async () => {
 
 try {
 
-const res = await client.get("/test-rides");
-
+const res = await client.get("/test-rides/admin/all");
 let data = Array.isArray(res.data) ? res.data : [];
 
 /* SORT NEWEST FIRST */
@@ -107,7 +106,7 @@ No test rides found.
 
 return(
 
-<tr key={ride.id}>
+<tr key={ride.id || `${ride.phone}-${ride.date}-${ride.timeSlot}`}>
 
 <td>{ride.bikeName}</td>
 
@@ -156,16 +155,16 @@ ride.status === "CONFIRMED"
 <div className="admin-rating-stars">
 
 {[1,2,3,4,5].map((star)=>(
-<span
-key={star}
-className={
-star <= ride.rating
-? "admin-rating-filled"
-: "admin-rating-empty"
-}
->
-★
-</span>
+  <span
+    key={`${ride.id}-star-${star}`}
+    className={
+      star <= ride.rating
+        ? "admin-rating-filled"
+        : "admin-rating-empty"
+    }
+  >
+    ★
+  </span>
 ))}
 
 </div>

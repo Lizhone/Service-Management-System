@@ -2,23 +2,29 @@ import express from "express";
 import {
   getComplaints,
   createComplaint,
+  getAllComplaintsAdmin
 } from "../controllers/complaintController.js";
 import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/* ================================
-   COMPLAINT ROUTES
-================================ */
+/* ================= ADMIN ================= */
 
-// GET /:id/complaints
+router.get(
+  "/admin/all",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  getAllComplaintsAdmin // ✅ FIXED
+);
+
+/* ================= JOB CARD ================= */
+
 router.get(
   "/:id/complaints",
   authenticate,
   getComplaints
 );
 
-// POST /:id/complaints
 router.post(
   "/:id/complaints",
   authenticate,

@@ -34,20 +34,22 @@ navigate("/login/customer", { replace: true });
 }, [loading, user, navigate]);
 
 useEffect(() => {
-if (loading || !user) return;
+  if (loading || !user) return;
 
-const loadVehicles = async () => {
-  try {
-    const res = await client.get("/customers/me/vehicles");
-    setVehicles(Array.isArray(res.data) ? res.data : []);
-  } catch (err) {
-    console.error("Failed to load vehicles:", err);
-  }
-};
+  const loadVehicles = async () => {
+    try {
+      const res = await client.get("/customers/me/vehicles");
 
-loadVehicles();
+      console.log("USER:", user);                     // 🔍
+      console.log("VEHICLES RESPONSE:", res.data);    // 🔥 THIS ONE
 
+      setVehicles(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Failed to load vehicles:", err);
+    }
+  };
 
+  loadVehicles();
 }, [loading, user]);
 
 useEffect(() => {

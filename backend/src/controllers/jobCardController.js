@@ -149,24 +149,34 @@ export const createJobCardWithDetails = async (req, res) => {
 
       /* ---------- VEHICLE ---------- */
 
-      let vehicle = await tx.vehicle.findUnique({
-        where: { vinNumber: vin },
-      });
+      /* ---------- VEHICLE ---------- */
 
-      if (!vehicle) {
-        vehicle = await tx.vehicle.create({
-          data: {
-            vinNumber: vin,
-            model: vehicleModel,
-            customerId: customer.id,
-            registrationNumber: registrationNumber || null,
-            batteryNumber: batteryNumber || null,
-            motorNumber: motorNumber || null,
-            chargerNumber: chargerNumber || null,
-            warrantyStatus: warrantyStatus || null,
-          },
-        });
-      }
+if (!vin || !vehicleModel) {
+  throw new Error("VIN and vehicle model are required");
+}
+
+let vehicle;
+
+try {
+  vehicle = await tx.vehicle.create({
+    data: {
+      vinNumber: vin,
+      model: vehicleModel,
+      customerId: customer.id,
+      registrationNumber: registrationNumber || null,
+      batteryNumber: batteryNumber || null,
+      motorNumber: motorNumber || null,
+      chargerNumber: chargerNumber || null,
+      warrantyStatus: warrantyStatus || null,
+    },
+  });
+} catch (error) {
+  // 🔥 HANDLE DUPLICATE VIN PROPERLY
+  if (error.code === "P2002") {
+    throw new Error("Vehicle with this VIN already exists");
+  }
+  throw error;
+}
 
       /* ---------- JOBCARD ---------- */
 

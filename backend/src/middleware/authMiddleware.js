@@ -1,15 +1,27 @@
 import jwt from "jsonwebtoken";
 
-/**
- * Authenticate JWT token from Authorization header
- * Header format: Authorization: Bearer <token>
- */
+/* ================= AUTHENTICATE ================= */
 export const authenticate = (req, res, next) => {
+  // ✅ SAFE PUBLIC ROUTE BYPASS (FINAL FIX)
+  const publicPaths = ["/api/whatsapp", "/api/chat"];
+
+  const isPublic = publicPaths.some((route) =>
+    req.originalUrl.startsWith(route) ||
+    req.baseUrl?.startsWith(route) ||
+    req.path?.startsWith(route)
+  );
+
+  if (isPublic) {
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
-  // 1. Check header presence & format
+  // 🔐 Check token presence
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Authorization token missing" });
+    return res.status(401).json({
+      error: "Authorization token missing",
+    });
   }
 
   const token = authHeader.split(" ")[1];
@@ -19,14 +31,15 @@ export const authenticate = (req, res, next) => {
       algorithms: ["HS256"],
     });
 
-    // 🔥 NORMALIZE USER (ADMIN + CUSTOMER SAFE)
-    const userId = decoded.id || decoded.customerId;
+    const userId = decoded.id ?? decoded.customerId;
 
     if (!userId || !decoded.role) {
-      return res.status(401).json({ error: "Invalid token payload" });
+      return res.status(401).json({
+        error: "Invalid token payload",
+      });
     }
 
-    // ✅ Unified user object
+    // ✅ Attach normalized user
     req.user = {
       id: userId,
       role: decoded.role,
@@ -34,27 +47,30 @@ export const authenticate = (req, res, next) => {
 
     next();
   } catch (err) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({
+      error: "Invalid or expired token",
+    });
   }
 };
 
-/**
- * Role-based authorization middleware
- * Usage: authorizeRoles("TECHNICIAN", "MANAGER")
- */
+/* ================= AUTHORIZE ROLES ================= */
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user?.role) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
     }
 
-    // ✅ ADMIN BYPASS (UNCHANGED)
+    // ✅ ADMIN bypass
     if (req.user.role === "ADMIN") {
       return next();
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden" });
+      return res.status(403).json({
+        error: "Forbidden",
+      });
     }
 
     next();

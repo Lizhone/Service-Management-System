@@ -1,56 +1,39 @@
 import express from "express";
-import fetch from "node-fetch";
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
   const { message } = req.body;
 
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
-You are FLEE Assistant.
+  let reply = "I can help you with bike info or booking a test ride.";
 
-Help users:
-- Choose bikes (Flee C2, Flee B1)
-- Give price, range, speed
-- Help book test rides
-
-Keep answers short and helpful.
-`,
-          },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-      }),
-    });
-
-    const data = await response.json();
-
-    res.json({
-      reply:
-        data?.choices?.[0]?.message?.content ||
-        "No response from AI",
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      reply: "AI error. Try again.",
-    });
+  if (!message) {
+    return res.json({ reply });
   }
+
+  const msg = message.toLowerCase();
+
+  if (msg.includes("bike")) {
+    reply = `
+We have two models:
+
+🚀 Flee C2
+• Range: 120 km
+• Top Speed: 75 km/h
+
+⚡ Flee B1
+• Range: 90 km
+• Top Speed: 60 km/h
+
+Would you like to view brochure or book a test ride?
+    `;
+  }
+
+  else if (msg.includes("book")) {
+    reply = "Great! Let's start your booking. What is your name?";
+  }
+
+  res.json({ reply });
 });
 
 export default router;

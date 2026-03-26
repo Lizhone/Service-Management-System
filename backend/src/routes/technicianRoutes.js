@@ -19,12 +19,17 @@ import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 /* =========================================================
+   🔐 PROTECT ALL ROUTES (TECHNICIAN ONLY)
+========================================================= */
+router.use(authenticate, authorizeRoles("TECHNICIAN"));
+
+/* =========================================================
    TECHNICIAN LIST
 ========================================================= */
 router.get("/", getTechnicians);
 
 /* =========================================================
-   AVAILABLE BOOKINGS (NEW ONLY)
+   AVAILABLE BOOKINGS (PENDING ONLY)
 ========================================================= */
 router.get("/available", getAvailableBookings);
 
@@ -77,7 +82,7 @@ router.get("/:technicianId/jobs", async (req, res) => {
 
 /* =========================================================
    CLAIM BOOKING
-   NEW → CLAIMED
+   PENDING → CLAIMED
 ========================================================= */
 router.put("/claim/:id/:technicianId", claimBooking);
 
@@ -100,19 +105,19 @@ router.put("/complete/:bookingId", completeWork);
 
 /* =========================================================
    UPLOAD SERVICE BOOKING MEDIA
-   Allowed: IN_PROGRESS or COMPLETED
 ========================================================= */
 router.post(
   "/service-bookings/:id/media",
   serviceBookingUpload.single("file"),
   uploadServiceMedia
 );
+
+/* =========================================================
+   DELETE MEDIA
+========================================================= */
 router.delete(
   "/service-media/:mediaId",
-  authenticate,
-  authorizeRoles("TECHNICIAN"),
   deleteServiceMedia
 );
-
 
 export default router;

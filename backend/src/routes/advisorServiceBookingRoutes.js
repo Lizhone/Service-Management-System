@@ -1,43 +1,25 @@
 import express from "express";
-import { authenticate } from "../middleware/authMiddleware.js";
+import { authenticate, authorizeRoles } from "../middleware/authMiddleware.js";
 import {
   getAdvisorBookings,
-  validateServiceBooking,
-  rejectServiceBooking,
   getAdvisorBookingHistory,
 } from "../controllers/advisorServiceBookingController.js";
 
 const router = express.Router();
 
-router.use(authenticate);
+/* ================================
+   AUTH + ROLE (READ ONLY)
+================================ */
+router.use(authenticate, authorizeRoles("SERVICE_ADVISOR"));
 
 /* ================================
-   ADVISOR: PENDING BOOKINGS
+   VIEW ALL BOOKINGS
 ================================ */
-router.get("/service-bookings/pending", getAdvisorBookings);
+router.get("/service-bookings", getAdvisorBookings);
 
 /* ================================
-   ADVISOR: VALIDATE BOOKING
+   BOOKING HISTORY
 ================================ */
-router.patch(
-  "/service-bookings/:id/validate",
-  validateServiceBooking
-);
-
-/* ================================
-   ADVISOR: REJECT BOOKING ✅ FIXED
-================================ */
-router.patch(
-  "/service-bookings/:id/reject",
-  rejectServiceBooking
-);
-
-/* ================================
-   ADVISOR: BOOKING HISTORY
-================================ */
-router.get(
-  "/service-bookings/history",
-  getAdvisorBookingHistory
-);
+router.get("/service-bookings/history", getAdvisorBookingHistory);
 
 export default router;
