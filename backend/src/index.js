@@ -10,7 +10,6 @@ import { config } from "./config/env.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
-import vehicleRoutes from "./routes/vehicleRoutes.js";
 import jobCardRoutes from "./routes/jobCardRoutes.js";
 import inspectionRoutes from "./routes/inspectionRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
@@ -31,6 +30,7 @@ import technicianRoutes from "./routes/technicianRoutes.js";
 import chatRoute from "./routes/chat.js";
 import publicServiceBookingRoutes from "./routes/publicServiceBookingRoutes.js";
 import publicTestRideRoutes from "./routes/public/testRide.js";
+import vehicleRoutes from "./routes/vehicle.routes.js";
 
 // ✅ ADDED (WHATSAPP)
 import whatsappRoutes from "./routes/whatsapp.js";
@@ -79,9 +79,13 @@ app.use("/api/auth/customer", customerAuthRoutes);
 // ✅ USE THIS (NEW PUBLIC ROUTE)
 app.use("/api/public/service-bookings", publicServiceBookingRoutes);
 app.use("/api/public/test-rides", publicTestRideRoutes);
+
 // Test Ride + Chat
 app.use("/api/test-rides", testRideRoutes);
 app.use("/api/chat", chatRoute);
+
+// public Vehicles
+app.use("/api/public/vehicles", vehicleRoutes);
 
 // ✅ WHATSAPP (PUBLIC)
 app.use("/api/whatsapp", whatsappRoutes);

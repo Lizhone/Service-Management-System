@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import Header from "../components/home/Header";
+import ResponsiveHeader from "../components/home/ResponsiveHeader";
 import HeroSection from "../components/home/HeroSection";
 import ServicesSection from "../components/home/ServicesSection";
 import Footer from "../components/home/Footer";
@@ -18,7 +18,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
 
       {/* Header */}
-      <Header />
+      <ResponsiveHeader />
 
       {/* Main content */}
       <main className="flex-1">

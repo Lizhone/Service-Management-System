@@ -131,14 +131,13 @@ headers={[
 bookings.flatMap(b=>{
 
 const workLogs = b.jobCard?.workLogs || [];
-
 if(workLogs.length === 0){
 
 return(
 <tr key={`tracking-${b.id}`}>
 <Td>SB-{b.id}</Td>
 <Td>{b.status}</Td>
-<Td>{b.claimedByProfile?.name || "Not Claimed"}</Td>
+<Td>{b.technician?.name || "Not Claimed"}</Td>
 <Td>-</Td>
 <Td>-</Td>
 <Td>-</Td>
@@ -191,9 +190,8 @@ log.technicianName ||
 "Not Claimed"}
 </Td>
 
-<Td>{log.taskName}</Td>
-
-<Td>{log.status}</Td>
+<Td>{log.taskName || "-"}</Td>
+<Td>{log.status || "-"}</Td>
 
 <Td>
 {log.startedAt

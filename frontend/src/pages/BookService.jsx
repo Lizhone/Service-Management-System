@@ -19,11 +19,23 @@ export default function BookService() {
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
-  };
+  const { name, value } = e.target;
+
+  if (name === "notes") {
+    const limited = value.slice(0, 50); // ✂️ cut to 50 chars
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: limited,
+    }));
+    return;
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
 
   /* =========================
      SUBMIT BOOKING
@@ -41,7 +53,7 @@ export default function BookService() {
 
       setSubmitting(true);
 
-      await client.post("/service-bookings/me/service-bookings", {
+     await client.post("/service-bookings/me/service-bookings", {
         vehiclePart: form.vehiclePart,
         serviceType: form.serviceType,
         preferredDate: selectedDate.toISOString(),   // backend safe
@@ -173,7 +185,7 @@ export default function BookService() {
               required
             >
               <option value="">Choose time slot</option>
-              <option value="10:30–12 AM">10:30–12 AM</option>
+              <option value="10:30–12 PM">10:30–12 PM</option>
               <option value="2–3 PM">2–3 PM</option>
               <option value="3–5 PM">3–5 PM</option>
             </select>
@@ -193,6 +205,9 @@ export default function BookService() {
               rows="3"
               className="w-full border rounded px-3 py-2"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {form.notes?.length || 0} / 50 characters
+            </p>
           </div>
 
           {/* BUTTONS */}

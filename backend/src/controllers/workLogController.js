@@ -19,25 +19,26 @@ export const getWorkLogsByJobCard = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch work logs" });
   }
 };
-
-
 /* ===============================
-   CREATE WORK LOG
+    CREATE WORK LOG 
 ================================ */
 export const createWorkLog = async (req, res) => {
   try {
+    console.log("REQ BODY:", req.body);
 
     const jobCardId = Number(req.params.id);
+    const { taskName, description, technicianName } = req.body;
 
-    const {
-      taskName,
-      description,
-      technicianName
-    } = req.body;
-
-    if (!taskName || !technicianName) {
+    if (!taskName) {
       return res.status(400).json({
-        error: "taskName and technicianName are required"
+        error: "taskName is required"
+      });
+    }
+
+    // ✅ USE FRONTEND VALUE ONLY
+    if (!technicianName) {
+      return res.status(400).json({
+        error: "Technician name is required"
       });
     }
 
@@ -46,7 +47,9 @@ export const createWorkLog = async (req, res) => {
         jobCardId,
         taskName,
         description: description || null,
-        technicianName
+        technicianName, // ✅ THIS IS THE FIX
+        status: "IN_PROGRESS",
+        startedAt: new Date()
       }
     });
 
@@ -57,8 +60,6 @@ export const createWorkLog = async (req, res) => {
     res.status(500).json({ error: "Failed to create work log" });
   }
 };
-
-
 /* ===============================
    START WORK
 ================================ */

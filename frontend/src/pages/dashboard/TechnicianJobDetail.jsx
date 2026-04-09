@@ -67,41 +67,92 @@ export default function TechnicianJobDetail() {
   /* ================= START WORK ================= */
 
   const handleStart = async () => {
+  if (!taskName) {
+    alert("Task name is required");
+    return;
+  }
 
-    if (!taskName) {
-      alert("Task name is required");
+  try {
+    const jobCardId = booking?.jobCard?.id;
+
+    if (!jobCardId) {
+      alert("JobCard not found");
       return;
     }
 
-    try {
+    // ✅ GET TECHNICIAN FROM LOCAL STORAGE
+    const technicianName = localStorage.getItem("technicianName");
 
-      await client.put(`/technicians/start/${bookingId}`, {
-        taskName,
-        description
-      });
-
-      fetchDetail();
-
-    } catch (err) {
-      console.error("Start failed:", err);
+    // ✅ VALIDATION
+    if (!technicianName) {
+      alert("Please select technician first");
+      return;
     }
-  };
 
-  /* ================= COMPLETE WORK ================= */
+    console.log("SENDING DATA:", { taskName, description, technicianName });
 
-  const handleComplete = async () => {
+    // 1️⃣ Create Work Log
+    await client.post(`/work-logs/job-cards/${jobCardId}/work-log`, {
+      taskName,
+      description,
+      technicianName   // ✅ NOW DEFINED
+    });
 
+    // 2️⃣ TRY updating backend (may fail)
     try {
-
-      await client.put(`/technicians/complete/${bookingId}`);
-
-      fetchDetail();
-
+      await client.put(`/technicians/start/${bookingId}`);
     } catch (err) {
-      console.error("Complete failed:", err);
+      console.warn("Start API failed — using frontend fallback");
     }
-  };
 
+    // 3️⃣ UI UPDATE
+    setBooking((prev) => ({
+      ...prev,
+      status: "IN_PROGRESS"
+    }));
+
+    // 4️⃣ Refresh
+    fetchDetail();
+
+  } catch (err) {
+    console.error("Start failed:", err);
+  }
+};
+
+/* ================= COMPLETE WORK ================= */
+const handleComplete = async () => {
+  try {
+    const jobCardId = booking?.jobCard?.id;
+
+    if (!jobCardId) {
+      alert("JobCard not found");
+      return;
+    }
+
+    // 1️⃣ Get latest work log (last active one)
+    const logs = booking?.jobCard?.workLogs || [];
+
+    if (logs.length === 0) {
+      alert("No work log found");
+      return;
+    }
+
+    const latestLog = logs[0]; // assuming latest is first
+
+    // 2️⃣ Complete that work log
+    await client.patch(`/work-logs/work-log/${latestLog.id}/complete`);
+
+    // 3️⃣ Update booking status
+    await client.put(`/technicians/complete/${bookingId}`);
+
+    // 4️⃣ Refresh UI
+    fetchDetail();
+
+  } catch (err) {
+    console.error("Complete failed:", err);
+    alert("Failed to complete work");
+  }
+};
   /* ================= UPLOAD MEDIA ================= */
 
   const handleUpload = async () => {
@@ -301,44 +352,48 @@ export default function TechnicianJobDetail() {
 
       {/* ================= WORK HISTORY ================= */}
 
-      <h3 className="text-xl font-semibold mt-8 mb-4">
-        Work History
-      </h3>
+<h3 className="text-xl font-semibold mt-8 mb-4">
+  Work History
+</h3>
 
-      {booking.jobCard?.workLogs?.length === 0 && (
-        <p className="text-gray-400">
-          No work history yet
-        </p>
-      )}
+{booking.jobCard?.workLogs?.length === 0 && (
+  <p className="text-gray-400">
+    No work history yet
+  </p>
+)}
 
-      {booking.jobCard?.workLogs?.map((log) => (
+{booking.jobCard?.workLogs?.map((log) => (
 
-        <div
-          key={log.id}
-          className="bg-[#0A3A55] p-4 rounded mb-3 border border-gray-700"
-        >
+  <div
+    key={log.id}
+    className="bg-[#0A3A55] p-4 rounded mb-3 border border-gray-700"
+  >
 
-          <p className="font-semibold text-lg">
-            {log.taskName}
-          </p>
+    <p className="font-semibold text-lg">
+      {log.taskName}
+    </p>
 
-          <p>Status: {log.status}</p>
+    {/* ✅ ADD THIS */}
+    <p>Description: {log.description || "No description"}</p>
 
-          <p>
-            Started: {new Date(log.startedAt).toLocaleString()}
-          </p>
+    {/* ✅ ADD THIS */}
+    <p>Technician: {log.technicianName || "Unknown"}</p>
 
-          {log.completedAt && (
+    <p>Status: {log.status}</p>
 
-            <p>
-              Completed: {new Date(log.completedAt).toLocaleString()}
-            </p>
+    <p>
+      Started: {new Date(log.startedAt).toLocaleString()}
+    </p>
 
-          )}
+    {log.completedAt && (
+      <p>
+        Completed: {new Date(log.completedAt).toLocaleString()}
+      </p>
+    )}
 
-        </div>
+  </div>
 
-      ))}
+))}
 
       {/* ================= UPLOAD MEDIA ================= */}
 

@@ -75,23 +75,22 @@ export const createTestRide = async (req, res) => {
 
     // 🔒 Check slot lock
     const existingRide = await prisma.testRide.findFirst({
-      where: {
-        location,
-        timeSlot,
-        status: "CONFIRMED",
-        date: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
+  where: {
+    timeSlot,
+    status: "CONFIRMED",
+    date: {
+      gte: startOfDay,
+      lte: endOfDay,
+    },
+  },
+});
 
-    if (existingRide) {
-      return res.status(400).json({
-        message:
-          "This location is already booked for the selected date and time. Please try another slot.",
-      });
-    }
+if (existingRide) {
+  return res.status(400).json({
+    message:
+      "❌ This time slot is already booked. Please choose another time.",
+  });
+}
 
     const newRide = await prisma.testRide.create({
       data: {
@@ -100,7 +99,7 @@ export const createTestRide = async (req, res) => {
         date: bookingDate,
         timeSlot,
         fullName: trimmedName,
-        phone: formattedPhone, // ✅ Correctly saving formatted version
+        phone: formattedPhone, 
         email: normalizedEmail,
         address,
         status: "CONFIRMED",
@@ -302,11 +301,14 @@ export const getTestRideSlotsRange = async (req, res) => {
     const slots = ["11:00 AM", "12:00 PM", "1:00 PM"];
 
     const bookings = await prisma.testRide.findMany({
-      select: {
-        date: true,
-        timeSlot: true,
-      },
-    });
+  where: {
+    status: "CONFIRMED",
+  },
+  select: {
+    date: true,
+    timeSlot: true,
+  },
+});
 
     const bookedMap = {};
 

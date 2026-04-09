@@ -57,16 +57,18 @@ export default function TechnicianDashboard() {
      SELECT TECHNICIAN
   ========================================================= */
   const handleSelectTechnician = async (tech) => {
-    setSelectedTech(tech);
-    setLoading(true);
+  localStorage.setItem("technicianName", tech.name); // ✅ dynamic
 
-    await Promise.all([
-      loadAvailableBookings(),
-      loadClaimedBookings(tech.id),
-    ]);
+  setSelectedTech(tech);
+  setLoading(true);
 
-    setLoading(false);
-  };
+  await Promise.all([
+    loadAvailableBookings(),
+    loadClaimedBookings(tech.id),
+  ]);
+
+  setLoading(false);
+};
 
   /* =========================================================
      CLAIM BOOKING

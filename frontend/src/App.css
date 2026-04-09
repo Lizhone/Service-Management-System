@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .logo {
@@ -39,4 +39,43 @@
 
 .read-the-docs {
   color: #888;
+}
+/* ========================================
+   GLOBAL MOBILE WIDTH FIX (SAFE)
+======================================== */
+
+html, body, #root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure all main wrappers use full width */
+div {
+  max-width: 100%;
+}
+/* ========================================
+   FORCE FULL WIDTH ON MOBILE (SAFE FIX)
+======================================== */
+
+@media (max-width: 768px) {
+
+  body, #root {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Fix ANY container causing shrink */
+  * {
+    max-width: 100% !important;
+  }
+
+  /* Fix common Tailwind containers */
+  .container,
+  .mx-auto,
+  [class*="max-w-"] {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 }

@@ -80,28 +80,23 @@ export default function AdminDashboard() {
 
 
   const loadVehicles = async () => {
+  try {
+    const res = await client.get("/api/public/vehicles");
 
-    try{
-
-      const res = await client.get("/vehicles");
-
-      const safeVehicles =
-        Array.isArray(res.data.data)
+    const safeVehicles =
+      Array.isArray(res.data.data)
         ? res.data.data
         : Array.isArray(res.data)
         ? res.data
         : [];
 
-      setVehicles(safeVehicles);
+    setVehicles(safeVehicles);
 
-    }catch(error){
-
-      console.error("Failed to load vehicles:",error);
-      setVehicles([]);
-
-    }
-
-  };
+  } catch (error) {
+    console.error("Failed to load vehicles:", error);
+    setVehicles([]);
+  }
+};
 
 
   /* ======================

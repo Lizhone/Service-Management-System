@@ -28,7 +28,6 @@ export default function StaffLogin() {
 
       const { token, user } = res.data;
 
-      // Save user + token
       login(user, token);
 
       const dashboardRoutes = {
@@ -39,7 +38,6 @@ export default function StaffLogin() {
         SALES: "/dashboard/sales",
       };
 
-      // 🔹 replace:true prevents forward navigation
       navigate(
         dashboardRoutes[user.role] || "/dashboard/admin",
         { replace: true }
@@ -54,29 +52,31 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#01263B]">
+    <div className="min-h-screen flex items-center justify-center bg-[#2f4550] px-4">
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col items-center gap-7 w-[480px]"
+        className="w-full max-w-md md:max-w-lg bg-[#01263B] rounded-xl shadow-2xl p-6 md:p-10 flex flex-col items-center gap-6"
       >
 
         {/* Avatar */}
-        <div className="w-32 h-32 rounded-full border-4 border-[#01263B] bg-white flex items-center justify-center">
-          <User size={52} strokeWidth={3} className="text-[#01263B]" />
+        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white flex items-center justify-center">
+          <User size={40} strokeWidth={3} className="text-[#01263B]" />
         </div>
 
-        <h2 className="text-white text-2xl font-semibold">
+        {/* Title */}
+        <h2 className="text-white text-xl md:text-2xl font-semibold">
           Staff Login
         </h2>
 
+        {/* Error */}
         {error && (
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-400 text-sm text-center">{error}</p>
         )}
 
         {/* Email */}
-        <div className="w-full flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl">
-          <User size={26} className="text-white" />
+        <div className="w-full flex items-center gap-3 px-4 py-3 border border-white/30 rounded-xl">
+          <User size={20} className="text-white" />
 
           <input
             type="email"
@@ -84,13 +84,13 @@ export default function StaffLogin() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
+            className="flex-1 bg-transparent outline-none text-white placeholder-gray-400 text-sm md:text-base"
           />
         </div>
 
         {/* Password */}
-        <div className="w-full flex items-center gap-3 px-4 py-3 border-2 border-white rounded-xl">
-          <Lock size={26} className="text-white" />
+        <div className="w-full flex items-center gap-3 px-4 py-3 border border-white/30 rounded-xl">
+          <Lock size={20} className="text-white" />
 
           <input
             type={showPassword ? "text" : "password"}
@@ -98,7 +98,7 @@ export default function StaffLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
+            className="flex-1 bg-transparent outline-none text-white placeholder-gray-400 text-sm md:text-base"
           />
 
           <button
@@ -111,13 +111,13 @@ export default function StaffLogin() {
         </div>
 
         {/* Links */}
-        <div className="flex justify-between w-full text-white text-sm">
+        <div className="flex justify-between w-full text-white text-xs md:text-sm">
 
           <span>
             Customer?{" "}
             <Link
               to="/login/customer"
-              className="underline font-medium"
+              className="underline font-medium hover:opacity-80"
             >
               Login here
             </Link>
@@ -125,18 +125,18 @@ export default function StaffLogin() {
 
           <Link
             to="/forgot-password"
-            className="underline"
+            className="underline hover:opacity-80"
           >
             Forgot password?
           </Link>
 
         </div>
 
-        {/* Login Button */}
+        {/* Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-16 rounded-2xl bg-white text-[#01263B] text-xl tracking-wide shadow-lg hover:opacity-90 transition disabled:opacity-60"
+          className="w-full h-12 md:h-14 rounded-xl bg-white text-[#01263B] text-base md:text-lg font-semibold shadow-lg hover:opacity-90 transition disabled:opacity-60"
         >
           {loading ? "Logging in..." : "LOGIN"}
         </button>

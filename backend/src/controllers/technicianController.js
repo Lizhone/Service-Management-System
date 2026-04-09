@@ -167,24 +167,27 @@ export const startWork = async (req, res) => {
     if (booking.status !== "CLAIMED")
       return res.status(400).json({ message: "Cannot start work" });
 
-    // Create WorkLog
-    await prisma.workLog.create({
-      data: {
-        jobCardId: booking.jobCardId,
-        taskName,
-        technicianName: "Technician",
-        status: "IN_PROGRESS",
-        startedAt: new Date()
-      }
-    });
+    // ✅ SAFE: only create log if taskName exists
+    if (taskName) {
+      await prisma.workLog.create({
+        data: {
+          jobCardId: booking.jobCardId,
+          taskName,
+          description: description || null,
+          technicianName: req.user?.name || "Technician",
+          status: "IN_PROGRESS",
+          startedAt: new Date()
+        }
+      });
+    }
 
-    // Update JobCard
+    // ✅ Update JobCard
     await prisma.jobCard.update({
       where: { id: booking.jobCardId },
       data: { status: "IN_PROGRESS" }
     });
 
-    // Update Booking
+    // ✅ Update Booking
     await prisma.serviceBooking.update({
       where: { id: Number(bookingId) },
       data: { status: "IN_PROGRESS" }
@@ -193,11 +196,10 @@ export const startWork = async (req, res) => {
     res.json({ message: "Work started" });
 
   } catch (error) {
-    console.error(error);
+    console.error("START WORK ERROR:", error);
     res.status(500).json({ message: "Failed to start work" });
   }
 };
-
 
 /* =========================================================
    COMPLETE WORK

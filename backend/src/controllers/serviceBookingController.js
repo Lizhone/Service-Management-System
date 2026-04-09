@@ -9,27 +9,61 @@ const prisma = new PrismaClient();
 export const createServiceBooking = async (req, res) => {
   try {
     let customerId;
+    let vehicle; // ✅ FIX: global scope
 
-    // ✅ AUTH USER (Dashboard)
-    if (req.user && req.user.id) {
-      customerId = req.user.id;
-      console.log("🔐 AUTH USER:", customerId);
-    } 
-    
-    // ✅ WHATSAPP USER
-    else {
-      console.log("📱 WHATSAPP BOOKING FLOW");
+   /* =====================================================
+   1. DASHBOARD FLOW (AUTH)
+===================================================== */
+if (req.user && req.user.id) {
+  console.log("🔐 DASHBOARD FLOW");
 
-      const phone = req.body.mobileNumber;
+  customerId = req.user.id; // ✅ assign (NOT const)
 
-      if (!phone) {
+  // ✅ ALWAYS GET VEHICLE
+  vehicle = await prisma.vehicle.findFirst({
+    where: { customerId },
+  });
+
+  if (!vehicle) {
+    return res.status(400).json({
+      error: "No vehicle found for this customer",
+    });
+  }
+}
+    /* =====================================================
+       2. WEBSITE BOT (NO PHONE)
+    ===================================================== */
+    else if (!req.body.mobileNumber && req.body.vehicleNumber) {
+      console.log("🌐 WEBSITE BOT FLOW");
+
+      vehicle = await prisma.vehicle.findFirst({
+        where: {
+          OR: [
+            { vinNumber: req.body.vehicleNumber },
+            { registrationNumber: req.body.vehicleNumber },
+          ],
+        },
+      });
+
+      if (!vehicle) {
+        console.log("❌ VEHICLE NOT FOUND:", req.body.vehicleNumber);
         return res.status(400).json({
-          error: "Mobile number is required",
+          error: "Vehicle not found",
         });
       }
 
-      // 🔍 FIND EXISTING CUSTOMER ONLY
-      let customer = await prisma.customer.findFirst({
+      customerId = vehicle.customerId;
+    }
+
+    /* =====================================================
+       3. WHATSAPP FLOW (PHONE REQUIRED)
+    ===================================================== */
+    else if (req.body.mobileNumber) {
+      console.log("📱 WHATSAPP FLOW");
+
+      const phone = req.body.mobileNumber;
+
+      const customer = await prisma.customer.findFirst({
         where: {
           mobileNumber: {
             contains: phone.slice(-10),
@@ -37,33 +71,47 @@ export const createServiceBooking = async (req, res) => {
         },
       });
 
-      // ❌ BLOCK NEW USERS
       if (!customer) {
         return res.status(403).json({
-          error: "You are not registered. Please visit showroom for first booking.",
+          error:
+            "You are not registered. Please visit showroom for first booking.",
         });
       }
 
-      console.log("👤 Existing customer:", customer.id);
-
       customerId = customer.id;
 
-      // 🚗 VEHICLE VALIDATION
-      const vehicle = await prisma.vehicle.findFirst({
+      vehicle = await prisma.vehicle.findFirst({
         where: {
-          customerId: customerId,
-          vin: req.body.vehicleNumber,
+          OR: [
+            { vinNumber: req.body.vehicleNumber },
+            { registrationNumber: req.body.vehicleNumber },
+          ],
         },
       });
 
       if (!vehicle) {
+        console.log("❌ VEHICLE NOT FOUND:", req.body.vehicleNumber);
         return res.status(400).json({
           error: "Vehicle not found. Please use registered vehicle.",
         });
       }
     }
 
-    const { vehiclePart, serviceType, preferredDate, timeSlot, notes } = req.body;
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
+    const { vehiclePart, serviceType, preferredDate, timeSlot, notes } =
+      req.body;
+
+    // ✅ DATE PARSE (SAFE)
+    const parsedDate = new Date(preferredDate);
+
+    if (isNaN(parsedDate.getTime())) {
+      console.log("❌ INVALID DATE:", preferredDate);
+      return res.status(400).json({
+        error: "Invalid date format",
+      });
+    }
 
     if (!vehiclePart || !serviceType || !preferredDate || !timeSlot) {
       return res.status(400).json({
@@ -71,54 +119,92 @@ export const createServiceBooking = async (req, res) => {
       });
     }
 
-    // ⏰ SLOT CHECK
-    const count = await prisma.serviceBooking.count({
+if (!vehicle && !req.user) {
+  return res.status(400).json({
+    error: "Vehicle missing for booking",
+  });
+}
+
+    /* =====================================================
+       SLOT BLOCKING
+    ===================================================== */
+    const existing = await prisma.serviceBooking.findFirst({
       where: {
-        preferredDate: new Date(preferredDate),
+        preferredDate: parsedDate,
         timeSlot: timeSlot,
       },
     });
 
-    if (count >= 5) {
+    if (existing) {
       return res.status(400).json({
-        error: "Selected time slot is full. Please choose another time or date.",
+        error: "This time slot is already booked",
       });
     }
 
-    // ✅ Create Booking
+    /* =====================================================
+       CREATE BOOKING
+    ===================================================== */
+    console.log("📦 FINAL BODY:", {
+      customerId,
+      vehiclePart,
+      serviceType,
+      parsedDate,
+      timeSlot,
+    });
+
     const booking = await prisma.serviceBooking.create({
       data: {
         customerId,
         vehiclePart,
         serviceType,
-        preferredDate: new Date(preferredDate),
+        preferredDate: parsedDate, // ✅ FIXED
         timeSlot,
-        notes: notes || "WhatsApp Booking",
+        notes: notes || "",
       },
     });
 
-    // ✅ Create Job Card (UNCHANGED — correct logic)
-    const jobCard = await prisma.jobCard.create({
-      data: {
-        jobCardNumber: `JC-${Date.now()}`,
-        customerId: booking.customerId,
-        vehicleId: 1,
-        serviceType: booking.serviceType,
-        serviceInDatetime: booking.preferredDate,
-        status: "OPEN",
-        remarks: booking.notes || "",
-      },
-    });
+    /* =====================================================
+   CREATE JOB CARD
+===================================================== */
 
-    // 📩 SEND WHATSAPP CONFIRMATION
-const customerDetails = await prisma.customer.findUnique({
-  where: { id: booking.customerId },
+// ✅ ADD THIS SAFETY CHECK
+if (!vehicle || !vehicle.id) {
+  console.log("❌ NO VEHICLE FOR JOBCARD:", vehicle);
+
+  return res.status(400).json({
+    error: "Vehicle missing for job card creation",
+  });
+}
+
+const jobCard = await prisma.jobCard.create({
+  data: {
+    jobCardNumber: `JC-${Date.now()}`,
+
+    customer: {
+      connect: { id: booking.customerId },
+    },
+
+    vehicle: {
+      connect: { id: vehicle.id },
+    },
+
+    serviceType: booking.serviceType,
+    serviceInDatetime: booking.preferredDate,
+    status: "OPEN",
+    remarks: booking.notes || "",
+  },
 });
+    /* =====================================================
+       WHATSAPP NOTIFICATION
+    ===================================================== */
+    const customerDetails = await prisma.customer.findUnique({
+      where: { id: booking.customerId },
+    });
 
-if (customerDetails?.mobileNumber) {
-  await sendWhatsAppMessage(
-    `+91${customerDetails.mobileNumber}`, // ✅ important
-    `✅ Booking Confirmed!
+    if (customerDetails?.mobileNumber) {
+      await sendWhatsAppMessage(
+        `+91${customerDetails.mobileNumber}`,
+        `✅ Booking Confirmed!
 
 🧾 Job Card: ${jobCard.jobCardNumber}
 🔧 Service: ${booking.serviceType}
@@ -126,10 +212,12 @@ if (customerDetails?.mobileNumber) {
 ⏰ Time: ${booking.timeSlot}
 
 👉 Reply "hi" to manage your booking`
-  );
-}
+      );
+    }
 
-    // ✅ Link Job Card
+    /* =====================================================
+       LINK JOB CARD
+    ===================================================== */
     await prisma.serviceBooking.update({
       where: { id: booking.id },
       data: { jobCardId: jobCard.id },
@@ -142,28 +230,18 @@ if (customerDetails?.mobileNumber) {
     });
 
   } catch (error) {
-
-    if (error.code === "P2002") {
-      return res.status(400).json({
-        error: "This time slot is already booked",
-      });
-    }
-
-    console.error("Create booking error:", error);
+    console.error("🔥 FULL ERROR:", error);
 
     return res.status(500).json({
-      error: "Failed to create service booking",
+      error: error.message || "Failed to create service booking",
     });
   }
 };
-
-
 /* =====================================================
    CUSTOMER BOOKINGS
 ===================================================== */
 export const getMyServiceBookings = async (req, res) => {
   try {
-
     if (!req.user || !req.user.id) {
       return res.status(401).json({
         error: "Unauthorized",
@@ -179,7 +257,6 @@ export const getMyServiceBookings = async (req, res) => {
     });
 
     return res.json(bookings);
-
   } catch (error) {
     console.error("Fetch my bookings error:", error);
     return res.status(500).json({
@@ -187,7 +264,6 @@ export const getMyServiceBookings = async (req, res) => {
     });
   }
 };
-
 
 /* =====================================================
    ADMIN: ALL BOOKINGS
@@ -199,18 +275,15 @@ export const getAllServiceBookings = async (req, res) => {
         customer: true,
         claimedByProfile: true,
         jobCard: {
-          include: {
-            workLogs: {
-              orderBy: { createdAt: "asc" }
-            }
-          }
-        }
+  include: {
+    workLogs: true
+  }
+}
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
 
     return res.json(bookings);
-
   } catch (error) {
     console.error("Fetch all bookings error:", error);
     return res.status(500).json({
@@ -219,41 +292,36 @@ export const getAllServiceBookings = async (req, res) => {
   }
 };
 
-
 /* =====================================================
    BOOKING DETAIL
 ===================================================== */
 export const getCustomerBookingDetail = async (req, res) => {
   try {
     const { bookingId } = req.params;
-
-    const booking = await prisma.serviceBooking.findUnique({
-      where: { id: Number(bookingId) },
+const booking = await prisma.serviceBooking.findUnique({
+  where: { id: Number(bookingId) },
+  include: {
+    jobCard: {
       include: {
-        media: true,
-        jobCard: {
-          include: {
-            complaints: true,
-            workLogs: {
-              orderBy: { createdAt: "asc" }
-            }
-          }
-        }
-      }
-    });
+        workLogs: true,
+        media: true,      
+      },
+    },
+     media: true,
+  },
+});
 
     if (!booking) {
       return res.status(404).json({
-        message: "Booking not found"
+        message: "Booking not found",
       });
     }
 
-    res.json(booking);
-
+    return res.json(booking);
   } catch (error) {
     console.error("Booking detail error:", error);
-    res.status(500).json({
-      message: "Failed to fetch booking detail"
+    return res.status(500).json({
+      message: "Failed to fetch booking detail",
     });
   }
 };

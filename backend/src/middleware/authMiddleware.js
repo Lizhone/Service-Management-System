@@ -41,10 +41,10 @@ export const authenticate = (req, res, next) => {
 
     // ✅ Attach normalized user
     req.user = {
-      id: userId,
-      role: decoded.role,
+      ...decoded,
+      id: decoded.id || decoded.customerId
     };
-
+    
     next();
   } catch (err) {
     return res.status(401).json({

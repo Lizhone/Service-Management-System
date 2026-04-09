@@ -139,36 +139,46 @@ export default function CustomerBookingDetail() {
 
       {/* ================= WORK PROOF MEDIA ================= */}
 
-      {booking.media?.length > 0 && (
-        <>
-          <h3 className="text-lg font-semibold mt-6 mb-3">
-            Work Proof
-          </h3>
+{(booking.jobCard?.media?.length > 0 || booking.media?.length > 0) && (
+  <>
+    <h3 className="text-lg font-semibold mt-6 mb-3">
+      Work Proof
+    </h3>
 
-          <div className="grid grid-cols-1 gap-4">
-            {booking.media.map((m) =>
-              m.fileType === "image" ? (
-                <img
-                  key={m.id}
-                  src={`http://localhost:4000${m.fileUrl}`}
-                  alt="Work proof"
-                  className="rounded shadow"
-                />
-              ) : (
-                <video
-                  key={m.id}
-                  controls
-                  className="rounded shadow"
-                >
-                  <source
-                    src={`http://localhost:4000${m.fileUrl}`}
-                  />
-                </video>
-              )
-            )}
-          </div>
-        </>
-      )}
+    <div className="grid grid-cols-1 gap-4">
+
+      {/* JobCard Media */}
+{booking.jobCard?.media?.map((m) =>
+  m.fileType === "image" ? (
+    <img
+      key={`job-${m.id}`}
+      src={`http://localhost:4000${m.fileUrl}`}
+      alt="Work proof"
+      className="rounded shadow"
+    />
+  ) : (
+    <video key={`job-${m.id}`} controls className="rounded shadow">
+      <source src={`http://localhost:4000${m.fileUrl}`} />
+    </video>
+  )
+)}{/* ServiceBooking Media */}
+{booking.media?.map((m) =>
+  m.fileType === "image" ? (
+    <img
+      key={`booking-${m.id}`}
+      src={`http://localhost:4000${m.fileUrl}`}
+      alt="Booking proof"
+      className="rounded shadow"
+    />
+  ) : (
+    <video key={`booking-${m.id}`} controls className="rounded shadow">
+      <source src={`http://localhost:4000${m.fileUrl}`} />
+    </video>
+  )
+)}
+    </div>
+  </>
+)}
 
     </div>
   );
