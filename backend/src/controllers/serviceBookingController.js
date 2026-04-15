@@ -56,46 +56,57 @@ if (req.user && req.user.id) {
     }
 
     /* =====================================================
-       3. WHATSAPP FLOW (PHONE REQUIRED)
-    ===================================================== */
-    else if (req.body.mobileNumber) {
-      console.log("📱 WHATSAPP FLOW");
+   3. WHATSAPP FLOW (VEHICLE BASED - FIXED)
+===================================================== */
+else if (req.body.mobileNumber) {
+  console.log("📱 WHATSAPP FLOW");
 
-      const phone = req.body.mobileNumber;
+  // You can still keep phone for logging if needed
+  const phone = req.body.mobileNumber;
+  console.log("USER PHONE:", phone);
 
-      const customer = await prisma.customer.findFirst({
-        where: {
-          mobileNumber: {
-            contains: phone.slice(-10),
-          },
-        },
-      });
+  /* ===============================
+     🚗 STEP 1: FIND VEHICLE
+  =============================== */
+  const vehicleInput = String(req.body.vehicleNumber || "").trim();
 
-      if (!customer) {
-        return res.status(403).json({
-          error:
-            "You are not registered. Please visit showroom for first booking.",
-        });
-      }
+  if (!vehicleInput) {
+    return res.status(400).json({
+      error: "Vehicle number is required",
+    });
+  }
 
-      customerId = customer.id;
+  vehicle = await prisma.vehicle.findFirst({
+    where: {
+      OR: [
+        { vinNumber: vehicleInput },
+        { registrationNumber: vehicleInput },
+      ],
+    },
+  });
 
-      vehicle = await prisma.vehicle.findFirst({
-        where: {
-          OR: [
-            { vinNumber: req.body.vehicleNumber },
-            { registrationNumber: req.body.vehicleNumber },
-          ],
-        },
-      });
+  if (!vehicle) {
+    console.log("❌ VEHICLE NOT FOUND:", vehicleInput);
 
-      if (!vehicle) {
-        console.log("❌ VEHICLE NOT FOUND:", req.body.vehicleNumber);
-        return res.status(400).json({
-          error: "Vehicle not found. Please use registered vehicle.",
-        });
-      }
-    }
+    return res.status(400).json({
+      error: "Vehicle not found. Please use registered vehicle.",
+    });
+  }
+
+  /* ===============================
+     👤 STEP 2: GET CUSTOMER FROM VEHICLE
+  =============================== */
+  customerId = vehicle.customerId;
+
+  if (!customerId) {
+    return res.status(400).json({
+      error: "Customer not linked to this vehicle.",
+    });
+  }
+
+  console.log("✅ VEHICLE FOUND:", vehicle.vinNumber);
+  console.log("✅ CUSTOMER ID:", customerId);
+}
 
     /* =====================================================
        VALIDATION

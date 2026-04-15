@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
+import "./dashboard/CreateJobCard.css";
 
 export default function CreateJobCard() {
   const navigate = useNavigate();
@@ -151,6 +152,7 @@ export default function CreateJobCard() {
     if (mode === "existing") {
       if (!form.customerId || !form.vehicleId) {
         alert("Please select both customer and vehicle");
+        console.log("Customers:", customers);
         return;
       }
 
@@ -167,7 +169,7 @@ export default function CreateJobCard() {
 
       endpoint = "/job-cards";
     } else {
-      // 🔴 THIS WAS THE BUG — missing validation
+      
       if (
         !form.customerName ||
         !form.customerPhone ||
@@ -519,53 +521,56 @@ export default function CreateJobCard() {
   <>
     <h3>Vehicle Service-In Condition Checklist</h3>
 
-    <table className="jobcard-table">
-      <thead>
-        <tr>
-          <th>Component</th>
-          <th>OK</th>
-          <th>NOT OK</th>
-          <th>DAMAGED</th>
-        </tr>
-      </thead>
+<table className="jobcard-table checklist-table">
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>OK</th>
+      <th>Repairable</th>
+      <th>DAMAGED</th>
+    </tr>
+  </thead>
 
-      <tbody>
-        {[
-          { key: "battery", label: "Battery" },
-          { key: "brakes", label: "Brakes" },
-          { key: "display", label: "Display" },
-          { key: "body", label: "Body" },
-          { key: "carrier", label: "Carrier" },
-          { key: "chassis", label: "Chassis" },
-          { key: "rust", label: "Rust" },
-          { key: "wheels", label: "Wheels" },
-          { key: "footBoard", label: "Foot Board" },
-          { key: "allSwitchesFunction", label: "All Switches Function" },
-          { key: "lightsAndIndicators", label: "Lights & Indicators" },
-          { key: "solenoid", label: "Solenoid" },
-          { key: "mudguards", label: "Mudguards" },
-          { key: "charger", label: "Charger" },
-        ].map((item) => (
-          <tr key={item.key}>
-            <td>{item.label}</td>
+  <tbody>
+    {[
+      { key: "battery", label: "Battery" },
+      { key: "brakes", label: "Brakes" },
+      { key: "display", label: "Display" },
+      { key: "body", label: "Body" },
+      { key: "carrier", label: "Carrier" },
+      { key: "chassis", label: "Chassis" },
+      { key: "rust", label: "Rust" },
+      { key: "wheels", label: "Wheels" },
+      { key: "footBoard", label: "Foot Board" },
+      { key: "allSwitchesFunction", label: "All Switches Function" },
+      { key: "lightsAndIndicators", label: "Lights & Indicators" },
+      { key: "solenoid", label: "Solenoid" },
+      { key: "mudguards", label: "Mudguards" },
+      { key: "charger", label: "Charger" },
+    ].map((item) => (
+      <tr key={item.key}>
+        <td>{item.label}</td>
 
-            {["OK", "NOT OK", "DAMAGED"].map((status) => (
-              <td key={status} style={{ textAlign: "center" }}>
-                <input
-                  type="radio"
-                  name={item.key}
-                  value={status}
-                  checked={vehicleServiceInCondition[item.key] === status}
-                  onChange={() =>
-                    handleConditionChange(item.key, status)
-                  }
-                />
-              </td>
-            ))}
-          </tr>
+        {["OK", "Repairable", "DAMAGED"].map((status) => (
+          <td key={status}>
+            <label className="checklist-option">
+              <input
+                type="radio"
+                name={item.key}
+                value={status}
+                checked={vehicleServiceInCondition[item.key] === status}
+                onChange={() =>
+                  handleConditionChange(item.key, status)
+                }
+              />
+              <span className="checklist-option-label">{status}</span>
+            </label>
+          </td>
         ))}
-      </tbody>
-    </table>
+      </tr>
+    ))}
+  </tbody>
+</table>
   </>
 )}
 

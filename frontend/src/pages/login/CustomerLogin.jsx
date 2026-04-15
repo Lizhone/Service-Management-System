@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Phone, Lock, Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import client from "../../api/client";
-import { Link } from "react-router-dom";
 
 export default function CustomerLogin() {
   const { login } = useAuth();
@@ -27,6 +26,7 @@ export default function CustomerLogin() {
       });
 
       const { token, customer } = res.data;
+      localStorage.setItem("token", token);
 
       login(customer, token);
       navigate("/dashboard");
@@ -39,43 +39,44 @@ export default function CustomerLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#01263B]">
+    <div className="min-h-screen flex items-center justify-center bg-[#01263B] px-4">
 
-      <div className="bg-white w-105 rounded-3xl shadow-2xl p-10">
+      <div className="bg-white w-full max-w-md md:max-w-lg rounded-3xl shadow-2xl p-6 md:p-10">
 
-        <h1 className="text-3xl font-bold text-[#01263B] text-center">
+        {/* Title */}
+        <h1 className="text-2xl md:text-3xl font-bold text-[#01263B] text-center">
           Welcome Back!
         </h1>
 
-        <p className="text-center text-gray-500 mt-2 mb-8">
+        <p className="text-center text-gray-500 mt-2 mb-6 md:mb-8 text-sm md:text-base">
           Please login to your account.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 md:gap-6">
 
           {/* Mobile Field */}
           <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3 border border-gray-200">
-            <Phone className="text-[#01263B] mr-3" size={20} />
+            <Phone className="text-[#01263B] mr-3" size={18} />
 
             <input
               type="text"
               placeholder="Mobile Number"
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-sm md:text-base"
             />
           </div>
 
           {/* Password Field */}
           <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3 border border-gray-200">
-            <Lock className="text-[#01263B] mr-3" size={20} />
+            <Lock className="text-[#01263B] mr-3" size={18} />
 
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+              className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-sm md:text-base"
             />
 
             <button
@@ -90,22 +91,25 @@ export default function CustomerLogin() {
           {/* Forgot Password */}
           <div className="text-right">
             <Link
-                to="/customer-forgot-password"
-                className="text-[#01263B] text-sm hover:underline"
-          >
-                Forgot password?
+              to="/customer-forgot-password"
+              className="text-[#01263B] text-xs md:text-sm hover:underline"
+            >
+              Forgot password?
             </Link>
           </div>
 
+          {/* Error */}
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <p className="text-red-500 text-sm text-center">
+              {error}
+            </p>
           )}
 
           {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#01263B] text-white py-3 rounded-xl text-lg font-semibold hover:opacity-90 transition disabled:opacity-60"
+            className="bg-[#01263B] text-white py-3 md:py-3.5 rounded-xl text-base md:text-lg font-semibold hover:opacity-90 transition disabled:opacity-60"
           >
             {loading ? "Logging in..." : "Login"}
           </button>

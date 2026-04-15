@@ -7,6 +7,11 @@ import { sendWhatsAppMessage } from "../utils/sendWhatsApp.js";
 
 dotenv.config();
 
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
 const router = express.Router();
 const prisma = new PrismaClient();
 const MessagingResponse = twilio.twiml.MessagingResponse;
@@ -17,22 +22,32 @@ const MessagingResponse = twilio.twiml.MessagingResponse;
 const sessions = {};
 
 /* =========================
-   📦 SAVE VIA CONTROLLER
+   📦 SAVE VIA CONTROLLER (FIXED)
 ========================= */
 async function saveBookingAPI(phone, data) {
   try {
     console.log("📤 Sending booking to backend...");
 
+    // ✅ FORMAT PHONE (same as website)
+    const digits = phone.replace(/\D/g, "").slice(-10);
+    const formattedPhone = `+91 ${digits.slice(0, 5)}-${digits.slice(5)}`;
+
+    // ✅ FORMAT DATE (FIXED - NO TIMEZONE ISSUE)
+const [dd, mm, yyyy] = data.date.split("/");
+
+const formattedDate = new Date(
+  Date.UTC(yyyy, mm - 1, dd)
+).toISOString();
     const response = await axios.post(
       "http://localhost:4000/api/public/service-bookings",
       {
-        mobileNumber: phone,
-        vehicleNumber: data.vehicle, // ✅ VERY IMPORTANT
+        mobileNumber: formattedPhone, 
+        vehicleNumber: data.vehicle,
         vehiclePart: data.part.toUpperCase().replace(/ /g, "_"),
         serviceType: mapServiceType(data.service),
-        preferredDate: formatDate(data.date),
+        preferredDate: formattedDate, 
         timeSlot: data.time,
-        notes: `Vehicle: ${data.vehicle} | WhatsApp`,
+       notes: `${data.issue} | Vehicle: ${data.vehicle} | WhatsApp`,
       }
     );
 
@@ -106,245 +121,312 @@ async function processMessage(phone, message) {
 
   try {
 
-    /* ===== MAIN MENU ===== */
-    if (session.state === "main_menu") {
+    /* =========================
+   🏁 MAIN MENU
+========================= */
+if (session.state === "main_menu") {
 
   if (
     message.startsWith("hi") ||
     message.startsWith("hello") ||
     message === "start"
   ) {
+    session.state = "main_choice";
 
-    const existingCustomer = await prisma.customer.findFirst({
-      where: {
-        mobileNumber: phone.slice(-10),
-      },
-    });
+    return `Hi! What would you like to do?
 
-    // ❌ NEW USER
-    if (!existingCustomer) {
-  session.state = "guest_menu";
-
-  return `Welcome!
-
-What would you like to do?
-
-1. Bike Info
-2. Get Brochure
-3. Book Test Ride`;
-}
-    // ✅ EXISTING USER
-    session.state = "existing_menu";
-
-    return ` Welcome!
-
-1️ Book Service
-2️ Bike Info
-3️ View Brochure
-4️ Download Brochure`;
+1️⃣ Sales
+2️⃣ Service`;
   }
 
+  return "Type 'hi' to start";
+}
+
+
+/* =========================
+   🔘 MAIN CHOICE
+========================= */
+if (session.state === "main_choice") {
+
+  if (message === "sales") message = "1";
+  if (message === "service") message = "2";
+
+  /* ===== SALES ===== */
   if (message === "1") {
-    session.state = "service_type";
-    return `🔧 Select Service Type:
-1. General Complaint
-2. Battery Complaint
-3. Charger Complaint
-4. Paid Service with Repairable Complaints
-5. Paid Service with Warranty Replacement
-6. Spares Parts Dispatch`;
+    session.state = "sales_menu";
+
+   return `💼 Sales Options:
+
+1️⃣ Book Test Ride
+2️⃣ Get Brochure
+3️⃣ Speak to Sales`;
+  }
+
+  /* ===== SERVICE ===== */
+  if (message === "2") {
+    session.state = "service_menu";
+
+    return `🔧 Service Options:
+
+1️⃣ Bike Issue
+2️⃣ Locate Service Center
+3️⃣ Speak to Service`;
+  }
+
+  return "❌ Please choose 1 or 2";
+}
+
+/* =========================
+   💼 SALES MENU 
+========================= */
+if (session.state === "sales_menu") {
+
+  if (message === "1") {
+    session.state = "test_ride_bike";
+
+    return `🏍️ Select Bike:
+
+1️⃣ Flee High Speed
+2️⃣ Flee Low Speed`;
   }
 
   if (message === "2") {
-    return `🚀 Flee High Speed • Range: 120km • Top Speed: 75 km/h
-⚡ Flee Low Speed • Range: 90km • Top Speed: 60 km/h`;
-  }
-
- if (message === "3") {
-  return `📄 View Brochure:
-${BROCHURE_URL}`;
-}
-
-if (message === "4") {
-  return `⬇️ Download Brochure:
-${BROCHURE_URL}`;
-}
-
-  return "Please choose 1, 2, 3 or 4";
-}
-/* ===== GUEST MENU ===== */
-if (session.state === "guest_menu") {
-
-  if (message === "1") {
-    return `🚀 Flee High Speed • Range: 120km • Top Speed: 75 km/h
-⚡ Flee Low Speed • Range: 90km • Top Speed: 60 km/h`;
-  }
-
-  else if (message === "2") {
     return {
       type: "media",
       body: "📄 Here is our brochure"
     };
   }
 
-  else if (message === "3") {
-    session.state = "test_ride_bike";
-    return "🏍️ Select Bike:\n\n1️⃣ Flee Low Speed\n2️⃣ Flee High Speed";
+  if (message === "3") {
+    return "📞 Call Sales: +91 70199 08703";
   }
 
-  // ✅ ADD THIS (IMPORTANT FIX)
-  else if (
-    message === "hi" ||
-    message === "hello" ||
-    message === "start"
-  ) {
-    return `Welcome!
+  return `❌ Please choose:
 
-What would you like to do?
+1️⃣ Book Test Ride
+2️⃣ Get Brochure
+3️⃣ Speak to Sales`;
+}
 
-1. Bike Info
-2. Get Brochure
-3. Book Test Ride`;
+/* =========================
+   🔧 SERVICE FLOW (CLEAN)
+========================= */
+
+if (session.state === "service_menu") {
+
+  if (message === "1") {
+    session.state = "service_issue";
+    return "Please describe your issue.";
   }
 
-  else {
-    return "Invalid option. Please select 1, 2 or 3.";
+  if (message === "2") {
+    return "📍 Service Center: Bangalore";
+  }
+
+  if (message === "3") {
+    return "📞 Call Service: +91 82172 54248";
+  }
+
+  return "❌ Choose 1, 2 or 3";
+}
+
+
+/* =========================
+   🔧 ISSUE
+========================= */
+if (session.state === "service_issue") {
+
+  data.issue = message;
+
+  session.state = "vehicle_number";
+
+  return "🚗 Enter your vehicle number";
+}
+
+
+/* =========================
+   🚗 VEHICLE (VALIDATE)
+========================= */
+if (session.state === "vehicle_number") {
+
+  const vehicleInput = message.toUpperCase().trim();
+
+  try {
+    const res = await axios.get(`http://localhost:4000/api/public/vehicles/${vehicleInput}`);
+
+    if (!res.data) {
+      return "❌ Vehicle not found. Please enter a valid vehicle number.";
+    }
+
+    data.vehicle = vehicleInput;
+
+    session.state = "vehicle_part";
+
+    return `Select affected part:
+
+1️⃣ Battery
+2️⃣ Brakes
+3️⃣ Display
+4️⃣ Body
+5️⃣ Carrier
+6️⃣ Chassis
+7️⃣ Rust
+8️⃣ Wheels
+9️⃣ Foot Board
+🔟 All Switches
+11️⃣ Lights & Indicators
+12️⃣ Solenoid
+13️⃣ Mudguards
+14️⃣ Charger`;
+
+  } catch (err) {
+    return "❌ Vehicle not found. Please enter a valid vehicle number.";
   }
 }
-    /* ===== SERVICE TYPE ===== */
-    if (session.state === "service_type") {
 
-      const services = {
-        "1": "General Complaint",
-        "2": "Battery Complaint",
-        "3": "Charger Complaint",
-        "4": "Paid Service with Repairable Complaints",
-        "5": "Paid Service with Warranty Replacement",
-        "6": "Spares Parts Dispatch",
-      };
 
-      if (!services[message]) {
-        return "❌ Invalid choice. Select 1–6";
-      }
+/* =========================
+   🔧 PART
+========================= */
+if (session.state === "vehicle_part") {
 
-      data.service = services[message];
-      session.state = "vehicle_part";
+  const parts = {
+    "1": "Battery",
+    "2": "Brakes",
+    "3": "Display",
+    "4": "Body",
+    "5": "Carrier",
+    "6": "Chassis",
+    "7": "Rust",
+    "8": "Wheels",
+    "9": "Foot Board",
+    "10": "All Switches",
+    "11": "Lights & Indicators",
+    "12": "Solenoid",
+    "13": "Mudguards",
+    "14": "Charger",
+  };
 
-      return `🔩 Select Vehicle Part:
-1. Battery
-2. Brakes
-3. Display
-4. Body
-5. Carrier
-6. Chassis
-7. Rust
-8. Wheels
-9. Foot Board
-10. All Switches
-11. Lights & Indicators
-12. Solenoid
-13. Mudguards
-14. Charger`;
-    }
+  const selectedPart = parts[message];
 
-    /* ===== VEHICLE PART ===== */
-    if (session.state === "vehicle_part") {
+  if (!selectedPart) {
+    return "❌ Invalid choice. Select 1–14";
+  }
 
-      const parts = {
-        "1": "Battery",
-        "2": "Brakes",
-        "3": "Display",
-        "4": "Body",
-        "5": "Carrier",
-        "6": "Chassis",
-        "7": "Rust",
-        "8": "Wheels",
-        "9": "Foot Board",
-        "10": "All Switches",
-        "11": "Lights & Indicators",
-        "12": "Solenoid",
-        "13": "Mudguards",
-        "14": "Charger",
-      };
+  data.part = selectedPart;
 
-      const selectedPart = parts[message];
+  session.state = "service_type";
 
-      if (!selectedPart) {
-        return "Invalid choice. Select 1–14";
-      }
+  return `🔧 Select service type:
 
-      if (data.service === "Battery Complaint" && selectedPart !== "Battery") {
-        return " For Battery Complaint, select Battery";
-      }
+1️⃣ General Service
+2️⃣ General Complaint
+3️⃣ Battery Complaint
+4️⃣ Charger Complaint
+5️⃣ Paid Service with Repairable Complaints
+6️⃣ Paid Service with Warranty Replacement
+7️⃣ Spares Parts Dispatch`;
+}
 
-      if (data.service === "Charger Complaint" && selectedPart !== "Charger") {
-        return " For Charger Complaint, select Charger";
-      }
 
-      data.part = selectedPart;
-      session.state = "vehicle_number";
+/* =========================
+   🔧 SERVICE TYPE
+========================= */
+if (session.state === "service_type") {
 
-      return "🚗 Enter vehicle number";
-    }
+  const types = {
+    "1": "GENERAL_SERVICE",
+    "2": "GENERAL_COMPLAINT",
+    "3": "BATTERY_COMPLAINT",
+    "4": "CHARGER_COMPLAINT",
+    "5": "PAID_SERVICE_REPAIR",
+    "6": "PAID_SERVICE_WARRANTY",
+    "7": "SPARES_PARTS_DISPATCH",
+  };
 
-    /* ===== VEHICLE NUMBER ===== */
-    if (session.state === "vehicle_number") {
-      data.vehicle = message.toUpperCase();
-      session.state = "service_date";
+  const labels = {
+    "1": "General Service",
+    "2": "General Complaint",
+    "3": "Battery Complaint",
+    "4": "Charger Complaint",
+    "5": "Paid Service with Repairable Complaints",
+    "6": "Paid Service with Warranty Replacement",
+    "7": "Spares Parts Dispatch",
+  };
 
-      return "📅 Enter preferred date (DD/MM/YYYY)";
-    }
+  const selectedType = types[message];
 
-    /* ===== DATE ===== */
-    if (session.state === "service_date") {
-      data.date = message;
+  if (!selectedType) {
+    return "❌ Select 1–7";
+  }
 
-      data.location =
-        "3/2, Magrath Road, Richmond Town, Bengaluru – 560025";
+  data.serviceType = selectedType;
+  data.serviceLabel = labels[message];
 
-      session.state = "service_time";
+  session.state = "service_date";
 
-      return `🏢 Service Location:
+  return "📅 Enter preferred date (DD/MM/YYYY)";
+}
+
+
+/* =========================
+   📅 DATE
+========================= */
+if (session.state === "service_date") {
+
+  data.date = message;
+
+  data.location =
+    "3/2, Magrath Road, Richmond Town, Bengaluru – 560025";
+
+  session.state = "service_time";
+
+  return `🏢 Service Location:
 3/2, Magrath Road, Richmond Town, Bengaluru
 
 ⏰ Choose time slot:
 1. 10:30–12 AM
 2. 2–3 PM
 3. 3–5 PM`;
-    }
+}
 
-    /* ===== TIME SLOT ===== */
-    if (session.state === "service_time") {
 
-      const slots = {
-        "1": "10:30–12 AM",
-        "2": "2–3 PM",
-        "3": "3–5 PM",
-      };
+/* =========================
+   ⏰ TIME + BOOKING
+========================= */
+if (session.state === "service_time") {
 
-      if (!slots[message]) {
-        return "❌ Choose 1, 2 or 3";
-      }
+  const slots = {
+    "1": "10:30–12 AM",
+    "2": "2–3 PM",
+    "3": "3–5 PM",
+  };
 
-      data.time = slots[message];
+  if (!slots[message]) {
+    return "❌ Choose 1, 2 or 3";
+  }
 
-      const result = await saveBookingAPI(phone, data);
+  data.time = slots[message];
 
-      if (!result.success) {
-        return `❌ ${result.message}`;
-      }
+  const result = await saveBookingAPI(phone, data);
 
-      delete sessions[phone];
+  if (!result.success) {
+    return `❌ ${result.message}`;
+  }
 
-      return `✅ Service Booked!
+  delete sessions[phone];
 
-Service: ${data.service}
-Part: ${data.part}
+  return `✅ Service Booked!
+
 Vehicle: ${data.vehicle}
+Issue: ${data.issue}
+Part: ${data.part}
+Service: ${data.serviceLabel}
 Date: ${data.date}
-Location: ${data.location}
-Time: ${data.time}`;
-    }
+Time: ${data.time}
+Location: ${data.location}`;
+}
+
 /* ===== TEST RIDE FLOW ===== */
 
 // STEP 1 — ENTRY (from guest menu)
@@ -399,19 +481,19 @@ if (session.state === "test_ride_date") {
 
   return `⏰ Select time slot:
 
-1️⃣ 10:30–12 AM
-2️⃣ 2–3 PM
-3️⃣ 3–5 PM`;
+1️⃣ 11:00 AM
+2️⃣ 12:00 PM
+3️⃣ 1:00 PM`;
 }
 
 // STEP 5 — TIME
 if (session.state === "test_ride_time") {
 
   const slots = {
-    "1": "10:30–12 AM",
-    "2": "2–3 PM",
-    "3": "3–5 PM",
-  };
+  "1": "11:00 AM",
+  "2": "12:00 PM",
+  "3": "1:00 PM",
+};
 
   if (!slots[message]) return "❌ Select 1–3";
 
@@ -534,10 +616,8 @@ router.post("/", async (req, res) => {
     const phone = From.replace("whatsapp:", "");
     console.log(`📩 ${phone}: ${Body}`);
 
-    // ✅ Respond immediately to Twilio
     res.status(200).send("OK");
 
-    // 🔥 Process chatbot
     const reply = await processMessage(phone, Body);
 
     console.log("REPLY:", reply);

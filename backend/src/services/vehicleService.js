@@ -139,3 +139,17 @@ export const deleteVehicle = async (id) => {
   await prisma.vehicle.delete({ where: { id: Number(id) } });
   return true;
 };
+// ✅ NEW: Get vehicle by VIN / Registration
+export const getVehicleByNumber = async (vehicleNumber) => {
+  const input = String(vehicleNumber).trim();
+
+  return prisma.vehicle.findFirst({
+    where: {
+      OR: [
+        { vinNumber: input },
+        { registrationNumber: input },
+      ],
+    },
+    include: { customer: true, jobCards: true },
+  });
+};

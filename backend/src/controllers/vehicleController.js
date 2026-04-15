@@ -80,3 +80,20 @@ export const deleteVehicle = async (req, res) => {
   }
 };
 
+// ✅ NEW: Get vehicle by VIN / Registration
+export const getVehicleByNumber = async (req, res) => {
+  try {
+    const { vehicleNumber } = req.params;
+
+    const vehicle = await vehicleService.getVehicleByNumber(vehicleNumber);
+
+    if (!vehicle) {
+      return res.status(404).json({ error: "Vehicle not found" });
+    }
+
+    res.status(200).json(vehicle);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

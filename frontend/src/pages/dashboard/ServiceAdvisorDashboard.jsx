@@ -225,100 +225,97 @@ log.technicianName ||
 
 }
 
-
 /* ===============================
    REUSABLE TABLE
 =============================== */
 
-function Table({headers,children}){
+function Table({ headers, children }) {
+  return (
+    <div style={{ width: "100%", overflowX: "auto" }}>
 
-return(
+      <table
+        style={{
+          width: "100%",
+          minWidth: "900px",          // ✅ keeps table wide
+          borderCollapse: "collapse",
+          marginTop: 12,
+          background: "#ffffff",
+          borderRadius: 8,
+        }}
+      >
 
-<table
-style={{
-width:"100%",
-borderCollapse:"collapse",
-marginTop:12,
-background:"#ffffff",
-borderRadius:8,
-overflow:"hidden"
-}}
->
+        <thead style={{ background: "#f1f5f9" }}>
+          <tr>
+            {headers.map((h) => (
+              <th
+                key={h}
+                style={{
+                  padding: "10px 12px",
+                  textAlign: "left",
+                  fontSize: 15,
+                  borderBottom: "1px solid #e5e7eb",
+                  color: "#111827",
+                  whiteSpace: "nowrap",   // ✅ KEEP HEADER CLEAN
+                }}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-<thead style={{background:"#f1f5f9"}}>
+        <tbody>{children}</tbody>
 
-<tr>
+      </table>
 
-{headers.map(h=>(
-<th
-key={h}
-style={{
-padding:10,
-textAlign:"left",
-fontSize:13,
-borderBottom:"1px solid #e5e7eb",
-color:"#111827"
-}}
->
-{h}
-</th>
-))}
-
-</tr>
-
-</thead>
-
-<tbody>
-{children}
-</tbody>
-
-</table>
-
-);
-
+    </div>
+  );
 }
 
 
-function Td({children,style}){
+/* ===============================
+   TABLE CELL
+=============================== */
 
-return(
+function Td({ children, style }) {
+  return (
+    <td
+      style={{
+        padding: "10px 12px",
+        fontSize: 14,
+        borderBottom: "1px solid #e5e7eb",
+        color: "#111827",
 
-<td
-style={{
-padding:10,
-fontSize:13,
-borderBottom:"1px solid #e5e7eb",
-color:"#111827",
-...style
-}}
->
-{children}
-</td>
+        whiteSpace: "normal",        // ✅ ALLOW WRAP
+        wordBreak: "break-all",      // 🔥 BREAK LONG TEXT (8888...)
+        overflowWrap: "anywhere",    // 🔥 MODERN FIX
 
-);
-
+        ...style,
+      }}
+    >
+      {children}
+    </td>
+  );
 }
 
 
-function EmptyRow({colSpan,text}){
+/* ===============================
+   EMPTY ROW
+=============================== */
 
-return(
-
-<tr>
-
-<td
-colSpan={colSpan}
-style={{
-padding:16,
-textAlign:"center",
-color:"#111827"
-}}
->
-{text}
-</td>
-
-</tr>
-
-);
-
+function EmptyRow({ colSpan, text }) {
+  return (
+    <tr>
+      <td
+        colSpan={colSpan}
+        style={{
+          padding: 14,
+          textAlign: "center",
+          color: "#111827",
+        }}
+      >
+        {text}
+      </td>
+    </tr>
+  );
 }
