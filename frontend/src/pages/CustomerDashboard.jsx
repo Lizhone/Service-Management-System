@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import client from "../api/client";
 import { useAuth } from "../hooks/useAuth";
 import { Pencil } from "lucide-react";
-import Cropper from "react-easy-crop";
-import "react-easy-crop/react-easy-crop.css";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 
 export default function CustomerDashboard() {
 
@@ -18,12 +18,18 @@ const [loadingJobs, setLoadingJobs] = useState(true);
 const [loadingBookings, setLoadingBookings] = useState(true);
 const [error, setError] = useState("");
 const [profile, setProfile] = useState(null);
-
+const [completedCrop, setCompletedCrop] = useState(null);
+const imgRef = useRef(null);
 const [bikeImage, setBikeImage] = useState("");
 const fileInputRef = useRef(null);
-const [crop, setCrop] = useState({ x: 0, y: 0 });
-const [zoom, setZoom] = useState(1);
-const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+const [crop, setCrop] = useState({
+  unit: "%",
+  width: 95,
+  height: 90,
+  x: 2,
+  y: 5,
+});
 const [showCropper, setShowCropper] = useState(false);
 const [imageSrc, setImageSrc] = useState(null);
 
@@ -121,6 +127,15 @@ if (loading || !user) return null;
 
 const primaryVehicle = vehicles[0];
 
+useEffect(() => {
+  if (!user) return;
+
+  const savedImage = localStorage.getItem(`bikeImage_${user.id}`);
+  if (savedImage) {
+    setBikeImage(savedImage);
+  }
+}, [user]);
+
 const getBikeImage = (model) => {
 if (!model) return "/bikes/flee-b1/default.png";
 return `/bikes/flee-${model.toLowerCase()}/default.png`;
@@ -138,10 +153,10 @@ const handleBikeImageUpload = (e) => {
 
   reader.readAsDataURL(file);
 };
-const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-  setCroppedAreaPixels(croppedAreaPixels);
-}, []);
+
 const getCroppedImg = async (imageSrc, crop) => {
+  if (!crop || !crop.width || !crop.height) return null;
+
   const image = new Image();
   image.src = imageSrc;
 
@@ -152,26 +167,49 @@ const getCroppedImg = async (imageSrc, crop) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  canvas.width = crop.width;
-  canvas.height = crop.height;
+  const displayedWidth = imgRef.current.width;
+  const displayedHeight = imgRef.current.height;
+
+  const scaleX = image.naturalWidth / displayedWidth;
+  const scaleY = image.naturalHeight / displayedHeight;
+
+  const pixelCrop = {
+    x: crop.x * scaleX,
+    y: crop.y * scaleY,
+    width: crop.width * scaleX,
+    height: crop.height * scaleY,
+  };
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
   ctx.drawImage(
     image,
-    crop.x,
-    crop.y,
-    crop.width,
-    crop.height,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
     0,
     0,
-    crop.width,
-    crop.height
+    pixelCrop.width,
+    pixelCrop.height
   );
 
-  return canvas.toDataURL("image/jpeg");
+  return canvas.toDataURL("image/jpeg", 1);
 };
+
 const saveCrop = async () => {
-  const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+  if (!completedCrop || !completedCrop.width || !completedCrop.height) {
+    alert("Please select crop area");
+    return;
+  }
+
+  const croppedImage = await getCroppedImg(imageSrc, completedCrop);
+
   setBikeImage(croppedImage);
+
+  // ✅ SAVE
+  localStorage.setItem(`bikeImage_${user.id}`, croppedImage);
   setShowCropper(false);
 };
 
@@ -367,31 +405,21 @@ return ( <div className="min-h-screen bg-[#01263B] text-white p-4 md:p-8">
   {showCropper && (
   <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
 
-    <div className="bg-gray-900 p-6 rounded-xl w-[600px]">
+    <div className="bg-gray-900 p-6 rounded-xl w-[800px] max-w-[95vw]">
+      <div className="relative w-full h-[550px] flex items-center justify-center bg-black rounded-lg overflow-hidden">
+        <ReactCrop
+  crop={crop}
+  onChange={(c) => setCrop(c)}
+  onComplete={(c) => setCompletedCrop(c)}
+>
+  <img
+  ref={imgRef}
+  src={imageSrc}
+  alt="Crop"
+ className="max-h-[1500px] max-w-full object-contain"
+/>
+</ReactCrop>
 
-      <div className="relative w-full h-[400px] bg-black rounded-lg overflow-hidden">
-
-  <Cropper
-    image={imageSrc}
-    crop={crop}
-    zoom={zoom}
-    aspect={16 / 9}
-    onCropChange={setCrop}
-    onZoomChange={setZoom}
-    onCropComplete={onCropComplete}
-  />
-
-</div>
-<div className="mt-4">
-  <input
-    type="range"
-    min={1}
-    max={3}
-    step={0.1}
-    value={zoom}
-    onChange={(e) => setZoom(e.target.value)}
-    className="w-full"
-  />
 </div>
 
       <div className="flex justify-between mt-4">

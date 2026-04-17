@@ -95,7 +95,7 @@ export default function TechnicianJobDetail() {
     await client.post(`/work-logs/job-cards/${jobCardId}/work-log`, {
       taskName,
       description,
-      technicianName   // ✅ NOW DEFINED
+      technicianName   
     });
 
     // 2️⃣ TRY updating backend (may fail)
@@ -218,6 +218,20 @@ const handleComplete = async () => {
 
     }
   };
+
+  const getMediaUrl = (m) => {
+  const raw = m.fileUrl || m.filePath;
+
+  if (!raw) return "";
+
+  // if already full URL
+  if (raw.startsWith("http")) {
+    return raw;
+  }
+
+  // if relative path
+  return `http://localhost:4000${raw}`;
+};
 
   /* ================= LOADING ================= */
 
@@ -439,57 +453,69 @@ const handleComplete = async () => {
 
       )}
 
-      {/* ================= MEDIA DISPLAY ================= */}
+      {mediaList.map((m) => {
+  const url = getMediaUrl(m);
+  const lower = url.toLowerCase();
 
-      {mediaList.length > 0 && (
+  let content;
 
-        <div className="mt-8">
+  if (
+    lower.endsWith(".mp4") ||
+    lower.endsWith(".mov") ||
+    lower.endsWith(".webm")
+  ) {
+    content = (
+      <video
+        src={url}
+        controls
+        className="rounded w-full h-auto object-contain"
+      />
+    );
+  } else if (
+    lower.endsWith(".jpg") ||
+    lower.endsWith(".jpeg") ||
+    lower.endsWith(".png") ||
+    lower.endsWith(".webp") ||
+    lower.endsWith(".gif")
+  ) {
+    content = (
+  <div className="flex justify-center">
+    <img
+      src={url}
+      alt="Work proof"
+      className="rounded max-h-[400px] w-auto object-contain"
+    />
+  </div>
+);
+  } else {
+    content = (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-gray-800 p-4 rounded text-center"
+      >
+        📎 Open File
+      </a>
+    );
+  }
 
-          <h3 className="text-xl font-semibold mb-4">
-            Uploaded Media
-          </h3>
+  return (
+    <div key={m.id} className="relative">
 
-          <div className="grid grid-cols-3 gap-4">
+      {content}
 
-            {mediaList.map((m) => (
-
-              <div key={m.id} className="relative">
-
-                {m.fileType === "VIDEO" ? (
-
-                  <video
-                    src={`http://localhost:4000${m.fileUrl || m.filePath}`}
-                    controls
-                    className="rounded"
-                  />
-
-                ) : (
-
-                  <img
-                    src={`http://localhost:4000${m.fileUrl || m.filePath}`}
-                    alt="Work proof"
-                    className="rounded"
-                  />
-
-                )}
-
-                <button
-                  onClick={() => handleDeleteMedia(m.id)}
-                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-xs px-2 py-1 rounded"
-                >
-                  Delete
-                </button>
-
-              </div>
-
-            ))}
-
-          </div>
-
-        </div>
-
-      )}
+      <button
+        onClick={() => handleDeleteMedia(m.id)}
+        className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-xs px-2 py-1 rounded"
+      >
+        Delete
+      </button>
 
     </div>
+  );
+})}
+    </div>
+
   );
 }

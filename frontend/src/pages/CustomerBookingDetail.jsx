@@ -168,7 +168,7 @@ export default function CustomerBookingDetail() {
       key={`booking-${m.id}`}
       src={`http://localhost:4000${m.fileUrl}`}
       alt="Booking proof"
-      className="rounded shadow"
+      className="rounded shadow max-h-[400px] w-auto object-contain mx-auto"
     />
   ) : (
     <video key={`booking-${m.id}`} controls className="rounded shadow">

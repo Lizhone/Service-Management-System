@@ -10,11 +10,11 @@ import logo from "../../assets/logo.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#01263B] text-white pt-16 pb-10">
+    <footer className="bg-[#01263B] text-white pt-10 pb-6">
       <div className="w-full px-10 2xl:px-16">
 
         {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-16 mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-10 mb-8">
 
           {/* Logo + Address */}
           <div>
@@ -22,13 +22,13 @@ export default function Footer() {
               <img
                 src={logo}
                 alt="InGO Logo"
-                className="h-44 mb-6 object-contain"
+                className="h-28 mb-4 object-contain"
               />
             </Link>
 
-            <div className="space-y-3 text-cyan-100/80 text-2xl">
+            <div className="space-y-3 text-cyan-100/80 text-xl">
               <p>3/2, Magrath Road</p>
-              <p>Richmond Town, Bengaluru – 560025</p>
+              <p>Bengaluru – 560025</p>
 
               <p className="pt-2">
                 <span className="font-semibold text-white">Sales:</span>{" "}
@@ -41,14 +41,14 @@ export default function Footer() {
               </p>
 
               <p className="pt-2">
-                🕒 Mon – Sat, 9:00 AM – 7:00 PM
+              🕒 Mon – Sat, 9:00 AM – 7:00 PM
               </p>
             </div>
           </div>
 
           {/* Service Management */}
           <div>
-            <h3 className="text-3xl font-semibold mb-6 text-cyan-300">
+            <h3 className="text-2xl font-semibold mb-6 text-cyan-300">
               Service Management
             </h3>
             <p className="text-cyan-100/80 text-2xl leading-relaxed">
@@ -59,7 +59,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-3xl font-semibold mb-6 text-cyan-300">
+            <h3 className="text-2xl font-semibold mb-6 text-cyan-300">
               Quick Links
             </h3>
             <ul className="space-y-4 text-cyan-100/80 text-2xl">
@@ -78,7 +78,7 @@ export default function Footer() {
 
           {/* Follow Us */}
           <div className="lg:text-cnetred">
-            <h3 className="text-3xl font-semibold mb-6 text-cyan-300">
+            <h3 className="text-2xl font-semibold mb-6 text-cyan-300">
               Follow Us
             </h3>
 

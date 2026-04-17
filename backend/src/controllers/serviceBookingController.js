@@ -56,7 +56,7 @@ if (req.user && req.user.id) {
     }
 
     /* =====================================================
-   3. WHATSAPP FLOW (VEHICLE BASED - FIXED)
+   3. WHATSAPP FLOW 
 ===================================================== */
 else if (req.body.mobileNumber) {
   console.log("📱 WHATSAPP FLOW");

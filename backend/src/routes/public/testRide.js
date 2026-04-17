@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
       data: {
         bikeName,
         location,
-        date: new Date(date), // ✅ ensure DateTime
+        date: new Date(date), 
         timeSlot,
         fullName,
         phone,
@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
 
     res.status(500).json({
       error: "Failed to create test ride",
-      details: error.message, // ✅ helpful debugging
+      details: error.message, 
     });
   }
 });

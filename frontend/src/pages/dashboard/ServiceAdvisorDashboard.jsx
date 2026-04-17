@@ -236,7 +236,7 @@ function Table({ headers, children }) {
       <table
         style={{
           width: "100%",
-          minWidth: "900px",          // ✅ keeps table wide
+          minWidth: "900px",          
           borderCollapse: "collapse",
           marginTop: 12,
           background: "#ffffff",
@@ -255,7 +255,7 @@ function Table({ headers, children }) {
                   fontSize: 15,
                   borderBottom: "1px solid #e5e7eb",
                   color: "#111827",
-                  whiteSpace: "nowrap",   // ✅ KEEP HEADER CLEAN
+                  whiteSpace: "nowrap",   
                 }}
               >
                 {h}
@@ -286,9 +286,9 @@ function Td({ children, style }) {
         borderBottom: "1px solid #e5e7eb",
         color: "#111827",
 
-        whiteSpace: "normal",        // ✅ ALLOW WRAP
-        wordBreak: "break-all",      // 🔥 BREAK LONG TEXT (8888...)
-        overflowWrap: "anywhere",    // 🔥 MODERN FIX
+        whiteSpace: "normal",        
+        wordBreak: "break-all",      
+        overflowWrap: "anywhere",    
 
         ...style,
       }}

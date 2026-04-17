@@ -82,7 +82,7 @@ function mapServiceType(service) {
     "Spares Parts Dispatch": "SPARES_DISPATCH",
   };
 
-  return map[service] || "GENERAL";
+  return map[service] || "";
 }
 
 function formatDate(dateStr) {
@@ -135,8 +135,8 @@ if (session.state === "main_menu") {
 
     return `Hi! What would you like to do?
 
-1️⃣ Sales
-2️⃣ Service`;
+1️ Sales
+2️ Service`;
   }
 
   return "Type 'hi' to start";
@@ -157,9 +157,9 @@ if (session.state === "main_choice") {
 
    return `💼 Sales Options:
 
-1️⃣ Book Test Ride
-2️⃣ Get Brochure
-3️⃣ Speak to Sales`;
+1️ Book Test Ride
+2️ Get Brochure
+3️ Speak to Sales`;
   }
 
   /* ===== SERVICE ===== */
@@ -168,9 +168,9 @@ if (session.state === "main_choice") {
 
     return `🔧 Service Options:
 
-1️⃣ Bike Issue
-2️⃣ Locate Service Center
-3️⃣ Speak to Service`;
+1️ Bike Issue
+2️ Locate Service Center
+3️ Speak to Service`;
   }
 
   return "❌ Please choose 1 or 2";
@@ -186,8 +186,8 @@ if (session.state === "sales_menu") {
 
     return `🏍️ Select Bike:
 
-1️⃣ Flee High Speed
-2️⃣ Flee Low Speed`;
+1️ Flee High Speed
+2️ Flee Low Speed`;
   }
 
   if (message === "2") {
@@ -203,9 +203,9 @@ if (session.state === "sales_menu") {
 
   return `❌ Please choose:
 
-1️⃣ Book Test Ride
-2️⃣ Get Brochure
-3️⃣ Speak to Sales`;
+1️ Book Test Ride
+2️ Get Brochure
+3️ Speak to Sales`;
 }
 
 /* =========================
@@ -264,20 +264,20 @@ if (session.state === "vehicle_number") {
 
     return `Select affected part:
 
-1️⃣ Battery
-2️⃣ Brakes
-3️⃣ Display
-4️⃣ Body
-5️⃣ Carrier
-6️⃣ Chassis
-7️⃣ Rust
-8️⃣ Wheels
-9️⃣ Foot Board
-🔟 All Switches
-11️⃣ Lights & Indicators
-12️⃣ Solenoid
-13️⃣ Mudguards
-14️⃣ Charger`;
+1️ Battery
+2️ Brakes
+3️ Display
+4️ Body
+5️ Carrier
+6️ Chassis
+7️ Rust
+8️ Wheels
+9️ Foot Board
+10 All Switches
+11️ Lights & Indicators
+12️ Solenoid
+13️ Mudguards
+14️ Charger`;
 
   } catch (err) {
     return "❌ Vehicle not found. Please enter a valid vehicle number.";
@@ -319,13 +319,13 @@ if (session.state === "vehicle_part") {
 
   return `🔧 Select service type:
 
-1️⃣ General Service
-2️⃣ General Complaint
-3️⃣ Battery Complaint
-4️⃣ Charger Complaint
-5️⃣ Paid Service with Repairable Complaints
-6️⃣ Paid Service with Warranty Replacement
-7️⃣ Spares Parts Dispatch`;
+1️ General Service
+2️ General Complaint
+3️ Battery Complaint
+4️ Charger Complaint
+5️ Paid Service with Repairable Complaints
+6️ Paid Service with Warranty Replacement
+7️ Spares Parts Dispatch`;
 }
 
 
@@ -408,15 +408,39 @@ if (session.state === "service_time") {
 
   data.time = slots[message];
 
-  const result = await saveBookingAPI(phone, data);
+ data.time = slots[message];
 
-  if (!result.success) {
-    return `❌ ${result.message}`;
-  }
+// 👉 MOVE TO CONFIRM STEP
+session.state = "service_confirm";
 
-  delete sessions[phone];
+return `Please confirm your Service Booking:
 
-  return `✅ Service Booked!
+Vehicle: ${data.vehicle}
+Issue: ${data.issue}
+Part: ${data.part}
+Service: ${data.serviceLabel}
+Date: ${data.date}
+Time: ${data.time}
+Location: ${data.location}
+
+Reply YES to confirm or NO to cancel`;
+}
+/* =========================
+   ✅ SERVICE CONFIRMATION
+========================= */
+if (session.state === "service_confirm") {
+
+  if (message === "yes") {
+
+    const result = await saveBookingAPI(phone, data);
+
+    if (!result.success) {
+      return `❌ ${result.message}`;
+    }
+
+    delete sessions[phone];
+
+    return `✅ Service Booked!
 
 Vehicle: ${data.vehicle}
 Issue: ${data.issue}
@@ -425,6 +449,14 @@ Service: ${data.serviceLabel}
 Date: ${data.date}
 Time: ${data.time}
 Location: ${data.location}`;
+  }
+
+  if (message === "no") {
+    delete sessions[phone];
+    return "❌ Booking cancelled. Type 'hi' to restart.";
+  }
+
+  return "Please reply YES or NO.";
 }
 
 /* ===== TEST RIDE FLOW ===== */
@@ -435,8 +467,8 @@ if (session.state === "guest_menu" && message === "3") {
 
   return `🏍️ Select Bike:
 
-1️⃣ Flee Low Speed
-2️⃣ Flee High Speed`;
+1️ Flee Low Speed
+2️ Flee High Speed`;
 }
 
 // STEP 2 — BIKE
@@ -454,8 +486,8 @@ if (session.state === "test_ride_bike") {
 
   return `📍 Select Location:
 
-1️⃣ Bangalore
-2️⃣ Goa`;
+1️ Bangalore
+2️ Goa`;
 }
 
 // STEP 3 — LOCATION
@@ -481,9 +513,9 @@ if (session.state === "test_ride_date") {
 
   return `⏰ Select time slot:
 
-1️⃣ 11:00 AM
-2️⃣ 12:00 PM
-3️⃣ 1:00 PM`;
+1️ 11:00 AM
+2️ 12:00 PM
+3️ 1:00 PM`;
 }
 
 // STEP 5 — TIME

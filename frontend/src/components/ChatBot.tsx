@@ -51,6 +51,7 @@ export default function ChatBot() {
   name: "",
   phone: "",
   email: "",
+  address:"",
   location: "",
   bike: "",
   date: "",
@@ -128,6 +129,7 @@ export default function ChatBot() {
   name: "",
   phone: "",
   email: "",
+  address:"",
   location: "",
   bike: "",
   date: "",
@@ -231,9 +233,11 @@ export default function ChatBot() {
     setStep("name");
     addMessage({ sender: "bot", text: "Great! What is your name?" });
   }
+  
 
  const handleUserFlow = async (message: string) => {
-    if (step === "service_issue") {
+    
+  if (step === "service_issue") {
   setFormData((p) => ({ ...p, issue: message }));
 
   setStep("service_vehicle");
@@ -245,13 +249,13 @@ export default function ChatBot() {
 
   return;
 }
+
   if (step === "service_vehicle") {
   try {
    const res = await axios.get(
   `http://localhost:4000/api/public/vehicles/${message}`
 );
 
-    // ✅ Vehicle exists
     setFormData((p) => ({ ...p, vehicleNumber: message }));
 
     setStep("service_part");
@@ -265,7 +269,6 @@ export default function ChatBot() {
     );
 
   } catch (err) {
-    // ❌ Vehicle not found
     addMessage({
       sender: "bot",
       text: "❌ Vehicle not found",
@@ -290,7 +293,7 @@ export default function ChatBot() {
       },
     ]);
 
-    setStep("service_vehicle"); // allow retry
+    setStep("service_vehicle"); 
   }
 
   return;
@@ -336,67 +339,91 @@ if (step === "service_date") {
   return;
 }
 
-    if (step === "name") {
-      setFormData((p) => ({ ...p, name: message }));
-      setStep("phone");
-      addMessage({ sender: "bot", text: "Enter your phone number" });
-      return;
-    }
+//** TEST RIDE FLOW */
 
-    if (step === "phone") {
-      if (!/^[6-9]\d{9}$/.test(message)) {
-        addMessage({ sender: "bot", text: "❌ Enter valid phone number" });
-        return;
-      }
+if (step === "name") {
+  setFormData((p) => ({ ...p, name: message }));
+  setStep("phone");
+  addMessage({ sender: "bot", text: "Enter your phone number" });
+  return;
+}
 
-      setFormData((p) => ({ ...p, phone: message }));
-      setStep("email");
-      addMessage({ sender: "bot", text: "Enter your email " });
-      return;
-    }
+if (step === "phone") {
+  if (!/^[6-9]\d{9}$/.test(message)) {
+    addMessage({ sender: "bot", text: "❌ Enter valid phone number" });
+    return;
+  }
 
-    if (step === "email") {
-      if (message && !/^\S+@\S+\.\S+$/.test(message)) {
-        addMessage({ sender: "bot", text: "❌ Invalid email" });
-        return;
-      }
+  setFormData((p) => ({ ...p, phone: message }));
+  setStep("email");
+  addMessage({ sender: "bot", text: "Enter your email" });
+  return;
+}
 
-      setFormData((p) => ({ ...p, email: message }));
-      setStep("location");
-      addMessage({ sender: "bot", text: "Enter your location" });
-      return;
-    }
+/* ================= EMAIL ================= */
+if (step === "email") {
+  if (message && !/^\S+@\S+\.\S+$/.test(message)) {
+    addMessage({ sender: "bot", text: "❌ Invalid email" });
+    return;
+  }
 
-    if (step === "location") {
-      setFormData((p) => ({ ...p, location: message }));
-      setStep("bike");
+  setFormData((p) => ({ ...p, email: message }));
+  setStep("address"); // ✅ NEW STEP
 
-      addOptionsMessage("Select a bike:", [
-        { label: "Flee High Speed", action: () => selectBike("Flee High Speed") },
-        { label: "Flee Low Speed", action: () => selectBike("Flee Low Speed") },
-      ]);
-      return;
-    }
+  addMessage({
+    sender: "bot",
+    text: "🏠 Enter your address (building, street, area, PIN code)",
+  });
 
-    if (step === "date") {
-      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(message)) {
-        addMessage({ sender: "bot", text: "❌ Use format DD/MM/YYYY" });
-        return;
-      }
+  return;
+}
 
-      const updated = { ...formData, date: message };
+/* ================= ADDRESS ================= */
+if (step === "address") {
+  if (!message.trim()) {
+    addMessage({
+      sender: "bot",
+      text: "❌ Address cannot be empty",
+    });
+    return;
+  }
 
-      setFormData(updated);
-      setStep("slot");
+  setFormData((p) => ({ ...p, address: message }));
 
-      addOptionsMessage("Select a time slot:", [
-        { label: "11:00 AM", action: () => selectSlot("11:00 AM", updated) },
-        { label: "12:00 PM", action: () => selectSlot("12:00 PM", updated) },
-        { label: "1:00 PM", action: () => selectSlot("1:00 PM", updated) },
-      ]);
-    }
-  };
-  
+  setStep("bike");
+
+  addOptionsMessage("Select a bike:", [
+    { label: "Flee High Speed", action: () => selectBike("Flee High Speed") },
+    { label: "Flee Low Speed", action: () => selectBike("Flee Low Speed") },
+  ]);
+
+  return;
+}
+/* ================= DATE ================= */
+if (step === "date") {
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(message)) {
+    addMessage({ sender: "bot", text: "❌ Use format DD/MM/YYYY" });
+    return;
+  }
+
+  const updated = { ...formData, date: message };
+
+  setFormData(updated);
+  setStep("slot");
+
+  addOptionsMessage("Select a time slot:", [
+    { label: "11:00 AM", action: () => selectSlot("11:00 AM", updated) },
+    { label: "12:00 PM", action: () => selectSlot("12:00 PM", updated) },
+    { label: "1:00 PM", action: () => selectSlot("1:00 PM", updated) },
+  ]);
+
+  return;
+}
+
+ }
+
+  //** SERVICE FLOW HELPER FUNCTIONS */
+
   const selectPart = (part: string) => {
   setFormData((p) => ({ ...p, part }));
 
@@ -453,7 +480,7 @@ const updated = {
   addOptionsMessage("Confirm service request?", [
     {
       label: "✅ Confirm",
-      action: () => submitService(updated), // ✅ FIX
+      action: () => submitService(updated), 
     },
   ]);
 };
@@ -472,7 +499,7 @@ const submitService = async (data: any) => {
         vehicleNumber: data.vehicleNumber,
         vehiclePart: data.part,
         serviceType: data.serviceType,
-        preferredDate: formattedDate, // ✅ NOW 100% VALID
+        preferredDate: formattedDate, 
         timeSlot: data.serviceSlot,
         notes: data.issue || "Website Bot",
       }
@@ -486,7 +513,7 @@ const submitService = async (data: any) => {
     setStep("idle");
 
   } catch (err: any) {
-    console.log("ERROR:", err.response?.data); // 👈 keep this
+    console.log("ERROR:", err.response?.data); 
 
     const msg =
       err.response?.data?.error ||
@@ -506,11 +533,30 @@ const submitService = async (data: any) => {
     ]);
   }
 };
-  const selectBike = (bike: string) => {
-    setFormData((p) => ({ ...p, bike }));
-    setStep("date");
-    addMessage({ sender: "bot", text: "Enter preferred date (DD/MM/YYYY)" });
-  };
+//* ================= TEST RIDE HELPER FUNCTIONS ================= */
+
+const selectLocation = (loc: string) => {
+  setFormData((p) => ({ ...p, location: loc }));
+
+  setStep("date");
+
+  addMessage({
+    sender: "bot",
+    text: "📅 Enter preferred date (DD/MM/YYYY)",
+  });
+};
+
+// ✅ THEN
+const selectBike = (bike: string) => {
+  setFormData((p) => ({ ...p, bike }));
+
+  setStep("location");
+
+  addOptionsMessage("📍 Select your location:", [
+    { label: "Bangalore", action: () => selectLocation("Bangalore") },
+    { label: "Goa", action: () => selectLocation("Goa") },
+  ]);
+};
 
   const selectSlot = (slot: string, currentData: any) => {
     const updated = { ...currentData, slot };
@@ -525,6 +571,7 @@ const submitService = async (data: any) => {
 👤 ${updated.name}
 📞 ${updated.phone}
 📧 ${updated.email || "N/A"}
+${updated.address ? `🏠 ${updated.address}\n` : ""}
 📍 ${updated.location}
 🏍 ${updated.bike}
 📅 ${updated.date}
@@ -549,6 +596,7 @@ const submitService = async (data: any) => {
         fullName: data.name,
         phone: formattedPhone,
         email: data.email || "",
+        address: data.address || "",
         location: data.location || "Bangalore",
         bikeName: data.bike,
         date: formattedDate,

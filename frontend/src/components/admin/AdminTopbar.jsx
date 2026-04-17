@@ -7,7 +7,7 @@ export default function AdminTopbar({ onToggleSidebar }) {
         minHeight: "56px",                
         background: "#01263B",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
-        display: "flex",
+        display: "flex",          
         alignItems: "center",
         padding: "8px 16px",
         color: "#ffffff",
