@@ -13,7 +13,7 @@ Backend application built with Node.js, Express.js, PostgreSQL, and Prisma ORM.
    Create a `.env` file in the backend directory with the following content:
    ```
    DATABASE_URL="postgresql://user:password@localhost:5432/service_system?schema=public"
-   PORT=3000
+   PORT=4000
    NODE_ENV=development
    ```
    Update the `DATABASE_URL` with your PostgreSQL credentials.
@@ -33,7 +33,7 @@ Backend application built with Node.js, Express.js, PostgreSQL, and Prisma ORM.
    npm run dev
    ```
 
-The server will start on `http://localhost:3000` (or the port specified in your `.env` file).
+The server will start on `http://localhost:4000` (or the port specified in your `.env` file).
 
 ## API Endpoints
 
@@ -57,5 +57,9 @@ backend/
 ├── package.json
 └── README.md
 ```
+
+The frontend server is running on `http://localhost:5173`.
+
+Prisma Studio is running on `http://localhost:5555`.
 
 
