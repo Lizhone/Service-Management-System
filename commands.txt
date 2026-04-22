@@ -32,6 +32,7 @@ email: 'advisor@test.com',
 node scripts/createSupplyChain.js
 node scripts/createSales.js
 node scripts/createServiceAdvisor.js
+node prisma/seed.js(adding a new technician)
 
 4. WhatsApp Bot twillio account 
 Account SID: AC842fd4a4c38da4cacd993c65ee3cddec
