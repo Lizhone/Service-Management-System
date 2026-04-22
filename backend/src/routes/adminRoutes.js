@@ -1,9 +1,12 @@
 import express from 'express';
-import { login } from '../controllers/adminController.js';
+import { login, getDashboardStats } from '../controllers/adminController.js';
 
 const router = express.Router();
 
+// Auth
 router.post('/admin/login', login);
 
-export default router;
+// Dashboard
+router.get('/admin/dashboard-stats', getDashboardStats);
 
+export default router;

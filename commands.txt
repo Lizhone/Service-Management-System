@@ -1,0 +1,46 @@
+Documentations 
+#///////////////////////////////////////////////////////////////
+1.Token :eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY3OTM3MDE5LCJleHAiOjE3Njc5NjU4MTl9.kIcOh9NRJS1IlqS0hPuxIuqcfxV856g_O693cNE8wZ4
+
+2.To update password for the customer :node scripts/setCustomerPasswords.js(everytime a new jobcard is created you need to update the password for the customer ot login )
+
+3.Different Role Based Authentication:
+Admin username :admin@exampl.com 
+password : admin123
+
+advisor usernmae : advisor@test.com
+password: password123
+
+
+email: 'technician@test.com',
+  role: 'TECHNICIAN',
+  password: 'Tech@123'
+  
+email: 'sales@test.com', 
+  password: 'password123', 
+  role: 'SALES' 
+ 
+email: 'supply@test.com',
+  password: 'password123',
+  role: 'SUPPLY_CHAIN'
+  
+email: 'advisor@test.com',
+  password: 'password123',
+  role: 'SERVICE_ADVISOR'
+  
+   
+node scripts/createSupplyChain.js
+node scripts/createSales.js
+node scripts/createServiceAdvisor.js
+
+4. WhatsApp Bot twillio account 
+Account SID: AC842fd4a4c38da4cacd993c65ee3cddec
+Auth Token: 4589de5dda53d0e1c7c84ac5eee3ad76
+My Twilio phone number: +14785513207
+to start conversation type :join aware aside ->Hi
+
+Backend command :ngrok http 4000(for whatsApp bot)
+Backend command:npm run dev (to start the server )
+frontend command :npm run dev 
+backend command for prisma schema :npx prisma studio
+5.

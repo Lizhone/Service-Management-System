@@ -12,5 +12,16 @@ export const login = async (req, res) => {
     }
     res.status(500).json({ error: error.message });
   }
+};// ===============================
+// 📊 DASHBOARD CONTROLLER
+// ===============================
+export const getDashboardStats = async (req, res) => {
+   console.log("🔥 CONTROLLER HIT");
+  try {
+    const data = await adminService.getDashboardStats();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ error: error.message });
+  }
 };
-
